@@ -1,0 +1,727 @@
+{
+ "start": "2026-11-16",
+ "sched": [
+  {
+   "k": "bjj",
+   "gi": true
+  },
+  {
+   "k": "gym",
+   "s": "LW"
+  },
+  {
+   "k": "gym",
+   "s": "UA"
+  },
+  {
+   "k": "bjj",
+   "gi": false
+  },
+  {
+   "k": "gym",
+   "s": "UB"
+  },
+  {
+   "k": "volei"
+  },
+  {
+   "k": "rest"
+  }
+ ],
+ "plan": {
+  "ex": {
+   "supino": {
+    "n": "Supino com halteres",
+    "s": [
+     4,
+     5,
+     5
+    ],
+    "r": [
+     "5–8",
+     "4–6",
+     "3–5"
+    ],
+    "m": "kg",
+    "t": "Pegada neutra ou semi-pronada. Principal do dia.",
+    "rest": 150
+   },
+   "remada_a": {
+    "n": "Remada curvada ou apoiada no banco",
+    "s": [
+     3,
+     4,
+     4
+    ],
+    "r": [
+     "6–8",
+     "4–6",
+     "3–5"
+    ],
+    "m": "kg",
+    "t": "Coluna neutra, sem balançar.",
+    "rest": 150
+   },
+   "press_a": {
+    "n": "Landmine press ou press sentado",
+    "s": [
+     3,
+     3,
+     3
+    ],
+    "r": [
+     "6–10",
+     "5–8",
+     "5–8"
+    ],
+    "m": "kg",
+    "t": "Pegada neutra, amplitude sem dor no ombro.",
+    "rest": 120
+   },
+   "barra": {
+    "n": "Barra fixa, pegada neutra",
+    "s": [
+     3,
+     3,
+     3
+    ],
+    "r": [
+     "5–8",
+     "5–8",
+     "3–6"
+    ],
+    "m": "bw",
+    "t": "Carga extra em kg (0 é o peso do corpo). Use elástico se não chegar a 5.",
+    "rest": 120
+   },
+   "lat_a": {
+    "n": "Elevação lateral com halteres",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "10–15",
+     "10–15",
+     "10–15"
+    ],
+    "m": "kg",
+    "t": "Pare com 1 a 2 repetições na reserva.",
+    "rest": 60
+   },
+   "face": {
+    "n": "Face pull na polia",
+    "s": [
+     3,
+     3,
+     3
+    ],
+    "r": [
+     "12–15",
+     "12–15",
+     "12–15"
+    ],
+    "m": "kg",
+    "t": "Pausa de 1 s na contração.",
+    "rest": 60
+   },
+   "rosca_a": {
+    "n": "Rosca direta com halteres",
+    "s": [
+     2,
+     3,
+     2
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "kg",
+    "t": "Superset com o tríceps.",
+    "rest": 45
+   },
+   "tri_a": {
+    "n": "Tríceps na polia",
+    "s": [
+     2,
+     3,
+     2
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "kg",
+    "t": "Superset com a rosca.",
+    "rest": 60
+   },
+   "pallof": {
+    "n": "Pallof press (core)",
+    "s": [
+     3,
+     3,
+     3
+    ],
+    "r": [
+     "10 por lado",
+     "10 por lado",
+     "10 por lado"
+    ],
+    "m": "kg",
+    "t": "Sem girar o tronco.",
+    "rest": 45
+   },
+   "farmer": {
+    "n": "Farmer’s walk (pegada)",
+    "s": [
+     2,
+     2,
+     2
+    ],
+    "r": [
+     "30–40 s",
+     "30–40 s",
+     "30–40 s"
+    ],
+    "m": "kgs",
+    "t": "Pesado, ombros para baixo. Carga em kg por mão.",
+    "rest": 60
+   },
+   "puxada": {
+    "n": "Puxada na frente, pegada aberta",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "kg",
+    "t": "Puxe com o cotovelo, sem balançar.",
+    "rest": 90
+   },
+   "inclinado": {
+    "n": "Supino inclinado com halteres",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "kg",
+    "t": "Banco a 30 graus.",
+    "rest": 90
+   },
+   "press_b": {
+    "n": "Press de ombros sentado",
+    "s": [
+     3,
+     3,
+     2
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "kg",
+    "t": "Pegada neutra, cotovelos levemente à frente.",
+    "rest": 90
+   },
+   "remada_b": {
+    "n": "Remada unilateral ou remada baixa",
+    "s": [
+     3,
+     3,
+     2
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "kg",
+    "t": "Pausa de 1 s no final.",
+    "rest": 90
+   },
+   "cruc": {
+    "n": "Crucifixo no peck deck ou nas polias",
+    "s": [
+     2,
+     3,
+     2
+    ],
+    "r": [
+     "10–15",
+     "10–15",
+     "10–15"
+    ],
+    "m": "kg",
+    "t": "Alongamento controlado.",
+    "rest": 60
+   },
+   "lat_b": {
+    "n": "Elevação lateral na polia",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "12–20",
+     "12–20",
+     "12–20"
+    ],
+    "m": "kg",
+    "t": "Superset com o crucifixo inverso.",
+    "rest": 45
+   },
+   "inverso": {
+    "n": "Crucifixo inverso",
+    "s": [
+     3,
+     3,
+     2
+    ],
+    "r": [
+     "12–15",
+     "12–15",
+     "12–15"
+    ],
+    "m": "kg",
+    "t": "Foco no deltoide posterior.",
+    "rest": 45
+   },
+   "rosca_b": {
+    "n": "Rosca alternada ou barra W",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "kg",
+    "t": "Superset com o tríceps.",
+    "rest": 45
+   },
+   "tri_b": {
+    "n": "Tríceps francês ou na corda",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "kg",
+    "t": "Cotovelos fixos.",
+    "rest": 60
+   },
+   "joelhos": {
+    "n": "Elevação de joelhos ou pernas na barra (core)",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "8–15",
+     "8–15",
+     "8–15"
+    ],
+    "m": "rep",
+    "t": "Incline a pelve, sem balançar.",
+    "rest": 60
+   },
+   "pescoco": {
+    "n": "Isometria de pescoço, 4 direções",
+    "s": [
+     2,
+     2,
+     2
+    ],
+    "r": [
+     "20 s",
+     "20 s",
+     "20 s"
+    ],
+    "m": "s",
+    "t": "Leve, 30 a 40% do esforço.",
+    "rest": 30
+   },
+   "salto_l": {
+    "n": "Salto vertical ou box jump",
+    "s": [
+     2,
+     3,
+     4
+    ],
+    "r": [
+     "3",
+     "3",
+     "3"
+    ],
+    "m": "rep",
+    "t": "Descansado, pouse macio.",
+    "rest": 120
+   },
+   "agach": {
+    "n": "Agachamento com barra",
+    "s": [
+     4,
+     5,
+     5
+    ],
+    "r": [
+     "5–8",
+     "4–6",
+     "3–5"
+    ],
+    "m": "kg",
+    "t": "Box squat se o joelho incomodar. Principal do dia.",
+    "rest": 150
+   },
+   "stiff": {
+    "n": "Stiff com barra ou halteres",
+    "s": [
+     3,
+     4,
+     4
+    ],
+    "r": [
+     "6–10",
+     "5–8",
+     "5–8"
+    ],
+    "m": "kg",
+    "t": "Coluna neutra, quadril para trás.",
+    "rest": 150
+   },
+   "bulg": {
+    "n": "Agachamento búlgaro",
+    "s": [
+     3,
+     3,
+     2
+    ],
+    "r": [
+     "8–10 por perna",
+     "8–10 por perna",
+     "8–10 por perna"
+    ],
+    "m": "kg",
+    "t": "Amplitude sem dor no joelho.",
+    "rest": 90
+   },
+   "nordic": {
+    "n": "Nordic curl assistido (ou mesa flexora)",
+    "s": [
+     3,
+     3,
+     2
+    ],
+    "r": [
+     "4–8",
+     "4–8",
+     "4–8"
+    ],
+    "m": "rep",
+    "t": "Desça devagar, 3 a 4 s.",
+    "rest": 90
+   },
+   "hip_l": {
+    "n": "Hip thrust com barra",
+    "s": [
+     2,
+     3,
+     2
+    ],
+    "r": [
+     "8–10",
+     "8–10",
+     "8–10"
+    ],
+    "m": "kg",
+    "t": "Pausa de 1 s no topo.",
+    "rest": 90
+   },
+   "pant_pe": {
+    "n": "Panturrilha em pé",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "kg",
+    "t": "Pausa de 1 s embaixo.",
+    "rest": 60
+   },
+   "roll": {
+    "n": "Roll-out com roda ou barra (core)",
+    "s": [
+     3,
+     3,
+     3
+    ],
+    "r": [
+     "8–12",
+     "8–12",
+     "8–12"
+    ],
+    "m": "rep",
+    "t": "Lombar sem arquear.",
+    "rest": 60
+   },
+   "copen_l": {
+    "n": "Copenhagen plank (adutores)",
+    "s": [
+     2,
+     2,
+     2
+    ],
+    "r": [
+     "20–30 s por lado",
+     "20–30 s por lado",
+     "20–30 s por lado"
+    ],
+    "m": "s",
+    "t": "Versão com joelho se for forte demais.",
+    "rest": 45
+   },
+   "salto_b": {
+    "n": "Salto vertical ou box jump",
+    "s": [
+     3,
+     3,
+     4
+    ],
+    "r": [
+     "3",
+     "3",
+     "3"
+    ],
+    "m": "rep",
+    "t": "Descansado, pouse macio.",
+    "rest": 120
+   },
+   "hip_b": {
+    "n": "Hip thrust com barra",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "8–10",
+     "8–10",
+     "8–10"
+    ],
+    "m": "kg",
+    "t": "Pausa de 1 s no topo.",
+    "rest": 90
+   },
+   "leg": {
+    "n": "Leg press, pés na altura média",
+    "s": [
+     3,
+     3,
+     3
+    ],
+    "r": [
+     "10–12",
+     "10–12",
+     "10–12"
+    ],
+    "m": "kg",
+    "t": "Sem tirar o quadril do banco.",
+    "rest": 90
+   },
+   "afundo": {
+    "n": "Afundo ou step-up",
+    "s": [
+     2,
+     3,
+     2
+    ],
+    "r": [
+     "10 por perna",
+     "10 por perna",
+     "10 por perna"
+    ],
+    "m": "kg",
+    "t": "Passo controlado.",
+    "rest": 75
+   },
+   "mesa": {
+    "n": "Mesa flexora",
+    "s": [
+     3,
+     3,
+     3
+    ],
+    "r": [
+     "10–15",
+     "10–15",
+     "10–15"
+    ],
+    "m": "kg",
+    "t": "Volta lenta.",
+    "rest": 75
+   },
+   "pant_sent": {
+    "n": "Panturrilha sentada",
+    "s": [
+     3,
+     4,
+     3
+    ],
+    "r": [
+     "12–15",
+     "12–15",
+     "12–15"
+    ],
+    "m": "kg",
+    "t": "Pausa de 1 s embaixo.",
+    "rest": 60
+   },
+   "med": {
+    "n": "Arremesso rotacional de medicine ball (core)",
+    "s": [
+     3,
+     3,
+     3
+    ],
+    "r": [
+     "5 por lado",
+     "5 por lado",
+     "5 por lado"
+    ],
+    "m": "rep",
+    "t": "Gire o quadril, sem forçar a lombar.",
+    "rest": 60
+   },
+   "copen_b": {
+    "n": "Copenhagen plank (adutores)",
+    "s": [
+     2,
+     2,
+     2
+    ],
+    "r": [
+     "20–30 s por lado",
+     "20–30 s por lado",
+     "20–30 s por lado"
+    ],
+    "m": "s",
+    "t": "Versão com joelho se for forte demais.",
+    "rest": 45
+   }
+  },
+  "sess": {
+   "UA": {
+    "name": "Upper A",
+    "sub": "Força: peito, costas e ombros",
+    "min": "70 a 80 min",
+    "ex": [
+     "supino",
+     "remada_a",
+     "press_a",
+     "barra",
+     "lat_a",
+     "face",
+     "rosca_a",
+     "tri_a",
+     "pallof",
+     "farmer"
+    ]
+   },
+   "UB": {
+    "name": "Upper B",
+    "sub": "Hipertrofia: ombros, braços, costas e peito",
+    "min": "70 a 80 min",
+    "ex": [
+     "puxada",
+     "inclinado",
+     "press_b",
+     "remada_b",
+     "cruc",
+     "lat_b",
+     "inverso",
+     "rosca_b",
+     "tri_b",
+     "joelhos",
+     "pescoco"
+    ]
+   },
+   "LW": {
+    "name": "Lower",
+    "sub": "Força e hipertrofia: pernas e core",
+    "min": "75 a 90 min",
+    "ex": [
+     "salto_l",
+     "agach",
+     "stiff",
+     "bulg",
+     "nordic",
+     "hip_l",
+     "pant_pe",
+     "roll",
+     "copen_l"
+    ]
+   },
+   "LB": {
+    "name": "Lower B (opcional)",
+    "sub": "Só em semana sem vôlei",
+    "min": "65 a 75 min",
+    "ex": [
+     "salto_b",
+     "hip_b",
+     "leg",
+     "afundo",
+     "mesa",
+     "pant_sent",
+     "med",
+     "copen_b"
+    ]
+   }
+  },
+  "order": [
+   "UA",
+   "UB",
+   "LW",
+   "LB"
+  ],
+  "alt": "LB",
+  "cond": [
+   "Mobilidade: 90/90 de quadril, rotação torácica e peitoral (8 min)",
+   "Rotação externa de ombro com halter leve: 3 × 12–15 por lado",
+   "Y, T e W no banco inclinado: 2 × 8 de cada",
+   "Wall slide para o serrátil: 2 × 10",
+   "Dead bug: 3 × 8 por lado",
+   "Bird dog: 3 × 8 por lado",
+   "Cardio leve em ritmo de conversa: 20 a 30 min"
+  ]
+ }
+}

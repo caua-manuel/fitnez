@@ -1,0 +1,211 @@
+[
+ {
+  "id": "panqueca",
+  "n": "Panqueca de banana e aveia",
+  "t": "10 min",
+  "uso": "Lanche A",
+  "ing": [
+   "1 banana madura",
+   "2 ovos",
+   "2 colheres de sopa de aveia (25 g)",
+   "1 colher de sobremesa de doce de leite (20 g)"
+  ],
+  "pas": [
+   "Amasse a banana com um garfo.",
+   "Misture os ovos e a aveia.",
+   "Em frigideira antiaderente em fogo baixo, doure 2 a 3 minutos de cada lado.",
+   "Finalize com o doce de leite."
+  ],
+  "dica": "Com a banana bem madura fica mais doce. Canela por cima dá sabor sem calorias."
+ },
+ {
+  "id": "pao_ovo",
+  "n": "Pão com ovo e queijo",
+  "t": "12 min",
+  "uso": "Café B",
+  "ing": [
+   "2 fatias de pão de forma",
+   "2 ovos",
+   "1 fatia de queijo muçarela",
+   "Sal ou chimichurri a gosto"
+  ],
+  "pas": [
+   "Com uma colher, faça um buraco no meio de cada fatia de pão.",
+   "Coloque 1 ovo cru em cada buraco e tempere.",
+   "Cubra com o queijo.",
+   "Leve à airfryer ou ao forno por 10 minutos."
+  ],
+  "dica": "Para a gema ficar mole, deixe 8 minutos. Para firme, 12."
+ },
+ {
+  "id": "mingau",
+  "n": "Mingau de aveia com banana e whey",
+  "t": "8 min",
+  "uso": "Café C e Pós C",
+  "ing": [
+   "1 banana picada",
+   "Aveia em flocos (40 g no café, 20 g no pós-treino)",
+   "Leite desnatado (250 ml no café, 150 ml no pós-treino)",
+   "Whey (15 g no café, 30 g no pós-treino)"
+  ],
+  "pas": [
+   "Na panela, junte a banana, a aveia e o leite em fogo médio para baixo.",
+   "Mexa até engrossar, cerca de 5 minutos.",
+   "Desligue o fogo e espere 1 minuto.",
+   "Misture o whey fora do fogo, para não empelotar."
+  ],
+  "dica": "No café C, acompanhe com 1 ovo cozido. Canela ou 2 quadradinhos de chocolate meio amargo deixam mais gostoso."
+ },
+ {
+  "id": "shake",
+  "n": "Shake e smoothie proteico",
+  "t": "3 min",
+  "uso": "Pós A e B",
+  "ing": [
+   "Whey 30 g",
+   "1 banana (congelada, se quiser mais cremoso)",
+   "Leite desnatado 150 ml",
+   "Para o smoothie: 10 morangos congelados (100 g)"
+  ],
+  "pas": [
+   "Coloque tudo no liquidificador.",
+   "Bata até ficar liso.",
+   "Beba logo depois do treino."
+  ],
+  "dica": "Para levar na mochila (jiu-jitsu às 6:30), bata em casa e leve na garrafa, ou leve o whey seco na coqueteleira e a banana à parte."
+ },
+ {
+  "id": "rap10",
+  "n": "Sanduíche Rap10 de frango",
+  "t": "10 min",
+  "uso": "Jantar B",
+  "ing": [
+   "1 Rap10",
+   "150 g de frango desfiado",
+   "Alface e tomate à vontade",
+   "20 g de queijo muçarela",
+   "1 colher de chá de azeite para a frigideira"
+  ],
+  "pas": [
+   "Faça um corte na massa até o centro, para dobrar em 4 partes.",
+   "Em cada parte, coloque um recheio: frango, alface, tomate e queijo.",
+   "Dobre a massa em 3 dobras.",
+   "Doure dos dois lados em frigideira antiaderente com um fio de azeite."
+  ],
+  "dica": "Para a quentinha, monte e embrulhe em papel alumínio. Esquenta rápido na frigideira."
+ },
+ {
+  "id": "omelete",
+  "n": "Omelete com peru e queijo",
+  "t": "8 min",
+  "uso": "Jantar C",
+  "ing": [
+   "3 ovos",
+   "60 g de peito de peru picado",
+   "30 g de queijo muçarela",
+   "Tomate ou alho-poró a gosto",
+   "Sal e 1 fio de azeite"
+  ],
+  "pas": [
+   "Bata os ovos com sal.",
+   "Aqueça a frigideira com um fio de azeite em fogo baixo e despeje os ovos.",
+   "Quando firmar embaixo, coloque o peru, o queijo e o tomate de um lado.",
+   "Dobre ao meio e deixe 1 minuto até o queijo derreter.",
+   "Sirva com 2 fatias de pão de forma."
+  ],
+  "dica": "Tampar a frigideira ajuda a cozinhar o ovo por cima sem precisar virar."
+ },
+ {
+  "id": "macarrao",
+  "n": "Macarrão com carne moída",
+  "t": "20 min",
+  "uso": "Almoço B",
+  "ing": [
+   "Macarrão (cerca de 80 g cru, que dá 230 g cozido)",
+   "120 g de patinho moído",
+   "1 concha de molho de tomate",
+   "Alho, sal e 1 colher de chá de azeite",
+   "Alface e tomate para acompanhar"
+  ],
+  "pas": [
+   "Cozinhe o macarrão em água com sal, conforme a embalagem, e escorra.",
+   "Em outra panela, refogue o alho no azeite e doure a carne moída.",
+   "Junte o molho de tomate e deixe 5 minutos.",
+   "Misture ao macarrão e sirva com alface e tomate."
+  ],
+  "dica": "Faça o molho com a carne em dobro e congele em porções. Na semana corrida, é só cozinhar o macarrão."
+ },
+ {
+  "id": "bife",
+  "n": "Bife de patinho e batata-doce",
+  "t": "25 min",
+  "uso": "Almoço C",
+  "ing": [
+   "120 g de bife de patinho",
+   "100 g de batata-doce",
+   "Sal, alho e pimenta a gosto",
+   "1 colher de chá de azeite"
+  ],
+  "pas": [
+   "Corte a batata-doce em cubos ou rodelas e tempere com sal.",
+   "Leve à airfryer a 200 °C por 20 a 25 minutos, virando na metade.",
+   "Tempere o bife com sal e alho.",
+   "Doure em frigideira bem quente, 2 a 3 minutos de cada lado."
+  ],
+  "dica": "Bata o bife com um martelo de carne antes: fica mais macio e cozinha mais rápido."
+ },
+ {
+  "id": "frango_semana",
+  "n": "Frango desfiado para a semana",
+  "t": "25 min",
+  "uso": "Almoço A e Jantar A",
+  "ing": [
+   "1 kg de peito de frango",
+   "Sal, alho e cebola",
+   "Água para cobrir"
+  ],
+  "pas": [
+   "Coloque o frango, o sal, o alho e a cebola na panela de pressão com água até cobrir.",
+   "Cozinhe 15 minutos depois que pegar pressão.",
+   "Escorra, desfie e divida em porções de 130 a 150 g.",
+   "Guarde em potes: até 3 dias na geladeira e até 2 meses no freezer."
+  ],
+  "dica": "Esquente na frigideira com um fio de azeite para dar sabor. Serve para o prato, o Rap10 e o sanduíche."
+ },
+ {
+  "id": "brocolis",
+  "n": "Brócolis gratinado",
+  "t": "15 min",
+  "uso": "Vegetal A",
+  "ing": [
+   "1 maço pequeno de brócolis",
+   "Sal",
+   "30 g de queijo muçarela ralado"
+  ],
+  "pas": [
+   "Cozinhe o brócolis em água fervente com sal por 3 a 4 minutos.",
+   "Escorra bem.",
+   "Cubra com o queijo.",
+   "Leve à airfryer a 180 °C por 5 a 8 minutos, até gratinar."
+  ],
+  "dica": "Com queijo derretido por cima é a forma mais fácil de começar a gostar."
+ },
+ {
+  "id": "arroz_semana",
+  "n": "Arroz e feijão para a semana",
+  "t": "40 min",
+  "uso": "Quentinha caseira",
+  "ing": [
+   "Arroz branco",
+   "Feijão pronto",
+   "Potes de vidro ou plástico"
+  ],
+  "pas": [
+   "Cozinhe o arroz de uma vez e esfrie rápido, em até 1 hora.",
+   "Guarde em potes na geladeira por até 3 dias.",
+   "Congele o feijão em porções de 120 g (1 concha cheia).",
+   "Esquente bem antes de comer."
+  ],
+  "dica": "Para a semana, deixe pronto no domingo: arroz e feijão da semana + frango desfiado e você monta o prato em 3 minutos."
+ }
+]

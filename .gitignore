@@ -1,0 +1,27 @@
+# Dependencias e build
+node_modules/
+dist/
+playwright-report/
+test-results/
+.frontend-checks/
+.npm-logs/
+
+# Segredos e ambiente
+.env
+.env.*
+!.env.example
+
+# Logs, pids e temporarios
+*.log
+*.pid
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Logs de agentes e previews locais
+.codex-*
+.devops-preview*

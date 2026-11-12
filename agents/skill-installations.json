@@ -1,0 +1,1404 @@
+{
+    "schema_version":  1,
+    "installed_on":  "2026-11-11",
+    "method":  "git sparse clone, pinned commit, local copies",
+    "skills":  [
+                   {
+                       "name":  "brainstorming",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/brainstorming",
+                       "locations":  [
+                                         ".claude/skills/brainstorming",
+                                         "agents/planejamento/superpowers/skills/brainstorming"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "builder-check-prompt.md",
+                                         "sha256":  "36d51a4723d6f0a3ce5811a0ea3b3a8424f07533947e1355f5d8cb8cce40c55e"
+                                     },
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "2c9ca71f94886f9ca9f4aef055f7cafb3e1a9bdf3aeebf8f4cb547c69405d207"
+                                     },
+                                     {
+                                         "path":  "visual-companion.md",
+                                         "sha256":  "6ffcb038b53254bd31debaa15e12dcd4ff24bd63d690e0b644ac6396701cf2e2"
+                                     },
+                                     {
+                                         "path":  "scripts/frame-template.html",
+                                         "sha256":  "7b9418e9939dded0cf8e6a5549a18162b7c7e5495deeefa83a12f3394b81395d"
+                                     },
+                                     {
+                                         "path":  "scripts/helper.js",
+                                         "sha256":  "43c6d69954a46ec34a2a262bcc62a9a7e83e839c739f199cb72646d397c686e3"
+                                     },
+                                     {
+                                         "path":  "scripts/server.cjs",
+                                         "sha256":  "a2397d59c7f7bd1a110e258c707ccf47ede42ba8dfc765c03669a3ee81cf3791"
+                                     },
+                                     {
+                                         "path":  "scripts/start-server.sh",
+                                         "sha256":  "314dd68dc00e8dd94c7491aca8a5f004c7fddffc161e2b07482f29f48d13659a"
+                                     },
+                                     {
+                                         "path":  "scripts/stop-server.sh",
+                                         "sha256":  "0b5ccbbd57f62d3ed88993f7940b5ee0e5c0fc9b21c550c623da4f6292e47daf"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "diagnosing-superpowers",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/diagnosing-superpowers",
+                       "locations":  [
+                                         ".claude/skills/diagnosing-superpowers",
+                                         "agents/planejamento/superpowers/skills/diagnosing-superpowers"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "3143de8695c5a2d63e8b1675f33837578076f464deb127c2ebdd0b46fceef886"
+                                     },
+                                     {
+                                         "path":  "prompts/analyst-common.md",
+                                         "sha256":  "88801c36070be2a54a8a9a29632b01ab21db053e2e76ee49b5252a9b74ca4090"
+                                     },
+                                     {
+                                         "path":  "prompts/cost-and-time.md",
+                                         "sha256":  "fe97a66d4db3b436816ef82694bda413b522b3a862dd41978da01e358fffecc4"
+                                     },
+                                     {
+                                         "path":  "prompts/plan-adherence.md",
+                                         "sha256":  "1dcbab82033598a2e9c9ee42e950d4b1822d2c871c02cef9e102cdd5cbbda113"
+                                     },
+                                     {
+                                         "path":  "prompts/quality-evidence.md",
+                                         "sha256":  "749d11cf678f379ed77a29274cad456634e0284aa523639a1a214a9f2b986eb1"
+                                     },
+                                     {
+                                         "path":  "prompts/repeated-work.md",
+                                         "sha256":  "895027f2dfa4b1b8bcdb7ac9aec8d45a80bff212fad6ec6cad5ab38fa68322f5"
+                                     },
+                                     {
+                                         "path":  "prompts/request-conflicts.md",
+                                         "sha256":  "e800e38d8b7752c212c76c5c3ed75cd78b749684263ea0c313586f26af6f4b5c"
+                                     },
+                                     {
+                                         "path":  "prompts/scrub-audit.md",
+                                         "sha256":  "5cc48f05a7f81f5f7e05e0c7ceafc0fb8774bcaf75fe88dcb5c7e408026c70ad"
+                                     },
+                                     {
+                                         "path":  "prompts/scrub.md",
+                                         "sha256":  "854cb3320cc5377b493cea2f72519d67983464882db68a0f408a7d0a0f040b8c"
+                                     },
+                                     {
+                                         "path":  "prompts/similar-session.md",
+                                         "sha256":  "b190f713b463df2bb5ec3914647e204074d1bd50643a53159db6d13cace916c1"
+                                     },
+                                     {
+                                         "path":  "prompts/skill-timeline.md",
+                                         "sha256":  "45d604d583b57a77b9033eced8eb875ef342af70fcd66cf7d15c6dc89964890f"
+                                     },
+                                     {
+                                         "path":  "prompts/stumbles.md",
+                                         "sha256":  "1f2d1f048aff7b8b400006301f1ce8c232ecc7e9d5f705af27a849b2c03ea2e7"
+                                     },
+                                     {
+                                         "path":  "references/context-safety.md",
+                                         "sha256":  "e6be2bd3495f454d4bedee9484d728d245d1fa656e11fc4ceec5693c16e4730a"
+                                     },
+                                     {
+                                         "path":  "references/github-issues.md",
+                                         "sha256":  "d26ef9197b4a6ae5159ae6d11abd162bcc624d95fc7ccf508e07b68f916a1b19"
+                                     },
+                                     {
+                                         "path":  "references/redaction-policy.md",
+                                         "sha256":  "96b16f47074838fe2d7e609577d6f8b0ad460f8378b281a3f96ee23cb5a08bde"
+                                     },
+                                     {
+                                         "path":  "references/session-discovery.md",
+                                         "sha256":  "6d1dced083e5d978448a78df298cf515531b0eb39b2854a4a2afbffeb69a7435"
+                                     },
+                                     {
+                                         "path":  "templates/bundle-README.md",
+                                         "sha256":  "2e6ddc6b106028d5ebd00a50ad93a77111d675c219ee1273cd0857869e8d51ec"
+                                     },
+                                     {
+                                         "path":  "templates/case.md",
+                                         "sha256":  "597892462be83bc478536ec91f7c285f6dd25d119c560734a3a180fe8471301d"
+                                     },
+                                     {
+                                         "path":  "templates/issue.md",
+                                         "sha256":  "afd21779e5de5bc5adfe2f5a50a04e44ab8d50d9ad0f829243de248d6f023eed"
+                                     },
+                                     {
+                                         "path":  "templates/report.md",
+                                         "sha256":  "38295d0fd785e8608f330815c59ebd7047942002ec7085aecbed54681f56b0c1"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "dispatching-parallel-agents",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/dispatching-parallel-agents",
+                       "locations":  [
+                                         ".claude/skills/dispatching-parallel-agents",
+                                         "agents/planejamento/superpowers/skills/dispatching-parallel-agents"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "1968923066f3b707eb01d1992cdf4c42284c3855f70253b9cd5000ff45fca13c"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "executing-plans",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/executing-plans",
+                       "locations":  [
+                                         ".claude/skills/executing-plans",
+                                         "agents/planejamento/superpowers/skills/executing-plans"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "deaf176fa179827e80f2ea3101db3ea90fdf562ebef340eba761e4687940f5f5"
+                                     },
+                                     {
+                                         "path":  "scripts/task-done",
+                                         "sha256":  "8cce825bcd73c31c66fa03c401844c8991813443b0b105b6395ad119a104a720"
+                                     },
+                                     {
+                                         "path":  "scripts/task-start",
+                                         "sha256":  "2c1aaf95b2e6c909d4c9a8ffb37c1691e0fbb58b5e77f6082f5036417be4b4d8"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "finishing-a-development-branch",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/finishing-a-development-branch",
+                       "locations":  [
+                                         ".claude/skills/finishing-a-development-branch",
+                                         "agents/planejamento/superpowers/skills/finishing-a-development-branch"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "8db5a922b242dd4e1bf824cb91c13b3e8d8e8a86d6ceaf7f0774eb9cce909d65"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "receiving-code-review",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/receiving-code-review",
+                       "locations":  [
+                                         ".claude/skills/receiving-code-review",
+                                         "agents/planejamento/superpowers/skills/receiving-code-review"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "091df1629510af1b92fc4abd6f96732ebedb4cb2c0f3457e8f2740b0504a2438"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "requesting-code-review",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/requesting-code-review",
+                       "locations":  [
+                                         ".claude/skills/requesting-code-review",
+                                         "agents/planejamento/superpowers/skills/requesting-code-review"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "code-reviewer.md",
+                                         "sha256":  "82e370be6b3447523816286195571e4216ba56ba1ad6ad0e87862294c4c78dcb"
+                                     },
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "2180e14a448e9410bec88e6646a2d1f0ce7fdd58de27388c1e052e929679d2bc"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "subagent-driven-development",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/subagent-driven-development",
+                       "locations":  [
+                                         ".claude/skills/subagent-driven-development",
+                                         "agents/planejamento/superpowers/skills/subagent-driven-development"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "implementer-prompt.md",
+                                         "sha256":  "81dd9d5a3fb0b09b96b5829f03b9796842f3199ef7591d1ba1c2db2a515f64d0"
+                                     },
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "re-review-prompt.md",
+                                         "sha256":  "ad54d0a10f1c2c8e656456e0a46e654af5dfe5ee6bcef63428cfd69b8dcd9311"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "1baf70e307bde682c462513c86116333f1f066168c6710f45145bf5f0b00828d"
+                                     },
+                                     {
+                                         "path":  "task-reviewer-prompt.md",
+                                         "sha256":  "61a04c2fb29907887d8babee1594f5e35ae26d461e7e584f5b7c283215165e08"
+                                     },
+                                     {
+                                         "path":  "references/batching.md",
+                                         "sha256":  "b54dc7e23dbfb90db89bcb2fb3af591aabf6a271a165fbc0da4c6f9439980eac"
+                                     },
+                                     {
+                                         "path":  "references/cannot-verify.md",
+                                         "sha256":  "e698713a15e0eabf1a2ab26ffe1bb04bf70c9d6d2e2060d44a0f9a1bdd4408bf"
+                                     },
+                                     {
+                                         "path":  "references/final-review.md",
+                                         "sha256":  "6c9e12093e46c4ad0a203bc07709c17e3470f855f1b78e55c5e7b722a012a32c"
+                                     },
+                                     {
+                                         "path":  "references/fix-loop.md",
+                                         "sha256":  "1938ce707915efc44021e563ebc29666329e20ad861b6c50b89f305b8f4e8d8b"
+                                     },
+                                     {
+                                         "path":  "references/handling-reports.md",
+                                         "sha256":  "8f759cdd4936220c38aab05b6d6c48c6df8ac8f146b0f37a6d2facbf87133c67"
+                                     },
+                                     {
+                                         "path":  "references/preflight.md",
+                                         "sha256":  "3ea21c5fc1af1a190ac8a9d19ceb0849b47bf2ffe27b87dffcc21b6a0539776c"
+                                     },
+                                     {
+                                         "path":  "references/resuming.md",
+                                         "sha256":  "ff6e38bde2276faa2a7e93513086caded0ea10edbf2ec7f349a7e3b0d7c668c4"
+                                     },
+                                     {
+                                         "path":  "scripts/review-package",
+                                         "sha256":  "1ec81e7d87d93ecbe33c282f267f9365f7bd985c360dede649715fe5a276c139"
+                                     },
+                                     {
+                                         "path":  "scripts/sdd-repo",
+                                         "sha256":  "8b63d61c6094502c0392d12415e3637f055ed24e3d6c1558c7ed7cbe42caebf7"
+                                     },
+                                     {
+                                         "path":  "scripts/sdd-workspace",
+                                         "sha256":  "ce59a387deb251e3d85f001ddf17f20f31de56dfc4b0b3ed8e9f9227d2221616"
+                                     },
+                                     {
+                                         "path":  "scripts/task-brief",
+                                         "sha256":  "fd342707660541e2a95efffc507c719361eb3d684862d2de96ca58c06466ebc7"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "systematic-debugging",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/systematic-debugging",
+                       "locations":  [
+                                         ".claude/skills/systematic-debugging",
+                                         "agents/planejamento/superpowers/skills/systematic-debugging",
+                                         "agents/testes-debug/systematic-debugging"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "condition-based-waiting-example.ts",
+                                         "sha256":  "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e"
+                                     },
+                                     {
+                                         "path":  "condition-based-waiting.md",
+                                         "sha256":  "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26"
+                                     },
+                                     {
+                                         "path":  "defense-in-depth.md",
+                                         "sha256":  "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7"
+                                     },
+                                     {
+                                         "path":  "find-polluter.sh",
+                                         "sha256":  "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c"
+                                     },
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "root-cause-tracing.md",
+                                         "sha256":  "75b933b6a8c40bdb2031b10f21654395b56ec6ab6bc7b018c18d3fe57aeb7fb8"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "51c6435d98c83c42c96ba7c35725a0b2c376cd487fb1a4e6bd0ddbe7e33ef202"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "test-driven-development",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/test-driven-development",
+                       "locations":  [
+                                         ".claude/skills/test-driven-development",
+                                         "agents/planejamento/superpowers/skills/test-driven-development"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "64b03fce4aee5a97a93160cea8111f3ba13a17b7c001db4bd5836d67fd10705d"
+                                     },
+                                     {
+                                         "path":  "writing-good-tests.md",
+                                         "sha256":  "51471c853306ff92ca8bb41dcaea05f31c0e46b03651f8f3c99754b7172f4ae1"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "using-git-worktrees",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/using-git-worktrees",
+                       "locations":  [
+                                         ".claude/skills/using-git-worktrees",
+                                         "agents/planejamento/superpowers/skills/using-git-worktrees"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "8cfb86f121269e8f7f12361e6795c4f6738828340e28964c9229d365666c9edd"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "using-superpowers",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/using-superpowers",
+                       "locations":  [
+                                         ".claude/skills/using-superpowers",
+                                         "agents/planejamento/superpowers/skills/using-superpowers"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "82c5c8866ad7f5dd4440ce66bd7806ba48a2f13771beae5cf112e53f08fe36ba"
+                                     },
+                                     {
+                                         "path":  "references/antigravity-tools.md",
+                                         "sha256":  "4880f6de3da4e32f9659ebe7a72b9e0ebfff04e028c2ed96173f86d0387a04c0"
+                                     },
+                                     {
+                                         "path":  "references/claude-code-tools.md",
+                                         "sha256":  "21479a3fee27448cab8748a3b5687e53bb257883bda9c070426f9a1ab5cebf1b"
+                                     },
+                                     {
+                                         "path":  "references/codex-tools.md",
+                                         "sha256":  "1a38ad9b188c393052f58d95657a1c35ea6aafc8b5a27f198f3922912f70bbe7"
+                                     },
+                                     {
+                                         "path":  "references/gemini-tools.md",
+                                         "sha256":  "62b9157bcb0ee3c6784e3d0da0798ddfa5872f9e0c34bea48f3079dabea71965"
+                                     },
+                                     {
+                                         "path":  "references/hermes-tools.md",
+                                         "sha256":  "e2185c976a3c87503910e05e2aea58cc89bc8e569bb624b93df9958ac47a9190"
+                                     },
+                                     {
+                                         "path":  "references/muse-tools.md",
+                                         "sha256":  "5a1da5c575fe18456ca71cd47ebfd8a38c745f8d82a67fe64d5b83080000eeb3"
+                                     },
+                                     {
+                                         "path":  "references/pi-tools.md",
+                                         "sha256":  "703dbc83d23ecab9c6f388460c38abc482e9dee2fe6772a8c7a255152ad3a4d5"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "verification-before-completion",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/verification-before-completion",
+                       "locations":  [
+                                         ".claude/skills/verification-before-completion",
+                                         "agents/planejamento/superpowers/skills/verification-before-completion"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "writing-plans",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/writing-plans",
+                       "locations":  [
+                                         ".claude/skills/writing-plans",
+                                         "agents/planejamento/superpowers/skills/writing-plans"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "a6c67c1900064347c2a329990dd3c555657c51c3ec53b259a08aa01a2c26139a"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "writing-skills",
+                       "repository":  "https://github.com/obra/superpowers",
+                       "commit":  "22f0b463e7a5e579904dd6211a520321035526f7",
+                       "source_path":  "skills/writing-skills",
+                       "locations":  [
+                                         ".claude/skills/writing-skills",
+                                         "agents/planejamento/superpowers/skills/writing-skills"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "0da33ed814ee87e72db078f489c4447af72f13d9f25d9e17476f32efd77705fc"
+                                     },
+                                     {
+                                         "path":  "render-graphs.js",
+                                         "sha256":  "c7f412cc629461c4d10287e668731874c0497707023e3e3f74a5355eb2cee196"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "8cb3ac68c6d8c4bb46886b998b09af7989643cab8bd0e46ee86dd62e64546bbe"
+                                     },
+                                     {
+                                         "path":  "references/anthropic-best-practices.md",
+                                         "sha256":  "217629b356c09c9bd11017c9788e8fc654ca1b32c92d4a51cd490e16dd65e59a"
+                                     },
+                                     {
+                                         "path":  "references/bulletproofing.md",
+                                         "sha256":  "9397023e6bc85b556a57f3097371363bf03e28e755c57f403f470bcda90e0a23"
+                                     },
+                                     {
+                                         "path":  "references/CLAUDE_MD_TESTING.md",
+                                         "sha256":  "0b379a3415e185d3c434b3ad283d8aa132f3022c2a4f210f168865b5986bcef0"
+                                     },
+                                     {
+                                         "path":  "references/discovery.md",
+                                         "sha256":  "c6bbc74af3be90f693f7cbc986af6fa94e8df75f65109b52e96032587f5b92af"
+                                     },
+                                     {
+                                         "path":  "references/flowcharts.md",
+                                         "sha256":  "8b1f542391f274f0d33f3457ac099a3d317d6877eaa3b8d3b1ebef151b55fda7"
+                                     },
+                                     {
+                                         "path":  "references/graphviz-conventions.dot",
+                                         "sha256":  "b18a02773875f6c7b92f2a260e88550c92a62549b0009df9d680f7e9541d0ecc"
+                                     },
+                                     {
+                                         "path":  "references/persuasion-principles.md",
+                                         "sha256":  "a51bc9bf75189ea73a27b3fb504a2fdfdb966fb1f7f1cdf03203230a216ccc03"
+                                     },
+                                     {
+                                         "path":  "references/testing-skills-with-subagents.md",
+                                         "sha256":  "ed8a6862c085900135962390530d9dc7637ad6d650b4324ce3b051287a5c3f22"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "find-skills",
+                       "repository":  "https://github.com/vercel-labs/skills",
+                       "commit":  "e781cb4d07433dfe1d19e924ed45cc61738c55ec",
+                       "source_path":  "skills/find-skills",
+                       "locations":  [
+                                         ".claude/skills/find-skills",
+                                         "agents/planejamento/find-skills"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "f8ebe6abd5f58b4fc6fbf3820537bc4b578bd694288bd8c02132b4e11c025458"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "c1d9628984991d7ed59ab3a7bf6a4dad3d731ef68c71f409f64a0ca258e8028e"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "supabase",
+                       "repository":  "https://github.com/supabase/agent-skills",
+                       "commit":  "c9be0e931b7930f7d02126d04774d904c381e7d7",
+                       "source_path":  "skills/supabase",
+                       "locations":  [
+                                         ".claude/skills/supabase",
+                                         "agents/backend-dados/supabase"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "CHANGELOG.md",
+                                         "sha256":  "653a274669ff4d84eb3004ad379050cb73dbf75740df82ccb9768f29f0422190"
+                                     },
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "d5f32eb9349125b311fd66f435a13eff089a7166b1e78e31b12e361edfb2466a"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "44f4cfefb57751abf9288fb2920de621c748964de1301db627dea725e187bccf"
+                                     },
+                                     {
+                                         "path":  "assets/feedback-issue-template.md",
+                                         "sha256":  "74b5dfa3a8f7d6584af059a12bae4cd6bb66d1f3205dc306bf31d4f4ae2a13b1"
+                                     },
+                                     {
+                                         "path":  "references/skill-feedback.md",
+                                         "sha256":  "85e688b56623f9250d23b60ea950dee740fd537980fc72178fe185eab76742b7"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "webapp-testing",
+                       "repository":  "https://github.com/anthropics/skills",
+                       "commit":  "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+                       "source_path":  "skills/webapp-testing",
+                       "locations":  [
+                                         ".claude/skills/webapp-testing",
+                                         "agents/testes-debug/webapp-testing"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE.txt",
+                                         "sha256":  "52b223c318576d65c32f70cb745f31352730e9f4c2c2c2570a66ce700f4f5a64"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "8bc27790f6e6dfc2bfa6692326d4518baacf6a31dcc646d963c729adad2f7e34"
+                                     },
+                                     {
+                                         "path":  "examples/console_logging.py",
+                                         "sha256":  "f06fbca7cdfa44ecf5bae40813b30fc758ec3280af1aab5586aa2dd384db7ad6"
+                                     },
+                                     {
+                                         "path":  "examples/element_discovery.py",
+                                         "sha256":  "7e99c7caf1593a75a8b2e36847128c41962fefc604f7947426581c2b9fc2361b"
+                                     },
+                                     {
+                                         "path":  "examples/static_html_automation.py",
+                                         "sha256":  "6633d0b7c3b3bef31e6baa9cef6fac57490767ee481702fe11c281d8d013b769"
+                                     },
+                                     {
+                                         "path":  "scripts/with_server.py",
+                                         "sha256":  "529b5f10f6ecf2e6234747be6d6601be7ef9011ee29a3eee0879e7823f608238"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "frontend-design",
+                       "repository":  "https://github.com/anthropics/skills",
+                       "commit":  "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+                       "source_path":  "skills/frontend-design",
+                       "locations":  [
+                                         ".claude/skills/frontend-design",
+                                         "agents/frontend-ui/frontend-design"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "LICENSE.txt",
+                                         "sha256":  "eb3d7b5485466acbd81f2b496f595ab637d2792e268206b27d99e793bdb67549"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "b8009ae690dfa69edc7f08bb8715f32db8817112cfa4388741dbaf876c237df8"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "vercel-react-best-practices",
+                       "repository":  "https://github.com/vercel-labs/agent-skills",
+                       "commit":  "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+                       "source_path":  "skills/react-best-practices",
+                       "locations":  [
+                                         ".claude/skills/vercel-react-best-practices",
+                                         "agents/frontend-ui/vercel-react-best-practices"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "AGENTS.md",
+                                         "sha256":  "5640053923e5f36448c53e50b74069ea7c1477101e645e852bc61a84db328855"
+                                     },
+                                     {
+                                         "path":  "metadata.json",
+                                         "sha256":  "1874ee16ee8ec9be9058dd31e0be60f9117ae1ac33986b258bac3923b5dd395f"
+                                     },
+                                     {
+                                         "path":  "README.md",
+                                         "sha256":  "2e7e6cbe3952689bf9c00b9a7032f1bffb263cde2d01635f0aa49d3375c33ff5"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "3286ace648b4d740317b9c1cb7fbd38600eaacc62a8b57ea5e06fd2992b5582e"
+                                     },
+                                     {
+                                         "path":  "rules/advanced-effect-event-deps.md",
+                                         "sha256":  "d6b0ca8ba2982602b736e931c9a8d7a11e0b22cd501ef17c732979fb9ceeb8b2"
+                                     },
+                                     {
+                                         "path":  "rules/advanced-event-handler-refs.md",
+                                         "sha256":  "029f0c929c665fb9263b8c72a44e50610caf94a6e22a8142821a84482eda825d"
+                                     },
+                                     {
+                                         "path":  "rules/advanced-init-once.md",
+                                         "sha256":  "3d209bc4b17c2a503fdbb53b39261bc5ee824703a8b387daef3f53bad1f32ce4"
+                                     },
+                                     {
+                                         "path":  "rules/advanced-use-latest.md",
+                                         "sha256":  "84b3504ef0dc85f171c6aa0c5d15ac6d252ba72e38fc4e87872c0a3b1728345f"
+                                     },
+                                     {
+                                         "path":  "rules/async-api-routes.md",
+                                         "sha256":  "adf38ea4f34fa74b275b908e49aa20de20af9d9935b4a656314a49217b182663"
+                                     },
+                                     {
+                                         "path":  "rules/async-cheap-condition-before-await.md",
+                                         "sha256":  "8677605b94a5ed704873d8013bda2b690ff09fe8757fd472d9047cc848cf4019"
+                                     },
+                                     {
+                                         "path":  "rules/async-defer-await.md",
+                                         "sha256":  "eaa4f64d04eac1023fb61ed27712a81397989d86c126b987fa90baf4da02cc33"
+                                     },
+                                     {
+                                         "path":  "rules/async-dependencies.md",
+                                         "sha256":  "4901341bd7f7b7036eb8d98b243515ce294e6e4079370b3187c1514c3e597ec6"
+                                     },
+                                     {
+                                         "path":  "rules/async-parallel.md",
+                                         "sha256":  "ff95abbb67b62a889d7ef71f1d06834238c47ecd3d49483f7823b4cd17d92680"
+                                     },
+                                     {
+                                         "path":  "rules/async-suspense-boundaries.md",
+                                         "sha256":  "8a6e88c6e5190e10d3e3ebca89a1bc4fefc4bdb0cbc9c6f406ce02452a5759df"
+                                     },
+                                     {
+                                         "path":  "rules/bundle-analyzable-paths.md",
+                                         "sha256":  "32260f587900a89d642b805a4824bf8e6a197c2c6f62aec76522775d0a2f41ab"
+                                     },
+                                     {
+                                         "path":  "rules/bundle-barrel-imports.md",
+                                         "sha256":  "ceae03eb1cfad7e82019aeb297f87dc895eca14221c66f724e0801393d4da21f"
+                                     },
+                                     {
+                                         "path":  "rules/bundle-conditional.md",
+                                         "sha256":  "16992beeaf9bdd1e7ff20989b8672cfffc8b918deb0783c058560c7a233dd37c"
+                                     },
+                                     {
+                                         "path":  "rules/bundle-defer-third-party.md",
+                                         "sha256":  "64de0f01dfe58b4d3a3865baa623f743ef1b8c363106c7dfaf2b2867f69b96d4"
+                                     },
+                                     {
+                                         "path":  "rules/bundle-dynamic-imports.md",
+                                         "sha256":  "0fb947cdfec5ce0e95a894c6b68220f88983eff73ce65b98e4f00c885ebd9b36"
+                                     },
+                                     {
+                                         "path":  "rules/bundle-preload.md",
+                                         "sha256":  "b673a49f4cf4bf385ddf6956ca704139ec2915802bade1925134f8cfabb2278c"
+                                     },
+                                     {
+                                         "path":  "rules/client-event-listeners.md",
+                                         "sha256":  "e2229c8e121dfdd6bad8063ba6c41213ff612e19e077f17ba805b70d48151775"
+                                     },
+                                     {
+                                         "path":  "rules/client-localstorage-schema.md",
+                                         "sha256":  "f9d177a557f4bd4bd1a81f30f841f75041821dd88f706a6b8c4eac86c7472e05"
+                                     },
+                                     {
+                                         "path":  "rules/client-passive-event-listeners.md",
+                                         "sha256":  "277118e32363381459bc7439fa942966da668d2c128d93968f9a289f0bb32861"
+                                     },
+                                     {
+                                         "path":  "rules/client-swr-dedup.md",
+                                         "sha256":  "866e6cc267f06df39129c44c68c5e6a2e62faa554bc8cdb6ada1f58afe4bcbbe"
+                                     },
+                                     {
+                                         "path":  "rules/js-batch-dom-css.md",
+                                         "sha256":  "d7343005afc6a9c7e86368e22318f49b88492973e673f7b0ba2eb65697597143"
+                                     },
+                                     {
+                                         "path":  "rules/js-cache-function-results.md",
+                                         "sha256":  "bbef6423ad250227e8c73a5d9be6fd687707dd187ef50236fd5b6883a41d49b6"
+                                     },
+                                     {
+                                         "path":  "rules/js-cache-property-access.md",
+                                         "sha256":  "bbecc553a5b51caab2ddc90423a23d4c3245669439ff91e5204e48d62aaf1c5e"
+                                     },
+                                     {
+                                         "path":  "rules/js-cache-storage.md",
+                                         "sha256":  "7710a2ceb421d9b6d3828d7f38ec8a093af4a372c2b3b4ea2299d5df2518f770"
+                                     },
+                                     {
+                                         "path":  "rules/js-combine-iterations.md",
+                                         "sha256":  "c43a02979586d39f341fa6da7fc61bdd6a6917fa0c4f9c926091fa540cdf8022"
+                                     },
+                                     {
+                                         "path":  "rules/js-early-exit.md",
+                                         "sha256":  "b6b967ab80d2a5fc19851d9db9464cf8e4d0e57dccb607a474b8f7818015951d"
+                                     },
+                                     {
+                                         "path":  "rules/js-flatmap-filter.md",
+                                         "sha256":  "acfa11d07d7982ec565e4d8cfb410d477ffb73a7b41a532b938bcdb15c6ba51f"
+                                     },
+                                     {
+                                         "path":  "rules/js-hoist-regexp.md",
+                                         "sha256":  "86f4772c5d732c1f5f0656412713c6dc919360f0f3ea32bb1a45937eaaa5866e"
+                                     },
+                                     {
+                                         "path":  "rules/js-index-maps.md",
+                                         "sha256":  "752dd0803a7394a70e8d437b7eb025d1e085566e30ad733e75b9d2e04cc6c4d9"
+                                     },
+                                     {
+                                         "path":  "rules/js-length-check-first.md",
+                                         "sha256":  "9e57362d76e57ea6a2ff8cd137cf2a87b094aaff152eac61758305acb450a25c"
+                                     },
+                                     {
+                                         "path":  "rules/js-min-max-loop.md",
+                                         "sha256":  "f0054bcd1c3168ea8a6474df33c398bc0066eb1e813d59ae57fe36806ec900b6"
+                                     },
+                                     {
+                                         "path":  "rules/js-request-idle-callback.md",
+                                         "sha256":  "cefb8938f833f4747546d8c4fbe2c8c9938a5bfe27e087636048adef3fd8d719"
+                                     },
+                                     {
+                                         "path":  "rules/js-set-map-lookups.md",
+                                         "sha256":  "7143f8d7b71cdbc77a171fc801bdcf5e7a209e0f471ff17bb669acc986a6b064"
+                                     },
+                                     {
+                                         "path":  "rules/js-tosorted-immutable.md",
+                                         "sha256":  "2722514cac46990f3361fa35ee20d499a12da2539362e7871b670978664d158a"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-activity.md",
+                                         "sha256":  "e23dd494d955db99d376b5bf62a59ce7df9f14576d94094f2e53cfdc388453a0"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-animate-svg-wrapper.md",
+                                         "sha256":  "dca7f0251244489b3bbb6f5aaf7d70f280d91dc13de8ebd24403286f382ec0f4"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-conditional-render.md",
+                                         "sha256":  "6db58f36c8b080c35e91f6504281f85ea2dbd133030610c860e60181d6d9556a"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-content-visibility.md",
+                                         "sha256":  "45437e9594857ee1066ee061e946ed129731cf2e80f7e08f3cc621fa0554c567"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-hoist-jsx.md",
+                                         "sha256":  "c5fa7274f067ce3760107196a9416df333a7b4187254ef66c547fad7c45cd8d3"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-hydration-no-flicker.md",
+                                         "sha256":  "bfedc3a73f9687c7836acf915165fb845880453b6dfcf2fa6475dfec96b23027"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-hydration-suppress-warning.md",
+                                         "sha256":  "7ec1623c69e1a82b09b8b5a6028005e3eb8485741898447af1bcaed8ff8c0139"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-resource-hints.md",
+                                         "sha256":  "03ffeb3c26ae514bd24ea8683621d67a4b8432926ef7ee8d3296f82ae5c1b6ab"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-script-defer-async.md",
+                                         "sha256":  "28ef87814467a4758645889dcbb0ccb9a9e2387c4cebbd8cd4dfa33435e3e5d8"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-svg-precision.md",
+                                         "sha256":  "d57cdfaaaf660a28a9a5d6d10e97202a5eb13e1bc1675e024cb1ccbfa8bb2c32"
+                                     },
+                                     {
+                                         "path":  "rules/rendering-usetransition-loading.md",
+                                         "sha256":  "c2186f944b60630c67d42222f60ecb12b5a85395e7f31f193982f85983165720"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-defer-reads.md",
+                                         "sha256":  "bb98d9b7c7622641887df6407406a8c4f61510af9cc1bd275574ebee71bac8c8"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-dependencies.md",
+                                         "sha256":  "4f0a1806694c2391c0b5b79bb4dee89fdf2c02ee322acf308509c17542240446"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-derived-state-no-effect.md",
+                                         "sha256":  "1d50f7b1b86d24f987c557415590f79b06250e3ec1ca552da981e31a31f9edb9"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-derived-state.md",
+                                         "sha256":  "6a501211aa53036905df7531deaf25fdb8582697366fd071d4c2607828662dcb"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-functional-setstate.md",
+                                         "sha256":  "e46096d4c2c8fc89ab717bd7e56b8a884b612a88013a99b0c63e7dfc45d8cf25"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-lazy-state-init.md",
+                                         "sha256":  "b8b9e6b6001a1e94979776e744eb38a98432858dd2369995731c9a095ecd1d2e"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-memo-with-default-value.md",
+                                         "sha256":  "e69d637687b85967554df7d5fcfd83cc6fbb89237e9b80d10fbea7916244aa8b"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-memo.md",
+                                         "sha256":  "8cc2d062f22ae762f7f5f93baf2bfc374c917079131896559721f9dfbd402a7c"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-move-effect-to-event.md",
+                                         "sha256":  "00f5eaf8d4380c736c9177b67583f6b33f6b1f84addc252653cd6dea9551ad8d"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-no-inline-components.md",
+                                         "sha256":  "381ec0a4224c20c57545b6c44a65ffcaf0ed520fad97f3d0f8abcb7389de602f"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-simple-expression-in-memo.md",
+                                         "sha256":  "1e41299336d72ce42ffe0b4d397496e520eae13ea544b1412b83761555f4e631"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-split-combined-hooks.md",
+                                         "sha256":  "93543c1987b8bb639302a4598f1444bc9ed02d200ea7ad0e47e890ff3fa8cf21"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-transitions.md",
+                                         "sha256":  "b51a82fb6b223d13c585dfddaeb753c79d7da0524da87b708f61fd6939600ab6"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-use-deferred-value.md",
+                                         "sha256":  "2c393cc085e9ae6285ee9e71f4db86ddd0120a41b84c6a1d659f46e8c7684db5"
+                                     },
+                                     {
+                                         "path":  "rules/rerender-use-ref-transient-values.md",
+                                         "sha256":  "26ddded1d59cc04cddf7c1412ffb05315dd1f358510edcce3c3474d5acb63f32"
+                                     },
+                                     {
+                                         "path":  "rules/server-after-nonblocking.md",
+                                         "sha256":  "86c8670ad8e6285753645c2cebd164c56baf6f0fa74f914c0ca496d0a0156bcc"
+                                     },
+                                     {
+                                         "path":  "rules/server-auth-actions.md",
+                                         "sha256":  "a413aba63b73f7f82cf2482646c8c1598eaa75753c8f73f33055b8508de99fea"
+                                     },
+                                     {
+                                         "path":  "rules/server-cache-lru.md",
+                                         "sha256":  "19d844eebd1fb7ef5f43f4d1e85baf1fc0160547400ab838ba4d40226eb891b9"
+                                     },
+                                     {
+                                         "path":  "rules/server-cache-react.md",
+                                         "sha256":  "7448470adc9f0066455f9cf45b658f5c3f1884a7990c89f880fbb272a4028b05"
+                                     },
+                                     {
+                                         "path":  "rules/server-dedup-props.md",
+                                         "sha256":  "5c4d4c9930812d3ab98e28ad97ca2f5af778effbf9b50b6a7558c18abf2e98b5"
+                                     },
+                                     {
+                                         "path":  "rules/server-hoist-static-io.md",
+                                         "sha256":  "92665f53454156ccc59f115455cf3cbf9c3cbd88dcb5b84b14037f200ab990c5"
+                                     },
+                                     {
+                                         "path":  "rules/server-no-shared-module-state.md",
+                                         "sha256":  "9c2b6ee5b418c35f8b0ce466d0d1352e25c85e6b7ebbe4495b81791f10f915dc"
+                                     },
+                                     {
+                                         "path":  "rules/server-parallel-fetching.md",
+                                         "sha256":  "f8f275fea2378e7707a50f2df4af6a2f65fe1fa84edb3ffc4720af805ebabe42"
+                                     },
+                                     {
+                                         "path":  "rules/server-parallel-nested-fetching.md",
+                                         "sha256":  "1e59763bbec3d6d74b8457c3d82f1a319b483fe5497b665652d8cba69fdda002"
+                                     },
+                                     {
+                                         "path":  "rules/server-serialization.md",
+                                         "sha256":  "567ce457f775d4e03e2a6ef7bf67213fee35c6c3b9d1bcfa783007d1df414d4b"
+                                     },
+                                     {
+                                         "path":  "rules/_sections.md",
+                                         "sha256":  "f352f75b84d6c6ee644c3fade99eaf2186bdfdc1d9e5b598bae436f32b3bce4f"
+                                     },
+                                     {
+                                         "path":  "rules/_template.md",
+                                         "sha256":  "21231af1b4c70cfe6f07625830d982934295c735f91fddd9741b3a8e3688d735"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "roast-me",
+                       "repository":  "https://github.com/ericrisco/rsc-harness",
+                       "commit":  null,
+                       "source_path":  "skills/roast-me",
+                       "method":  "npx skills add",
+                       "cli_computed_hash":  "6981b6e560f056233e33a35cb73d8e2aa4d931b8d85a485ea40906023a3c8eea",
+                       "local_changes":  [
+
+                                         ],
+                       "locations":  [
+                                         ".claude/skills/roast-me",
+                                         "agents/auditoria-roast/roast-prompts"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "b132561a8bddf994741f4b394d1fc117e292f16d3661687a02e279935f70f5d0"
+                                     },
+                                     {
+                                         "path":  "evals/cases.yaml",
+                                         "sha256":  "01ca507469904e69cddd7e859604359e11ecb16c3488fbb83379331ecb00e566"
+                                     },
+                                     {
+                                         "path":  "evals/README.md",
+                                         "sha256":  "9b21d71da9dd9494c2c4d44cfb8802e18b13ff9972f42ef604617e8b2a48adef"
+                                     },
+                                     {
+                                         "path":  "prompts/analyze.md",
+                                         "sha256":  "bd46f1aa490746c120889c65d77e377d21a9f280bd64c3b1b15641fdc2bd2c07"
+                                     },
+                                     {
+                                         "path":  "prompts/compute.md",
+                                         "sha256":  "6973029004bcbf3c6651b67bd46e34c97b0c9a0c2e476517077e8866dceff39e"
+                                     },
+                                     {
+                                         "path":  "prompts/roast.md",
+                                         "sha256":  "c504031890725689ff0a2c3e960baeaa25932872b1d415ef4b0171caf55aca79"
+                                     },
+                                     {
+                                         "path":  "tools/extract_prompts.py",
+                                         "sha256":  "141bb9da8e7ddd7d0f5182724193bcdc2748c35b85f90c7d1d6c3b4ddea800a8"
+                                     },
+                                     {
+                                         "path":  "tools/adapters/base.py",
+                                         "sha256":  "5dbd6dda419f3eccddc698e40be2df5d15a5ed0d6cf296b87fd0717f2ad02c59"
+                                     },
+                                     {
+                                         "path":  "tools/adapters/claude.py",
+                                         "sha256":  "d2c99ef1691998e39a3ac292eee482af3fa7b28c198b2ff65a17739ff1d01002"
+                                     },
+                                     {
+                                         "path":  "tools/adapters/codex.py",
+                                         "sha256":  "2ebc0951583818b24956da32af60ed3916d060e8541598c23f26d0851c06971c"
+                                     },
+                                     {
+                                         "path":  "tools/adapters/gemini.py",
+                                         "sha256":  "2807109dee41060683b805db71c6869ac58ff38f3ebd62ef3f1e874ad1bbec09"
+                                     },
+                                     {
+                                         "path":  "tools/adapters/registry.py",
+                                         "sha256":  "9ccad71a1d1b243aba6b54b3517dc0d5e5faf6c8f51e5572b2339f21521568ed"
+                                     },
+                                     {
+                                         "path":  "tools/adapters/__init__.py",
+                                         "sha256":  "c4e1fb5c3aac7965387c58b3550be306408072bd279191befa4ea9f3b603aba8"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "roast-idea",
+                       "repository":  "https://github.com/mfranzon/roast-me",
+                       "commit":  "556dd6408375607da6eab72334514e0e1294ca56",
+                       "source_path":  ".claude/skills/roast-me",
+                       "method":  "git clone",
+                       "cli_computed_hash":  null,
+                       "local_changes":  [
+                                             "Moved upstream skill files to installation root",
+                                             "Renamed frontmatter name to roast-idea and disambiguated generic roast me description trigger"
+                                         ],
+                       "locations":  [
+                                         ".claude/skills/roast-idea",
+                                         "agents/auditoria-roast/roast-idea"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  ".gitignore",
+                                         "sha256":  "5b4aaef96c6413961d00ff11b454ed9ad85ea74249cc3c4133a4091582e0b1f6"
+                                     },
+                                     {
+                                         "path":  "README.md",
+                                         "sha256":  "84068f2f5baef17630aa77be802a5c643e0a0008bdca5d7412a3d7bf86cd62cf"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "ed8a8eaffd73cb26b1aab808eaa0fe722a7c006ca420e00ed7ed49881f525c55"
+                                     },
+                                     {
+                                         "path":  "references/attack-lines.md",
+                                         "sha256":  "a92eb5a0e61fd3271b926292cd05be082152b1335b965f6832e11d951fb2fef1"
+                                     },
+                                     {
+                                         "path":  "references/pitch-template.md",
+                                         "sha256":  "2385ac0fb84735b7d24805264711d1cdccf2134579706eae5ecabc3cbdfb6854"
+                                     },
+                                     {
+                                         "path":  "references/plan-template.md",
+                                         "sha256":  "0fda4c061275ec2ab5234ad218c9ddc2cdc6c96454b0aa2d576464b325c6f84b"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "roast-repo",
+                       "repository":  "https://github.com/janderswag/roast-skill",
+                       "commit":  "4e7eb51b434e4f845831ecb63c64d9f5ef1ed668",
+                       "source_path":  ".",
+                       "method":  "git clone",
+                       "cli_computed_hash":  null,
+                       "local_changes":  [
+
+                                         ],
+                       "locations":  [
+                                         ".claude/skills/roast-repo",
+                                         "agents/auditoria-roast/roast-repo"
+                                     ],
+                       "files":  [
+                                     {
+                                         "path":  ".gitignore",
+                                         "sha256":  "e52a2456dcc900311651ad6ccb2c50ca65bf27988356867ee666e085fa026dc8"
+                                     },
+                                     {
+                                         "path":  "CHANGELOG.md",
+                                         "sha256":  "dc44e2ebdca8487d8e55e595bffaa1d844fdae2df4b9ec4d9137f5280ac855d8"
+                                     },
+                                     {
+                                         "path":  "LICENSE",
+                                         "sha256":  "4c3fd9fa3046de63f15e6a23797728dd365f8ed6d56ebdbfa172a3f2e8f0128a"
+                                     },
+                                     {
+                                         "path":  "README.md",
+                                         "sha256":  "da8f9b2114bdde216bc5dedb1fe33bc2c3156acb4d18cf2630e4e23ca9e9ad9d"
+                                     },
+                                     {
+                                         "path":  "SKILL.md",
+                                         "sha256":  "54b57c129ef4243c2ea3b8e667d6d72c754e829f60312878810f38394ccb58e7"
+                                     },
+                                     {
+                                         "path":  "examples/roast-ai-partner-site.md",
+                                         "sha256":  "eaa3fcad7e9c4a8c4933f008c4c14791a78cda96894971b70179fe3e802634b5"
+                                     },
+                                     {
+                                         "path":  "examples/roast-r-and-r.md",
+                                         "sha256":  "a6d71ca11371a51ba874b09c6a75a1a817d98335b877e55e72e77be1ec4af483"
+                                     },
+                                     {
+                                         "path":  "examples/roast-remotion.md",
+                                         "sha256":  "66e949b7bdfcde6ea43f9a7545c43b84de824b73f35df7a348f75093faf6e594"
+                                     },
+                                     {
+                                         "path":  "modules/00-roast.md",
+                                         "sha256":  "b06d7991c951230c930f5022310174206985707049a3f671d9439a053e570d33"
+                                     },
+                                     {
+                                         "path":  "modules/01-security.md",
+                                         "sha256":  "438f2c5557afff853dd946ba6b65773f4b3115f8cea07d4b8803a54d7a54e495"
+                                     },
+                                     {
+                                         "path":  "modules/02-architecture.md",
+                                         "sha256":  "351c2488afc28a35b3010ddcf976d11c3c900dcb239542072ca437ccbc034fc5"
+                                     },
+                                     {
+                                         "path":  "modules/03-customer-flow.md",
+                                         "sha256":  "5e3e20706121d2cde9caa63a38a1b02d1321a4f04c91ab943e948635dfb97d71"
+                                     },
+                                     {
+                                         "path":  "modules/04-growth.md",
+                                         "sha256":  "4ebdc633ea0fc314e4a1298a8048c79129c9ae4e5b28de7a90981cb94f9dbd3f"
+                                     },
+                                     {
+                                         "path":  "modules/05-founder-briefing.md",
+                                         "sha256":  "b3791da7f4570ee1e96cb524ace04527d6ddedde1d2e7db17e44408d68412ae8"
+                                     },
+                                     {
+                                         "path":  "runner/.gitignore",
+                                         "sha256":  "414ecf1c8f80cb2ac1abc3bc3f1b3bb51d8ab75114387ea0ea150207a4f8ae01"
+                                     },
+                                     {
+                                         "path":  "runner/package-lock.json",
+                                         "sha256":  "d806294e7553fe4c9b042f527b3ec92e21acb03e3aae400cd2b286a5167d71d9"
+                                     },
+                                     {
+                                         "path":  "runner/package.json",
+                                         "sha256":  "92ec3b7a183cab317e1c6dade4ca664628e505143ff1677788fabd3c2049bf49"
+                                     },
+                                     {
+                                         "path":  "runner/tsconfig.json",
+                                         "sha256":  "4b34607a17817b966f76c22ddd0b2fb61eb1060188575dd4cb1a60d011a79793"
+                                     },
+                                     {
+                                         "path":  "runner/tsup.config.ts",
+                                         "sha256":  "9e9bac0f9862a75345a8f5f77fbb87bb9b5bad60f6b76c80f71cb0bd061f6aad"
+                                     },
+                                     {
+                                         "path":  "runner/vitest.config.ts",
+                                         "sha256":  "66040e4084a2ada57116ff05d62c5e6dd177a0cb89178c20b5e46bf055184db6"
+                                     },
+                                     {
+                                         "path":  "runner/dist/axe.min.js",
+                                         "sha256":  "2c696c4002ee516100898545e933c14015170bf4a6569b17ed58be4a713e8a98"
+                                     },
+                                     {
+                                         "path":  "runner/dist/cli.cjs",
+                                         "sha256":  "cf46357d4254fc2fff909dafb9fbcd9866bb879b8186e19b4d84b852b4b9ed19"
+                                     },
+                                     {
+                                         "path":  "runner/fixtures/known-bad/package.json",
+                                         "sha256":  "f8689a4385bb2ef0edd4fec1178a69c897211db75edb037489f3b3a4e33e453c"
+                                     },
+                                     {
+                                         "path":  "runner/fixtures/known-bad/src/danger.js",
+                                         "sha256":  "1028423a6315bec51ca715f97562e2d23f290e598b242b8d9ae0079919d582ee"
+                                     },
+                                     {
+                                         "path":  "runner/fixtures/parsers/gitleaks-sample.json",
+                                         "sha256":  "91dc798be9277a71a32c60c5174bdd19b5c80e15802c47992020cce36aad7cea"
+                                     },
+                                     {
+                                         "path":  "runner/fixtures/parsers/psi-mixed.json",
+                                         "sha256":  "1a536075c9d6f28bbf38e3d9335c3d26c22bd8ca29c836f4e16bc13e104f6b6b"
+                                     },
+                                     {
+                                         "path":  "runner/fixtures/parsers/semgrep-sample.json",
+                                         "sha256":  "e2856e951943374555ed01a580f519f9497ce3a301e30ee5c8d9a679499e7722"
+                                     },
+                                     {
+                                         "path":  "runner/src/claim.ts",
+                                         "sha256":  "995da819c8cc7fb3a7efc806ed34a07819552deef76cfc64a39e8720df3217bc"
+                                     },
+                                     {
+                                         "path":  "runner/src/cli.ts",
+                                         "sha256":  "6c3c3f96054d8fc66d11fc8e9f50d31c52bba8d5909959ac2e58343ad755b22a"
+                                     },
+                                     {
+                                         "path":  "runner/src/cta.ts",
+                                         "sha256":  "68bac69791ab004ddd71a26ca66da2e1e28f17d12f141861927aee1b35f5fe5e"
+                                     },
+                                     {
+                                         "path":  "runner/src/delta.ts",
+                                         "sha256":  "295c1e659a2ca105483e4f68ed4dfc7582c11c76688e6ec79edd3b52e3c6e3cd"
+                                     },
+                                     {
+                                         "path":  "runner/src/enrichment.ts",
+                                         "sha256":  "b7e721196321a55c93bbdfc012cd537c6826f6618c0b2a0a79b973856c600709"
+                                     },
+                                     {
+                                         "path":  "runner/src/export.ts",
+                                         "sha256":  "474bd34d554a18e3222e278f7433b8fdc049850d272b37c42a531e523b5b326b"
+                                     },
+                                     {
+                                         "path":  "runner/src/git.ts",
+                                         "sha256":  "efef5b9811f6132e54c4bc02a478f42bd6c3c306e5df3a90aba60514f58a292b"
+                                     },
+                                     {
+                                         "path":  "runner/src/live-install.ts",
+                                         "sha256":  "be169f49569fb17f9e233b6d1e3041a3078858d5825bc5f3663051f26bd09a02"
+                                     },
+                                     {
+                                         "path":  "runner/src/orchestrator.ts",
+                                         "sha256":  "1a8ec2cc57830f080cccc6c3ec55ef9eb8f2be7e6ee444740f0f338f5426b109"
+                                     },
+                                     {
+                                         "path":  "runner/src/playwright-types.ts",
+                                         "sha256":  "5f79334a27ad7cf824be64afe9a99d4606c660c2a115095b1c40172f285be216"
+                                     },
+                                     {
+                                         "path":  "runner/src/preview.ts",
+                                         "sha256":  "a923832348f8e7ffc5f73ef00f399dd45e9ebba8d8018971b10a70df2b680e6c"
+                                     },
+                                     {
+                                         "path":  "runner/src/qr.d.ts",
+                                         "sha256":  "f425ba6f5314f60b988a94904a4f6c567eb7059fc7826fbd360568070ce75922"
+                                     },
+                                     {
+                                         "path":  "runner/src/redact.ts",
+                                         "sha256":  "fa75ab1f158ff723923763864178384e86ee9819223cf5d05a06170ab004485e"
+                                     },
+                                     {
+                                         "path":  "runner/src/registry.ts",
+                                         "sha256":  "b464ffe2db3d0b78c5a7bb95ed77a73ee8865f957c36c0fbb7b253d39e544925"
+                                     },
+                                     {
+                                         "path":  "runner/src/shell.ts",
+                                         "sha256":  "a1fbf37598760f5b7f8ee3b627d0791985c95a687d394791fad4399741fdd6f1"
+                                     },
+                                     {
+                                         "path":  "runner/src/signature.ts",
+                                         "sha256":  "5d900a700323595a9b637d3b1dcb1225bc3bf27801c2a4e7475d96702c8179b3"
+                                     },
+                                     {
+                                         "path":  "runner/src/state.ts",
+                                         "sha256":  "a7ac3b45c32511ad2a57ff2c380c773042d4b2a368533015bfa06904b5c847d0"
+                                     },
+                                     {
+                                         "path":  "runner/src/trust-boundaries.ts",
+                                         "sha256":  "7e55656d24d149f7c9221db6786655b020b755360c9af26f98ff83ec9cefac9a"
+                                     },
+                                     {
+                                         "path":  "runner/src/types.ts",
+                                         "sha256":  "dc4ebc5ad1ffa3212e92c77478ebc4610c7a99a60839ca219483056c9e8953eb"
+                                     },
+                                     {
+                                         "path":  "runner/src/verifier.ts",
+                                         "sha256":  "2e21b0b582d7df49b2a2c9357cb1f42e9caf0d27fb7c6ddd759aa755b7d10323"
+                                     },
+                                     {
+                                         "path":  "runner/src/verifiers/dep-audit.ts",
+                                         "sha256":  "d20f17873b653d394bf996ef963398570ae2e48605d3f0f46b4d8c07b3bf4806"
+                                     },
+                                     {
+                                         "path":  "runner/src/verifiers/gitleaks.ts",
+                                         "sha256":  "3aea278c07c08271448aa28a26561a8523e3f3642b6f0ac5f4f17109fafa1ba1"
+                                     },
+                                     {
+                                         "path":  "runner/src/verifiers/live-browser.ts",
+                                         "sha256":  "c8810c614bde4856c7fa15750646aee27d0b5bf28f4c27eb19ed76ce7de5115d"
+                                     },
+                                     {
+                                         "path":  "runner/src/verifiers/live-lighthouse.ts",
+                                         "sha256":  "0728cedf1fd7b7f229bde40426a7d0ea89744bea9a4ed6539ab2b8616dd4ecb6"
+                                     },
+                                     {
+                                         "path":  "runner/src/verifiers/semgrep.ts",
+                                         "sha256":  "d6ec1ab08dd113f8473d95014a744f820a99bfa415a4e2d03e2c75dada58d48e"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/claim.test.ts",
+                                         "sha256":  "281ff4d22ea76892c57f820b98e2b525abbd2a34350746a3a27acd6503279f9a"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/cli.test.ts",
+                                         "sha256":  "7a0a501df67b541bb6269f16fdadc8d582c979d0f38c86b09e95a1ac53f451a6"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/delta.test.ts",
+                                         "sha256":  "21c2eb6ed7c03f318bc8d71248db2154f6fe5fa3b753cd4bf8cdb8fc48895587"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/dep-audit.test.ts",
+                                         "sha256":  "3274f62648245fb1bcd1a79bfe62522253edd8b47934a46b0876feab6cc64292"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/enrichment.test.ts",
+                                         "sha256":  "b234b8afe6ab9f864ad1cd10cd401b2e5e6bbaf9cbe4a7eeb0ea36cf88bfa43d"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/export.test.ts",
+                                         "sha256":  "a68eb7f7ce7d2e18fe526b7d48b059a749f4b91e27435e0cd4984dbb160c6a07"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/git.test.ts",
+                                         "sha256":  "d3e01116c61424d0280ea2208c2ca75fe5a50a1eb2a3893d3151d634c445cdfa"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/gitleaks-parser.test.ts",
+                                         "sha256":  "0abeb543385eb86193c5eb428ef2c804029cf1148293713f23603bb67af3a6ec"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/integration.test.ts",
+                                         "sha256":  "9d77f5645bf885f3bd133a3fcddacfb25dd6c64a282ab841c7097f8da72a8d9f"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/live-install.test.ts",
+                                         "sha256":  "cc8ecc32075193ec28db45311d92ae8e45d764de35b168c6261effba46f40d1f"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/live-lighthouse-parser.test.ts",
+                                         "sha256":  "480ec01b922d2969478c9edfd49cf11b1868bafa89b2233de4bf33b993fbb244"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/orchestrator.test.ts",
+                                         "sha256":  "64f542051e16105a5f47c5ed2cd7749dddda86236e8da27189806e3d741045e4"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/redact.test.ts",
+                                         "sha256":  "ffa944ad3835a21dbc981f56d8f73b4f255bceadbe1fd0d8095d6b4d394d45c5"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/semgrep-parser.test.ts",
+                                         "sha256":  "edd6f07ddc81da5fd2ad23bb6fea9f6689e7050d8bf0dd3029773126c5a298e0"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/shell.test.ts",
+                                         "sha256":  "b9ad65d30c07a4d27b9ca51c74a2f915179624665d574511acf9231ba2b378dc"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/signature.test.ts",
+                                         "sha256":  "a01c6b6e8887d4d9922928ed8f70e8fe4ce2d8dbf7a473e1dadfcf31a8ac8269"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/state.test.ts",
+                                         "sha256":  "0d78ccbee5688c9130d2701c17a3aaaffda2b69631b30681ea26da182925b547"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/trust-boundaries.test.ts",
+                                         "sha256":  "9bca9de22b80e98c37a8c8991c3462474d084a9c64f9d893d1bc50d0314c3afd"
+                                     },
+                                     {
+                                         "path":  "runner/src/__tests__/types.test.ts",
+                                         "sha256":  "65378dcf3e94e7646ea5567da325f128a41e4a18565a1ef22d404fce4b1126a9"
+                                     }
+                                 ]
+                   }
+               ]
+}

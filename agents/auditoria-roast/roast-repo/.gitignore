@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Local config / secrets
+.env
+.env.local
+.env.*.local
+
+# Skill local cache (per-user audit history, kept off-repo)
+.roast-cache/
+
+# v0.7 per-repo state directory (last-audit.json + triage.json). The
+# integration test fixtures auto-create one when the runner is exercised
+# end-to-end; this keeps it out of commits everywhere it appears.
+.roast/
+
+# Test scratch
+scratch/

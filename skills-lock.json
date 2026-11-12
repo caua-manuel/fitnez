@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "skills": {
+    "roast-me": {
+      "source": "ericrisco/rsc-harness",
+      "sourceType": "github",
+      "skillPath": "skills/roast-me/SKILL.md",
+      "computedHash": "6981b6e560f056233e33a35cb73d8e2aa4d931b8d85a485ea40906023a3c8eea"
+    }
+  }
+}

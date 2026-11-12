@@ -1,0 +1,7 @@
+# Ativa o mecanismo de subagentes disponível no Codex CLI instalado.
+# Modelo e esforço de raciocínio continuam herdados do agente principal.
+[features]
+multi_agent_v2 = true
+
+[agents]
+enabled = true

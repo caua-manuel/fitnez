@@ -1,0 +1,253 @@
+{
+ "cafe": [
+  {
+   "kcal": 495,
+   "p": 27,
+   "c": 71,
+   "g": 12,
+   "key": "A",
+   "name": "Ovos, pão e leite",
+   "items": [
+    "Leite desnatado 240 ml",
+    "Achocolatado 1 colher de sopa (15 g)",
+    "2 ovos, cozidos ou mexidos com pouco óleo",
+    "Pão de forma, 2 fatias",
+    "1 banana"
+   ],
+   "rec": ""
+  },
+  {
+   "kcal": 501,
+   "p": 31,
+   "c": 58,
+   "g": 17,
+   "key": "B",
+   "name": "Pão com ovo e queijo",
+   "items": [
+    "Pão de forma, 2 fatias",
+    "2 ovos mexidos",
+    "Queijo muçarela, 1 fatia",
+    "Leite desnatado 240 ml",
+    "1 banana"
+   ],
+   "rec": "pao_ovo"
+  },
+  {
+   "kcal": 456,
+   "p": 34,
+   "c": 61,
+   "g": 9,
+   "key": "C",
+   "name": "Mingau de aveia com whey",
+   "items": [
+    "Aveia em flocos, 3 colheres de sopa (40 g)",
+    "Leite desnatado 250 ml",
+    "1 banana",
+    "Whey, metade da dose (15 g)",
+    "1 ovo cozido"
+   ],
+   "rec": "mingau"
+  }
+ ],
+ "almoco": [
+  {
+   "kcal": 759,
+   "p": 55,
+   "c": 97,
+   "g": 16,
+   "key": "A",
+   "name": "Arroz, feijão e frango",
+   "items": [
+    "Arroz 200 g (2 escumadeiras)",
+    "Feijão, 1 concha cheia (120 g)",
+    "Frango grelhado 130 g (1 filé médio)",
+    "Vegetal A à vontade (alface, tomate, brócolis)",
+    "Azeite, 1 colher de sobremesa",
+    "1 fruta (100 g)",
+    "Chocolate ao leite 10 g (2 quadradinhos)"
+   ],
+   "rec": "frango_semana"
+  },
+  {
+   "kcal": 751,
+   "p": 58,
+   "c": 92,
+   "g": 16,
+   "key": "B",
+   "name": "Macarrão com carne moída",
+   "items": [
+    "Macarrão cozido 230 g (2,3 escumadeiras)",
+    "Molho de tomate, 1 concha",
+    "Patinho moído refogado 120 g",
+    "Alface e tomate à vontade",
+    "Azeite, 1 colher de chá",
+    "1 fruta (100 g)"
+   ],
+   "rec": "macarrao"
+  },
+  {
+   "kcal": 747,
+   "p": 55,
+   "c": 96,
+   "g": 15,
+   "key": "C",
+   "name": "Arroz, feijão, bife e batata-doce",
+   "items": [
+    "Arroz 150 g (1,5 escumadeira)",
+    "Feijão, 1 concha cheia (120 g)",
+    "Bife de patinho grelhado 120 g",
+    "Batata-doce cozida 100 g",
+    "Vegetal A à vontade",
+    "Azeite, 1 colher de chá",
+    "1 fruta (100 g)"
+   ],
+   "rec": "bife"
+  }
+ ],
+ "lanche": [
+  {
+   "kcal": 384,
+   "p": 19,
+   "c": 50,
+   "g": 13,
+   "key": "A",
+   "name": "Panqueca de banana e aveia",
+   "items": [
+    "1 banana amassada",
+    "Aveia, 2 colheres de sopa (25 g)",
+    "2 ovos",
+    "Doce de leite, 1 colher de sobremesa (20 g)"
+   ],
+   "rec": "panqueca"
+  },
+  {
+   "kcal": 334,
+   "p": 20,
+   "c": 47,
+   "g": 9,
+   "key": "B",
+   "name": "Sanduíche de peru e queijo",
+   "items": [
+    "Pão de forma, 2 fatias",
+    "Peito de peru 60 g",
+    "Queijo muçarela, 1 fatia",
+    "1 banana"
+   ],
+   "rec": ""
+  },
+  {
+   "kcal": 355,
+   "p": 23,
+   "c": 50,
+   "g": 9,
+   "key": "C",
+   "name": "Iogurte com aveia e whey",
+   "items": [
+    "Iogurte natural 170 g",
+    "Aveia, 2 colheres de sopa (30 g)",
+    "1 banana",
+    "Whey, metade da dose (15 g)"
+   ],
+   "rec": ""
+  }
+ ],
+ "pos": [
+  {
+   "kcal": 251,
+   "p": 30,
+   "c": 31,
+   "g": 2,
+   "key": "A",
+   "name": "Shake de banana",
+   "items": [
+    "Whey 30 g",
+    "1 banana",
+    "Leite desnatado 150 ml"
+   ],
+   "rec": "shake"
+  },
+  {
+   "kcal": 283,
+   "p": 31,
+   "c": 39,
+   "g": 2,
+   "key": "B",
+   "name": "Smoothie de morango",
+   "items": [
+    "Whey 30 g",
+    "Morango congelado, cerca de 10 unidades",
+    "1 banana congelada",
+    "Leite desnatado 150 ml"
+   ],
+   "rec": "shake"
+  },
+  {
+   "kcal": 330,
+   "p": 33,
+   "c": 44,
+   "g": 3,
+   "key": "C",
+   "name": "Mingau de banana com whey",
+   "items": [
+    "1 banana picada",
+    "Aveia, 1,5 colher de sopa (20 g)",
+    "Leite desnatado 150 ml",
+    "Whey 30 g (depois de desligar o fogo)"
+   ],
+   "rec": "mingau"
+  }
+ ],
+ "jantar": [
+  {
+   "kcal": 574,
+   "p": 48,
+   "c": 67,
+   "g": 12,
+   "key": "A",
+   "name": "Arroz, frango e legumes",
+   "items": [
+    "Arroz 150 g (1,5 escumadeira)",
+    "Frango 130 g",
+    "Vegetal A à vontade",
+    "Vegetal B, 3 colheres de sopa (cenoura ou abóbora)",
+    "Azeite, 1 colher de sobremesa",
+    "1 fruta (100 g)"
+   ],
+   "rec": "frango_semana"
+  },
+  {
+   "kcal": 583,
+   "p": 63,
+   "c": 45,
+   "g": 16,
+   "key": "B",
+   "name": "Sanduíche Rap10 de frango",
+   "items": [
+    "1 Rap10",
+    "Frango desfiado 150 g",
+    "Alface e tomate à vontade",
+    "Queijo muçarela, 1 fatia (20 g)",
+    "1 iogurte natural",
+    "1 fruta (100 g)"
+   ],
+   "rec": "rap10"
+  },
+  {
+   "kcal": 575,
+   "p": 42,
+   "c": 44,
+   "g": 26,
+   "key": "C",
+   "name": "Omelete com peru e pão",
+   "items": [
+    "3 ovos",
+    "Queijo muçarela 30 g",
+    "Peito de peru 60 g",
+    "Pão de forma, 2 fatias",
+    "Tomate ou alho-poró",
+    "1 fruta (100 g)"
+   ],
+   "rec": "omelete"
+  }
+ ]
+}
