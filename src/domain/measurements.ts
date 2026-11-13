@@ -2,8 +2,8 @@ import { parseNumber } from './workout';
 import type { DayIso } from './calendar';
 
 // Validação pura do registro de medidas (Evolução). Sem relógio nem acesso a dados: a data de "hoje" entra como argumento.
-// Chaves legadas de history.measurements[data]: p peso (kg), c cintura, t coxa, b braço (cm).
-export type MeasureField = 'p' | 'c' | 't' | 'b';
+// Chaves legadas de history.measurements[data]: p peso (kg), c cintura, t coxa, b braço, q quadril (cm).
+export type MeasureField = 'p' | 'c' | 't' | 'b' | 'q';
 export interface MeasureLimit { label: string; unit: 'kg' | 'cm'; min: number; max: number }
 
 export const MEASURE_LIMITS: Record<MeasureField, MeasureLimit> = {
@@ -11,8 +11,9 @@ export const MEASURE_LIMITS: Record<MeasureField, MeasureLimit> = {
  c: { label: 'Cintura', unit: 'cm', min: 10, max: 250 },
  t: { label: 'Coxa', unit: 'cm', min: 10, max: 250 },
  b: { label: 'Braço', unit: 'cm', min: 10, max: 250 },
+ q: { label: 'Quadril', unit: 'cm', min: 10, max: 250 },
 };
-const ORDER: MeasureField[] = ['p', 'c', 't', 'b'];
+const ORDER: MeasureField[] = ['p', 'c', 't', 'b', 'q'];
 
 export interface MeasurementInput { date: string; today: DayIso; values: Partial<Record<MeasureField, string>> }
 export interface MeasurementValue { date: DayIso; values: Partial<Record<MeasureField, string>> }
@@ -29,7 +30,7 @@ const isRealDate = (iso: string) => {
 /**
  * Valida data (não pode ser futura) e medidas preenchidas (vírgula ou ponto decimal, dentro de limites plausíveis).
  * Campos vazios são ignorados; sem nenhum preenchido, o erro fica na chave "form". Os valores válidos saem como texto aparado
- * (ex.: "78,2"), o formato que o histórico já guarda. Erros por campo usam as chaves p, c, t, b e date.
+ * (ex.: "78,2"), o formato que o histórico já guarda. Erros por campo usam as chaves p, c, t, b, q e date.
  */
 export function validateMeasurement(input: MeasurementInput): MeasurementResult {
  const errors: Record<string, string> = {};

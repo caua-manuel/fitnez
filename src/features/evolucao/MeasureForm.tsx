@@ -7,7 +7,7 @@ import { validateMeasurement, MEASURE_LIMITS } from '../../domain/measurements';
 import type { MeasureField } from '../../domain/measurements';
 
 const FIELDS: Array<{ key: MeasureField; id: string }> = [
- { key: 'p', id: 'peso' }, { key: 'c', id: 'cintura' }, { key: 't', id: 'coxa' }, { key: 'b', id: 'braco' },
+ { key: 'p', id: 'peso' }, { key: 'c', id: 'cintura' }, { key: 'q', id: 'quadril' }, { key: 't', id: 'coxa' }, { key: 'b', id: 'braco' },
 ];
 const br = (iso: string) => iso.split('-').reverse().join('/');
 
@@ -40,7 +40,7 @@ export function MeasureForm({ today }: { today: string }) {
  return <section className="card ev-card ev-measure" aria-labelledby="ev-form-title">
   <button type="button" className="ev-row-btn" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setDone(''); setOpen(true); }}>
    <Icon name="editar" size={24} weight={1.9} />
-   <span className="ev-row-text"><strong id="ev-form-title">Registrar medidas</strong><small>Peso, cintura, coxa e braço</small></span>
+   <span className="ev-row-text"><strong id="ev-form-title">Registrar medidas</strong><small>Peso, cintura, quadril, coxa e braço</small></span>
    <Icon name="chevron" size={22} />
   </button>
   <p className="ev-done" role="status">{done ? <><Icon name="marca" size={18} />{done}</> : null}</p>

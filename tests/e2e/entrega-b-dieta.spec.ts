@@ -7,22 +7,22 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 const today = () => iso(new Date());
 const monday = (day: string) => { const [y, m, d] = day.split('-').map(Number); return iso(new Date(y, m - 1, d - ((new Date(y, m - 1, d).getDay() + 6) % 7))); };
 
-function backup() {
+function backup(profile?: Record<string, unknown>) {
  const plan = json('plan.json');
  const state = {
   v: 3, revision: 0,
   catalog: { plan: plan.plan, diet: json('diet.json'), recipes: json('recipes.json'), revision: 0 },
-  settings: { start: monday(today()), sched: plan.sched, theme: 'auto' },
+  settings: { start: monday(today()), sched: plan.sched, theme: 'auto', ...(profile ? { profile } : {}) },
   history: { days: {}, measurements: {} }, snapshots: {}, recovery: {},
   meta: { initializedAt: 1, updatedAt: 1, migrationCompleted: true, migrationStatus: 'none', migrationWarnings: [], lastBackupGeneratedAt: null, lastBackupConfirmedAt: null },
  };
  return { v: 3, app: 'treino12', exportedAt: Date.now(), state };
 }
-async function seed(page: Page) {
+async function seed(page: Page, profile?: Record<string, unknown>) {
  await page.goto('#perfil'); await page.waitForLoadState('networkidle');
  await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
  await page.getByRole('button', { name: /Backup e restauração/ }).click();
- await page.locator('#backup-file').setInputFiles({ name: 'fixture-SINTETICO.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup())) });
+ await page.locator('#backup-file').setInputFiles({ name: 'fixture-SINTETICO.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup(profile))) });
  await page.getByRole('button', { name: 'Confirmar importação', exact: true }).click();
  await expect(page.getByText('Backup importado.', { exact: false })).toBeVisible();
  await page.goto('#dieta');
@@ -220,4 +220,18 @@ test('Dieta: textos destrutivos legíveis (contraste AA) nos dois temas', async 
   const b = await ratio(btn); const m1 = lum(b.fg), m2 = lum(b.bg);
   expect((Math.max(m1, m2) + 0.05) / (Math.min(m1, m2) + 0.05), scheme + ' confirmar').toBeGreaterThanOrEqual(4.5);
  }
+});
+
+test('Dieta: meta de proteína acompanha o peso do perfil (80 kg → 192 g; sem perfil → 185 g)', async ({ page }) => {
+ await seed(page);
+ await expect(page.getByText('0 g / 185 g').first()).toBeVisible();
+ await seed(page, { name: 'Perfil sintético', goal: 'recomposicao', weightKg: 80 });
+ await expect(page.getByText('0 g / 192 g')).toBeVisible();
+});
+
+test('Dieta: dia futuro não quebra a tela', async ({ page }) => {
+ await seed(page);
+ await page.goto(`#dieta?dia=${tomorrow()}`);
+ await expect(page.getByRole('list', { name: 'Refeições' })).toBeVisible();
+ expect(await noHScroll(page)).toBe(true);
 });

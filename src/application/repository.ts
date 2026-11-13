@@ -10,7 +10,7 @@ export interface DayRecord extends Payload { log?: Record<string, Payload[]>; do
 export interface StateV3 extends Payload {
  v: 3; revision: number;
  catalog: { plan: Plan; diet: Payload; recipes: Payload[]; revision: number; [key: string]: any };
- settings: { start: string; sched: Payload[]; theme: 'auto'|'light'|'dark'; profile?: { name: string; goal: string }; notifications?: { enabled: boolean; restEnd: boolean }; [key: string]: any };
+ settings: { start: string; sched: Payload[]; theme: 'auto'|'light'|'dark'; profile?: { name: string; goal: string; age?: number; weightKg?: number; heightCm?: number }; notifications?: { enabled: boolean; restEnd: boolean }; [key: string]: any };
  history: { days: Record<string, DayRecord>; measurements: Record<string, Payload>; [key: string]: any };
  snapshots: Record<string, Payload>; recovery: Record<string, Payload>;
  meta: { initializedAt: number; updatedAt: number; migrationCompleted: boolean; migrationStatus?: 'none'|'completed'|'pending'|'invalid'; lastBackupGeneratedAt: number|null; lastBackupConfirmedAt: number|null; [key: string]: any };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyAdjustments, dayTarget, dayTotals, markEaten, progress, unmarkEaten, weeklyReview } from '../../src/domain/diet';
+import { applyAdjustments, dayTarget, dayTargetForProfile, dayTotals, markEaten, progress, unmarkEaten, weeklyReview } from '../../src/domain/diet';
 import type { DietDay, DietOption, MealKey } from '../../src/domain/diet';
 
 const opt = (key: string, kcal: number, p = 30, c = 40, g = 10): DietOption => ({ key, name: `Opção ${key}`, kcal, p, c, g, items: ['x'] });
@@ -126,5 +126,19 @@ describe('revisão semanal', () => {
  it('entradas inválidas não geram NaN', () => {
   const r = weeklyReview({ ...base, weights: [NaN, 80] });
   expect(r.suggestion).toBe('dados-insuficientes');
+ });
+});
+
+describe('meta de proteína pelo perfil', () => {
+ it('sem peso mantém 185 g e 55 g de gordura', () => {
+  expect(dayTarget('academia', { protein: 185, fat: 55 }).protein).toBe(185);
+  expect(dayTargetForProfile('academia', undefined).protein).toBe(185);
+  expect(dayTargetForProfile('academia', {}).fat).toBe(55);
+ });
+ it('com peso usa 2,4 g/kg e não altera kcal nem carboidrato', () => {
+  const t = dayTargetForProfile('perna', { weightKg: 80 });
+  expect(t.protein).toBe(192);
+  expect(t.kcal).toBe(2600);
+  expect(t.carbs).toBe(340);
  });
 });

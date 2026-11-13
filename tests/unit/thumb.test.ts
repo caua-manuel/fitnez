@@ -10,7 +10,8 @@ describe('Thumb', () => {
   it('prefixo de refeição escolhe o ícone e a opção define o tom', () => {
     expect(splitMealId('almoco-b')).toEqual({ meal: 'almoco', option: 'b' });
     expect(fallbackIcon('meal', 'almoco-a')).toBe('garfo');
-    expect(fallbackIcon('meal', 'pos-c')).toBe('agua');
+    for (const id of ['pos', 'pos-a', 'pos-b', 'pos-c']) expect(fallbackIcon('meal', id)).toBe('shake');
+    expect(html({ kind: 'meal', id: 'pos-a', size: 56 })).toContain('ic-shake');
     expect(fallbackIcon('meal', 'cafe-a')).toBe('dieta');
     expect(fallbackIcon('meal', 'desconhecido-a')).toBe('garfo');
     const m = html({ kind: 'meal', id: 'almoco-b', size: 56 });

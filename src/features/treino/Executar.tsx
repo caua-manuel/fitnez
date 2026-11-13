@@ -139,7 +139,7 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
  };
  if (!state || !plan) return null;
  if (!sess) return <section className="card"><p>Treino não encontrado.</p><a className="tr-back" href={hrefFor({ tab: 'treino', view: 'lista' })}>← Voltar aos treinos</a></section>;
- if (!rows || exIds.length === 0) return <section className="card">{exIds.length === 0 && rows ? <p>Este treino não tem exercícios.</p> : <p className="loading" role="status">Abrindo o treino…</p>}{back}</section>;
+ if (!rows || exIds.length === 0) return <section className="card">{exIds.length === 0 && rows ? <div className="tr-empty-card"><strong>Este treino não tem exercícios.</strong><p className="muted">Adicione exercícios ao treino para poder executá-lo.</p><a className="button" href={hrefFor({ tab: 'treino', view: 'editar', id })}>Editar treino</a></div> : <p className="loading" role="status">Abrindo o treino…</p>}{back}</section>;
 
  const exId = exIds[Math.min(idx, exIds.length - 1)]!;
  const ex = plan.ex[exId]!;

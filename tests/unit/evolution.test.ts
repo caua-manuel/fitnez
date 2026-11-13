@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DayRecord, Plan } from '../../src/application/repository';
 import {
- consistency, planConsistency, periodRange, strengthChange, strengthSeries, waistDelta, waistSeries, weightDelta, weightSeries, measureSeries, parseMeasure, formatSigned, weeklyValues, pctOf,
+ consistency, planConsistency, periodRange, strengthChange, strengthSeries, waistDelta, waistSeries, hipDelta, hipSeries, weightDelta, weightSeries, measureSeries, parseMeasure, formatSigned, weeklyValues, pctOf,
 } from '../../src/domain/evolution';
 
 // 2026-11-16 é segunda-feira.
@@ -90,6 +90,13 @@ describe('medidas', () => {
   expect(waistDelta(waistSeries(meas, range))!.cm).toBeCloseTo(-3, 5);
   expect(measureSeries(meas, range, 'b').map(p => p.value)).toEqual([33]);
   expect(measureSeries(meas, range, 't').map(p => p.value)).toEqual([58.5]);
+ });
+ it('quadril: série e variação', () => {
+  const m = { '2026-11-16': { q: '100' }, '2026-12-01': { q: '98,5' }, '2026-12-20': { p: '80' } };
+  expect(hipSeries(m, range).map(p => p.cm)).toEqual([100, 98.5]);
+  expect(hipDelta(hipSeries(m, range))!.cm).toBeCloseTo(-1.5, 5);
+  expect(hipDelta([])).toBeNull();
+  expect(measureSeries(m, range, 'q').length).toBe(2);
  });
  it('sem dados ou 1 ponto: delta nulo', () => {
   expect(weightSeries({}, range)).toEqual([]);

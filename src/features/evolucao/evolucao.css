@@ -123,3 +123,14 @@
 .ev-date{margin:0 0 10px}.ev-date input{width:100%;min-height:48px}
 .ev-errors:empty{display:none}.ev-errors{margin:0 0 12px}.ev-errors .ev-error{margin:0 0 6px}
 .ev-single{margin:6px 0 0}
+
+.ev-rows{list-style:none;padding:0}
+.ev-row-measure{width:100%;min-height:48px;border:0;border-top:1px solid var(--border);background:transparent;color:var(--foreground);text-align:left;box-shadow:none;border-radius:0;font:inherit;cursor:pointer}
+li:first-child>.ev-row-measure{border-top:0}
+.ev-row-measure .ev-row-label{grid-column:1;grid-row:1;font-size:.8125rem;font-weight:500;line-height:1.2;color:var(--muted-foreground)}
+.ev-row-measure .ev-row-value{grid-column:1;grid-row:2;font-size:1rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ev-row-measure .ev-chip{grid-column:2;grid-row:1/3}
+.ev-row-measure[aria-expanded="true"] .ev-row-label{color:var(--foreground)}
+.ev-med-detail{border-top:1px solid var(--border);padding-top:4px}
+.ev-tap{margin:6px 0 0;font-size:.8125rem}
+.ev-disclaimer{margin:16px 4px 8px;font-size:.8125rem;line-height:1.4;color:var(--muted-foreground);text-align:center}

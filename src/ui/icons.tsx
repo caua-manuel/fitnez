@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 export type IconName =
  | 'inicio' | 'treino' | 'dieta' | 'evolucao' | 'perfil' | 'sino' | 'editar' | 'relogio' | 'seta' | 'marca'
  | 'calendario' | 'play' | 'plus' | 'alvo' | 'chevron' | 'voltar' | 'busca' | 'fogo' | 'garfo' | 'agua'
- | 'nuvem' | 'engrenagem' | 'lua' | 'sol' | 'info' | 'historico' | 'filtro' | 'mais' | 'salvar' | 'balanca' | 'fita' | 'circulo';
+ | 'shake' | 'nuvem' | 'engrenagem' | 'lua' | 'sol' | 'info' | 'historico' | 'filtro' | 'mais' | 'salvar' | 'balanca' | 'fita' | 'circulo';
 
 const paths: Record<IconName, ReactNode> = {
  inicio: <><path d="M3.5 10.6 12 3.5l8.5 7.1V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19Z" /><path className="door" d="M9.5 20.5v-6h5v6" /></>,
@@ -26,6 +26,7 @@ const paths: Record<IconName, ReactNode> = {
  fogo: <path d="M12 3c1 3.5 5.5 5.5 5.5 11a5.5 5.5 0 0 1-11 0c0-2 1-3.5 2-4.5.2 1.5.8 2.5 1.8 3C10 9 11 6 12 3Z" />,
  garfo: <><path d="M6 3v6a2.5 2.5 0 0 0 5 0V3M8.5 3v18" /><path d="M17 21V3c-2.2 1.5-3 4-3 7v3h3" /></>,
  agua: <path d="M12 3.2C9 7.5 6.2 10.5 6.2 14.2a5.8 5.8 0 0 0 11.6 0C17.8 10.5 15 7.5 12 3.2Z" />,
+ shake: <><path d="M6.5 8h11l-1.4 11.6a1.5 1.5 0 0 1-1.5 1.4H9.4a1.5 1.5 0 0 1-1.5-1.4Z" /><path d="M7.2 13.5h9.6M13.5 8l1.8-5H19" /></>,
  nuvem: <><path d="M7 18.5a4.5 4.5 0 0 1-.6-8.9 6 6 0 0 1 11.5 1.3 3.8 3.8 0 0 1-.4 7.6" /><path d="M12 21v-8M8.8 15.8 12 12.6l3.2 3.2" /></>,
  engrenagem: <><circle cx="12" cy="12" r="3.2" /><path d="M12 2.8v2.5M12 18.7v2.5M2.8 12h2.5M18.7 12h2.5M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8" /></>,
  lua: <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" />,

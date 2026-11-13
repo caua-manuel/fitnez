@@ -8,10 +8,11 @@ const addDays = (day: string, n: number) => { const [y, m, d] = day.split('-').m
 const today = () => iso(new Date());
 const monday = (day: string) => { const [y, m, d] = day.split('-').map(Number); return addDays(day, -((new Date(y, m - 1, d).getDay() + 6) % 7)); };
 
-interface Fixture { days?: Record<string, any>; longName?: boolean; start?: string }
+interface Fixture { days?: Record<string, any>; longName?: boolean; empty?: boolean; start?: string }
 function backup(f: Fixture = {}) {
  const plan = json('plan.json');
  if (f.longName) { plan.plan.sess.LONG = { name: 'Treino' + 'x'.repeat(74), sub: 'Nome muito longo para testar quebra de linha', min: '40', ex: ['supino'] }; plan.plan.order.push('LONG'); }
+ if (f.empty) { plan.plan.sess.VAZIO = { name: 'Treino vazio sintético', sub: 'Sem exercícios', min: '30', ex: [] }; plan.plan.order.push('VAZIO'); }
  const state = {
   v: 3, revision: 0,
   catalog: { plan: plan.plan, diet: json('diet.json'), recipes: json('recipes.json'), revision: 0 },
@@ -202,4 +203,68 @@ test('Treino: com treino parcial hoje o detalhe oferece Continuar treino', async
  await page.goto('#treino/UA');
  await expect(page.getByRole('link', { name: 'Continuar treino' })).toBeVisible();
  await expect(page.getByRole('link', { name: 'Começar treino' })).toHaveCount(0);
+});
+
+const AVISO = 'Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.';
+
+for (const scheme of ['light', 'dark'] as const) {
+ test(`Treino: estados ativos e selecionados têm contraste AA (${scheme})`, async ({ page }) => {
+  await page.emulateMedia({ colorScheme: scheme });
+  await seed(page);
+  await page.waitForTimeout(300); // fim de qualquer transição de cor
+  const alvos: Locator[] = [page.getByRole('button', { name: 'Meu plano', exact: true })];
+  await biblioteca(page);
+  await page.waitForTimeout(300);
+  alvos.push(page.getByRole('button', { name: 'Biblioteca', exact: true }), page.getByRole('button', { name: 'Todos', exact: true }));
+  await page.getByRole('button', { name: 'Superiores', exact: true }).click();
+  alvos.push(page.getByRole('button', { name: 'Superiores', exact: true }));
+  for (const a of alvos) {
+   const pressed = await a.getAttribute('aria-pressed');
+   if (pressed !== 'true') continue;
+   const { color, bg } = await paint(a);
+   expect(ratio(color, bg), `${await a.innerText()} ativo`).toBeGreaterThanOrEqual(4.5);
+  }
+  await page.goto('#treino/UA');
+  await page.waitForTimeout(300);
+  for (const nome of [/^Exercícios/, 'Detalhes', 'Histórico']) {
+   const tab = page.getByRole('tab', { name: nome });
+   await tab.click(); await page.waitForTimeout(300);
+   expect(await tab.getAttribute('aria-selected')).toBe('true');
+   const { color, bg } = await paint(tab);
+   expect(ratio(color, bg), `aba ${nome} selecionada`).toBeGreaterThanOrEqual(4.5);
+   const outra = page.getByRole('tab', { selected: false }).first();
+   const o = await paint(outra);
+   expect(ratio(o.color, o.bg), 'aba não selecionada').toBeGreaterThanOrEqual(4.5);
+  }
+ });
+}
+
+test('Treino: aviso de saúde no fim de Meu plano, Biblioteca e Detalhe', async ({ page }) => {
+ await seed(page);
+ await expect(page.getByText(AVISO, { exact: true })).toBeVisible();
+ await biblioteca(page);
+ await expect(page.getByText(AVISO, { exact: true })).toBeVisible();
+ await page.goto('#treino/UA');
+ await expect(page.getByText(AVISO, { exact: true })).toBeVisible();
+ await page.getByRole('tab', { name: 'Histórico' }).click();
+ await expect(page.getByText(AVISO, { exact: true })).toBeVisible();
+});
+
+test('Treino: treino sem exercícios mostra aviso e não deixa começar; execução explica', async ({ page }) => {
+ await seed(page, { empty: true });
+ await page.goto('#treino/VAZIO');
+ await expect(page.getByText('Este treino ainda não tem exercícios.')).toBeVisible();
+ await expect(page.getByRole('link', { name: 'Começar treino' })).toHaveAttribute('aria-disabled', 'true');
+ expect(await noHScroll(page)).toBe(true);
+ await page.goto(`#treino/VAZIO/executar?dia=${today()}`);
+ await expect(page.getByText('Este treino não tem exercícios.')).toBeVisible();
+ await expect(page.getByRole('link', { name: 'Editar treino' })).toBeVisible();
+});
+
+test('Treino: busca sem resultado mostra lista vazia com Limpar busca', async ({ page }) => {
+ await seed(page); await biblioteca(page);
+ await page.getByRole('searchbox', { name: /Buscar treino/ }).fill('zzzzqq');
+ await expect(page.getByText('Nenhum treino encontrado.')).toBeVisible();
+ await page.getByRole('button', { name: 'Limpar busca' }).click();
+ await expect(page.getByRole('list', { name: 'Treinos da biblioteca' }).getByRole('listitem')).toHaveCount(4);
 });

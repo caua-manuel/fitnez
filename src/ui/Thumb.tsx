@@ -11,7 +11,7 @@ import { hasPhoto } from './photos';
 export type ThumbKind = 'meal' | 'exercise' | 'hero';
 export interface ThumbProps { kind: ThumbKind; id?: string; group?: string; size?: number; className?: string; label?: string }
 
-const MEAL_ICON: Record<string, IconName> = { cafe: 'dieta', almoco: 'garfo', lanche: 'dieta', pos: 'agua', jantar: 'garfo' };
+const MEAL_ICON: Record<string, IconName> = { cafe: 'dieta', almoco: 'garfo', lanche: 'dieta', pos: 'shake', jantar: 'garfo' };
 const EXERCISE_ICON: Record<string, IconName> = { cardio: 'fogo', core: 'alvo', abdomen: 'alvo', abdominais: 'alvo' };
 const EXTENSIONS = ['jpg', 'webp'] as const;
 

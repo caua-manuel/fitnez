@@ -1,4 +1,5 @@
 import type { DayType } from './dayActivity';
+import { dietTargetsFromProfile } from './profile';
 
 export type MealKey = 'cafe' | 'almoco' | 'lanche' | 'pos' | 'jantar';
 export interface DietOption { key: string; name: string; kcal: number; p: number; c: number; g: number; items: string[]; rec?: string }
@@ -92,4 +93,9 @@ export function weeklyReview(input: { weights: number[]; waists: number[]; stren
  }
  if (loss >= 0.2 && loss <= 0.4 && waistDown) return { suggestion: 'manter', kcalDelta: 0, text: 'Perda de 0,2 a 0,4 kg por semana com a cintura diminuindo: mantenha o plano atual.' };
  return { suggestion: 'manter', kcalDelta: 0, text: 'Nenhuma mudança sugerida agora. Mantenha o plano e acompanhe a próxima semana.' };
+}
+
+/** Meta do dia com proteína vinda do peso do perfil (185 g sem peso). Kcal e carboidrato seguem o tipo de dia. */
+export function dayTargetForProfile(type: DayType, profile?: { weightKg?: number } | null): DayTarget {
+ return dayTarget(type, dietTargetsFromProfile(profile));
 }

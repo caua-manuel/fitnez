@@ -49,7 +49,7 @@ function populated(): Fixture {
    days[day] = { workout: { sessionId: 'UA', startedAt: 1, finishedAt: 2, status: 'done', sets: 2, volume: 100 }, acts: { gym: true }, log: { supino: [{ kg: String(kg).replace('.', ','), reps: '8', done: true }, { kg: String(kg), reps: '8', done: true }] } };
   }
  });
- return { start, days, measurements: { [addDays(start, 1)]: { p: '82,0', c: '91', b: '33', t: '58' }, [addDays(start, 15)]: { p: '80,5', c: '89,5', b: '34', t: '57' } } };
+ return { start, days, measurements: { [addDays(start, 1)]: { p: '82,0', c: '91', b: '33', t: '58', q: '101' }, [addDays(start, 15)]: { p: '80,5', c: '89,5', b: '34', t: '57' } } };
 }
 
 test.use({ viewport: { width: 360, height: 800 } });
@@ -199,4 +199,53 @@ test('Perfil e Evolução mostram a mesma constância para o mesmo histórico', 
  const pct = evo!.match(/(\d+)%/)![1];
  await page.goto('#perfil');
  await expect(page.getByRole('list', { name: 'Seus números' }).or(page.getByLabel('Seus números'))).toContainText(pct + '%');
+});
+
+test('Evolução: registrar quadril e coxa persiste ao recarregar, grava a chave q e mostra o aviso de saúde', async ({ page }) => {
+ await seed(page);
+ await page.getByRole('button', { name: /Registrar medidas/ }).click();
+ const dlg = page.getByRole('dialog', { name: 'Registrar medidas' });
+ await expect(dlg.getByLabel('Quadril')).toBeVisible();
+ await dlg.getByLabel('Quadril').fill('98,5');
+ await dlg.getByLabel('Coxa').fill('56');
+ await dlg.getByRole('button', { name: 'Salvar medidas' }).click();
+ await expect(page.getByText('Medidas de hoje salvas neste aparelho.')).toBeVisible();
+ const med = page.getByRole('region', { name: 'Medidas', exact: true });
+ await expect(med).toContainText('Quadril');
+ await expect(med.getByText('98,5 cm')).toBeVisible();
+ await expect(med.getByText('56 cm')).toBeVisible();
+ await expect(med).not.toContainText('Braço'); // só as medidas com dados
+ expect((await dbState(page)).history.measurements[today()]).toMatchObject({ q: '98,5', t: '56' });
+ await page.reload();
+ await expect(page.getByRole('region', { name: 'Medidas', exact: true }).getByText('98,5 cm')).toBeVisible();
+ await expect(page.getByText('Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.')).toBeVisible();
+ expect(await noHScroll(page)).toBe(true);
+});
+
+test('Evolução: quadril e coxa mostram variação entre duas datas e a mini-série acessível', async ({ page }) => {
+ await seed(page, populated());
+ const med = page.getByRole('region', { name: 'Medidas', exact: true });
+ await expect(med.getByRole('button', { name: /Quadril/ })).toBeVisible();
+ await page.getByRole('button', { name: 'Registrar medidas' }).click();
+ const dlg = page.getByRole('dialog', { name: 'Registrar medidas' });
+ await dlg.getByLabel('Quadril').fill('99');
+ await dlg.getByRole('button', { name: 'Salvar medidas' }).click();
+ await expect(med.getByText('99 cm')).toBeVisible();
+ await expect(med.getByRole('button', { name: /Cintura/ })).toContainText('−1,5 cm');
+ await expect(med.getByRole('button', { name: /Coxa/ })).toContainText('−1 cm');
+ await med.getByRole('button', { name: /Quadril/ }).click();
+ await expect(med.getByRole('img', { name: /Quadril: de 101 cm a 99 cm/ })).toBeVisible();
+ await expect(med.getByRole('table', { name: 'Quadril, registros' })).toBeAttached();
+ await expect(med.getByRole('button', { name: /Quadril/ })).toContainText('−2 cm');
+});
+
+test('Evolução: quadril absurdo é recusado e nada é gravado', async ({ page }) => {
+ await seed(page);
+ await page.getByRole('button', { name: /Registrar medidas/ }).click();
+ const dlg = page.getByRole('dialog', { name: 'Registrar medidas' });
+ await dlg.getByLabel('Quadril').fill('900');
+ await dlg.getByRole('button', { name: 'Salvar medidas' }).click();
+ await expect(dlg.getByRole('alert')).toContainText('Quadril: informe um valor entre 10 e 250 cm');
+ await expect(dlg.getByLabel('Quadril')).toHaveValue('900');
+ expect(Object.keys((await dbState(page)).history.measurements)).toHaveLength(0);
 });

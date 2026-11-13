@@ -12,6 +12,7 @@ import { enableNotifications, notifySupport } from '../../pwa/notifications';
 import type { NotifySupport } from '../../pwa/notifications';
 
 import { planConsistency } from '../../domain/evolution';
+import { validateProfile, proteinTargetG } from '../../domain/profile';
 import { diaLocal, refeicoesRegistradas, treinosConcluidos } from './metricas';
 import './perfil.css';
 
@@ -43,9 +44,13 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
  const [preview, setPreview] = useState<ImportPreview | null>(null);
  const [source, setSource] = useState('');
  const [filename, setFilename] = useState(NO_FILE);
- const [editing, setEditing] = useState<null | 'name' | 'goal'>(null);
+ const [editing, setEditing] = useState<null | 'name' | 'goal' | 'body'>(null);
  const [nameDraft, setNameDraft] = useState('');
  const [goalDraft, setGoalDraft] = useState('');
+ const [ageDraft, setAgeDraft] = useState('');
+ const [weightDraft, setWeightDraft] = useState('');
+ const [heightDraft, setHeightDraft] = useState('');
+ const [errors, setErrors] = useState<Record<string, string>>({});
  const [dataOpen, setDataOpen] = useState(false);
  const [backupOpen, setBackupOpen] = useState(false);
  const [notify, setNotify] = useState<NotifySupport>(() => notifySupport());
@@ -58,11 +63,12 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
  const fileInput = useRef<HTMLInputElement>(null);
  const nameInput = useRef<HTMLInputElement>(null);
  const goalInput = useRef<HTMLInputElement>(null);
+ const ageInput = useRef<HTMLInputElement>(null);
  const conflict = initialization?.status === 'migration-conflict';
  useEffect(() => { if (preview) previewHeading.current?.focus(); }, [preview]);
  useEffect(() => { if (importError) { importErrorRef.current?.scrollIntoView({ block: 'center' }); importErrorRef.current?.focus({ preventScroll: true }); } }, [importError]);
  useEffect(() => { if (!saved) return; const t = window.setTimeout(() => setSaved(false), 4000); return () => window.clearTimeout(t); }, [saved]);
- useEffect(() => { if (editing === 'name') nameInput.current?.focus(); if (editing === 'goal') goalInput.current?.focus(); }, [editing]);
+ useEffect(() => { if (editing === 'name') nameInput.current?.focus(); if (editing === 'goal') goalInput.current?.focus(); if (editing === 'body') ageInput.current?.focus(); }, [editing]);
  useEffect(() => { if (conflict) setBackupOpen(true); }, [conflict]);
  if (!state) return null;
  const locked = busy || conflict;
@@ -75,17 +81,37 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
  const feitos = treinosConcluidos(days);
  const refeicoes = refeicoesRegistradas(days);
  // Mesma fonte da Evolução (src/domain/evolution.ts): previsto = atividades da rotina até hoje; hoje só conta se já feito.
- const taxa = planConsistency(days, state.settings.sched, state.settings.start, today).pct;
+ const consist = planConsistency(days, state.settings.sched, state.settings.start, today);
+ // Sem nenhum registro concluído mostra '—' (como Treinos e Refeições), em vez de 0%.
+ const taxa = consist.pct !== null && (consist.done > 0 || feitos > 0 || refeicoes > 0) ? consist.pct : null;
+ const hasWeight = typeof profile?.weightKg === 'number';
+ const bodyParts = [profile?.age !== undefined ? `${profile.age} anos` : '', hasWeight ? `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(profile!.weightKg!)} kg` : '', profile?.heightCm !== undefined ? `${profile.heightCm} cm` : ''].filter(Boolean);
+ const proteinText = hasWeight ? `Meta de proteína: ${NUMBER.format(proteinTargetG(profile!.weightKg))} g por dia, 2,4 g por kg` : '';
  const pct = phase.kind === 'week' ? Math.round(phase.progress * 100) : phase.kind === 'done' ? 100 : 0;
  const planText = phase.kind === 'week' ? weekLabel(phase.week) : phase.kind === 'done' ? 'Plano concluído' : `Começa em ${phase.daysUntil} ${phase.daysUntil === 1 ? 'dia' : 'dias'}`;
  const enabled = state.settings.notifications?.enabled === true && notify === 'granted';
  const notifyState = notify === 'unsupported' ? 'Indisponível neste aparelho' : notify === 'denied' ? 'Bloqueadas no navegador' : enabled ? 'Ativadas' : 'Desativadas';
 
- function openEditor(target: 'name' | 'goal') { setNameDraft(name); setGoalDraft(goal); setEditing(target); }
+ function openEditor(target: 'name' | 'goal' | 'body') {
+  setNameDraft(name); setGoalDraft(goal); setErrors({});
+  setAgeDraft(profile?.age !== undefined ? String(profile.age) : '');
+  setWeightDraft(profile?.weightKg !== undefined ? String(profile.weightKg).replace('.', ',') : '');
+  setHeightDraft(profile?.heightCm !== undefined ? String(profile.heightCm) : '');
+  setEditing(target);
+ }
  async function saveProfile(event: FormEvent) {
   event.preventDefault();
-  const nextName = nameDraft.trim(); const nextGoal = goalDraft.trim();
-  const ok = await commit(s => { s.settings.profile = { ...s.settings.profile, name: nextName, goal: nextGoal }; return s; });
+  const result = validateProfile({ name: nameDraft, goal: goalDraft, age: ageDraft, weightKg: weightDraft, heightCm: heightDraft });
+  if (!result.ok) { setErrors(result.errors); window.setTimeout(() => (document.querySelector('.perfil-edit [aria-invalid="true"]') as HTMLElement | null)?.focus(), 0); return; }
+  setErrors({});
+  const value = result.value;
+  const ok = await commit(s => {
+   const next: NonNullable<typeof s.settings.profile> = { name: value.name, goal: value.goal };
+   if (value.age !== undefined) next.age = value.age;
+   if (value.weightKg !== undefined) next.weightKg = value.weightKg;
+   if (value.heightCm !== undefined) next.heightCm = value.heightCm;
+   s.settings.profile = next; return s;
+  });
   if (ok) { setEditing(null); setSaved(true); }
  }
  function setTheme(value: 'auto' | 'light' | 'dark') { void commit(s => { s.settings.theme = value; return s; }); }
@@ -143,12 +169,27 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
   </header>
   <p className="perfil-salvo" role="status">{saved ? <><Icon name="marca" size={16} />Salvo</> : null}</p>
 
-  {editing ? <form className="card perfil-edit" onSubmit={e => void saveProfile(e)}>
+  {editing ? <form className="card perfil-edit" noValidate aria-labelledby="perfil-edit-titulo" onSubmit={e => void saveProfile(e)}>
+   <h2 id="perfil-edit-titulo" className="perfil-edit-titulo">Dados físicos</h2>
    <label htmlFor="perfil-nome">Seu nome</label>
-   <input id="perfil-nome" ref={nameInput} type="text" maxLength={40} autoComplete="given-name" placeholder="Seu nome" value={nameDraft} onChange={e => setNameDraft(e.target.value)} />
+   <input id="perfil-nome" ref={nameInput} type="text" maxLength={60} autoComplete="given-name" placeholder="Seu nome" value={nameDraft} aria-invalid={errors.name ? true : undefined} aria-describedby={errors.name ? 'perfil-nome-erro' : undefined} onChange={e => setNameDraft(e.target.value)} />
+   {errors.name ? <p id="perfil-nome-erro" className="perfil-erro">{errors.name}</p> : null}
    <label htmlFor="perfil-objetivo">Seu objetivo</label>
-   <input id="perfil-objetivo" ref={goalInput} type="text" maxLength={80} placeholder="Defina seu objetivo" value={goalDraft} onChange={e => setGoalDraft(e.target.value)} />
-   <div className="actions"><button type="submit" className="button">Salvar</button><button type="button" className="button secondary" onClick={() => setEditing(null)}>Cancelar</button></div>
+   <input id="perfil-objetivo" ref={goalInput} type="text" maxLength={140} placeholder="Defina seu objetivo" value={goalDraft} aria-invalid={errors.goal ? true : undefined} aria-describedby={errors.goal ? 'perfil-objetivo-erro' : undefined} onChange={e => setGoalDraft(e.target.value)} />
+   {errors.goal ? <p id="perfil-objetivo-erro" className="perfil-erro">{errors.goal}</p> : null}
+   <div className="perfil-fisico">
+    <div><label htmlFor="perfil-idade">Idade (anos)</label>
+     <input id="perfil-idade" ref={ageInput} type="text" inputMode="numeric" autoComplete="off" value={ageDraft} aria-invalid={errors.age ? true : undefined} aria-describedby={errors.age ? 'perfil-idade-erro' : undefined} onChange={e => setAgeDraft(e.target.value)} /></div>
+    <div><label htmlFor="perfil-peso">Peso (kg)</label>
+     <input id="perfil-peso" type="text" inputMode="decimal" autoComplete="off" value={weightDraft} aria-invalid={errors.weightKg ? true : undefined} aria-describedby={errors.weightKg ? 'perfil-peso-erro' : undefined} onChange={e => setWeightDraft(e.target.value)} /></div>
+    <div><label htmlFor="perfil-altura">Altura (cm)</label>
+     <input id="perfil-altura" type="text" inputMode="numeric" autoComplete="off" value={heightDraft} aria-invalid={errors.heightCm ? true : undefined} aria-describedby={errors.heightCm ? 'perfil-altura-erro' : undefined} onChange={e => setHeightDraft(e.target.value)} /></div>
+   </div>
+   {errors.age ? <p id="perfil-idade-erro" className="perfil-erro">{errors.age}</p> : null}
+   {errors.weightKg ? <p id="perfil-peso-erro" className="perfil-erro">{errors.weightKg}</p> : null}
+   {errors.heightCm ? <p id="perfil-altura-erro" className="perfil-erro">{errors.heightCm}</p> : null}
+   {proteinText ? <p className="perfil-meta">{proteinText}</p> : null}
+   <div className="actions"><button type="submit" className="button" disabled={busy}>Salvar</button><button type="button" className="button secondary" onClick={() => setEditing(null)}>Cancelar</button></div>
   </form> : null}
 
   <dl className="card perfil-stats" aria-label="Seus números">
@@ -161,6 +202,11 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
    <li><button type="button" className="list-row perfil-link" onClick={() => openEditor('goal')}>
     <span className="icon-tile soft"><Icon name="alvo" size={26} /></span>
     <span className="grow"><strong>Meu objetivo</strong><small className={goal ? undefined : 'perfil-vazio'}>{goal || 'Defina seu objetivo'}</small></span>
+    <Icon name="seta" size={22} />
+   </button></li>
+   <li><button type="button" className="list-row perfil-link" onClick={() => openEditor('body')}>
+    <span className="icon-tile soft"><Icon name="perfil" size={26} /></span>
+    <span className="grow"><strong>Dados físicos</strong><small className={bodyParts.length ? undefined : 'perfil-vazio'}>{bodyParts.length ? bodyParts.join(' · ') : 'Idade, peso e altura'}</small>{proteinText ? <small>{proteinText}</small> : null}</span>
     <Icon name="seta" size={22} />
    </button></li>
    <li><a className="list-row perfil-link perfil-plano" href={hrefFor({ tab: 'treino', view: 'lista' })}>
@@ -215,5 +261,6 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
     {preview ? <section className="import-preview" aria-labelledby="preview-title"><h3 ref={previewHeading} id="preview-title" tabIndex={-1}>Prévia da importação</h3><p>Backup versão {preview.sourceVersion}</p><dl className="facts"><div><dt>Dias com dados</dt><dd>{preview.summary.days}</dd></div><div><dt>Datas com medidas</dt><dd>{preview.summary.measurements}</dd></div><div><dt>Exercícios</dt><dd>{preview.summary.exercises}</dd></div><div><dt>Treinos</dt><dd>{preview.summary.sessions}</dd></div></dl>{preview.warnings.map((w, i) => <p className="muted" key={i}>{w}</p>)}<p className="warning"><strong>Os dados atuais serão substituídos.</strong> Uma cópia de recuperação será preservada neste aparelho na mesma operação.</p><div className="actions"><button className="danger" disabled={locked} onClick={async () => { const result = await run(() => repository.confirmImport({ token: preview.token, expectedRevision: preview.expectedRevision }), 'Backup importado. Os dados anteriores estão preservados para recuperação.'); if (result) clearFile(false); }}>Confirmar importação</button><button className="button secondary" disabled={busy} onClick={() => clearFile(true)}>Cancelar</button></div></section> : null}
    </Disclosure>
   </div>
+  <p className="perfil-aviso-saude">Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.</p>
  </div>;
 }

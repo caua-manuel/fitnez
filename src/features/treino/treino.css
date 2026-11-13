@@ -242,3 +242,27 @@
 .ok-actions{margin-top:16px!important}
 .tr-detail .tr-stack{margin-top:0}
 .tr-table td:first-child .num{display:inline-block;min-width:12px}
+
+/* Refino: contraste explícito nos estados ativos, aviso de saúde, tema escuro e estados extremos */
+.tr-page .segmented>*{transition:none}
+.tr-page .segmented>[aria-pressed=true],.tr-page .chip[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--primary-foreground)}
+.tr-page .segmented>[aria-pressed=false]{color:var(--foreground)}
+.tr-tabs button[aria-selected=true]{background:var(--card);color:var(--foreground)}
+.tr-tabs button[aria-selected=false]{color:var(--muted-foreground)}
+.tr-aviso{margin:28px 0 16px;padding:0 4px;font-size:.8125rem;line-height:1.45;color:var(--muted-foreground);text-align:center}
+.tr-detail .tr-aviso{margin-top:8px}
+.tr-row{border-color:var(--border)}
+.tr-name{overflow-wrap:anywhere}
+.tr-name,.ex-name h2,.tr-hero h2,.tr-exname{hyphens:auto}
+.tr-hero-text{flex:1 1 auto}
+.ok-ico{color:var(--primary)}
+.ok-stats li{padding:18px 4px 16px;gap:2px}
+.ok-sub{margin-bottom:4px!important}
+.ok-mark{box-shadow:0 0 0 10px var(--accent-soft)}
+.ok-volume{padding:14px 16px}
+.ex-row.is-done .ex-input{background:var(--accent-soft);color:var(--foreground);border-color:transparent}
+.ex-sheet{border:1px solid var(--border)}
+.tr-start[aria-disabled=true]{background:var(--surface-2);color:var(--muted-foreground);border:1px solid var(--border);pointer-events:none;box-shadow:none}
+.tr-empty-card{display:grid;gap:12px;justify-items:start;padding:20px;border:1px dashed var(--field-border);border-radius:var(--radius-card);background:var(--card)}
+.tr-empty-card p{margin:0}
+.tr-empty-card strong{font-size:1.0625rem}

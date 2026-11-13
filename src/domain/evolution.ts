@@ -62,8 +62,8 @@ export function strengthChange(series: StrengthPoint[]): number | null {
  return a > 0 ? ((b - a) / a) * 100 : null;
 }
 
-// Chaves legadas de history.measurements[data]: p peso (kg), c cintura, b braço, t coxa (cm); valores em texto, com vírgula.
-export type MeasureKey = 'p' | 'c' | 'b' | 't';
+// Chaves legadas de history.measurements[data]: p peso (kg), c cintura, b braço, t coxa, q quadril (cm); valores em texto, com vírgula.
+export type MeasureKey = 'p' | 'c' | 'b' | 't' | 'q';
 export interface MeasurePoint { day: DayIso; value: number }
 export function measureSeries(measurements: Record<string, Payload>, range: Range, key: MeasureKey): MeasurePoint[] {
  if (isEmpty(range)) return [];
@@ -145,3 +145,6 @@ export function weeklyValues(series: MeasurePoint[], range: Range, weeks: number
 }
 /** Percentual inteiro; null sem previsto. */
 export function pctOf(done: number, planned: number): number | null { return planned > 0 ? Math.round((done / planned) * 100) : null; }
+
+export const hipSeries = (m: Record<string, Payload>, range: Range): Array<{ day: DayIso; cm: number }> => measureSeries(m, range, 'q').map(p => ({ day: p.day, cm: p.value }));
+export const hipDelta = waistDelta;

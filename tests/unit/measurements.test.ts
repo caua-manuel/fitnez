@@ -46,4 +46,12 @@ describe('validateMeasurement', () => {
   expect(r.ok).toBe(false);
   if (!r.ok) expect(Object.keys(r.errors).sort()).toEqual(['date', 'p']);
  });
+ it('quadril (q): aceita 10 a 250 cm com vírgula e recusa fora', () => {
+  expect(ok({ q: '98,5' })).toEqual({ ok: true, value: { date: today, values: { q: '98,5' } } });
+  expect(ok({ q: '10' }).ok).toBe(true);
+  expect(ok({ q: '250' }).ok).toBe(true);
+  const r = ok({ q: '251' });
+  expect(r.ok).toBe(false);
+  if (!r.ok) expect(r.errors.q).toContain('Quadril: informe um valor entre 10 e 250 cm');
+ });
 });

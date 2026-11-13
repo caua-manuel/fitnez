@@ -17,6 +17,7 @@ import { Icon } from '../../ui/icons';
 import { WEEKDAYS, minutesLabel, plural, shortDay, statusOf, todayIso, weekDays } from './util';
 import './treino.css';
 
+const AVISO_SAUDE = 'Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.';
 type Tab = 'plano' | 'biblioteca';
 let lastTab: Tab = 'plano';
 
@@ -75,6 +76,7 @@ export function Treino({ route }: { route: Extract<Route, { tab: 'treino' }> }) 
     <button type="button" aria-pressed={tab === 'biblioteca'} onClick={() => choose('biblioteca')}>Biblioteca</button>
    </div>
    {tab === 'plano' ? <MeuPlano /> : <Biblioteca />}
+   <p className="tr-aviso">{AVISO_SAUDE}</p>
   </div>;
  return <>{content}{route.view === 'executar' ? null : <UndoHost />}</>;
 }

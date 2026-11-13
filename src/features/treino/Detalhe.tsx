@@ -17,6 +17,7 @@ import { StatusBadge } from './Cartao';
 import { GROUP_LABEL, dayBelongsTo, formatDay, formatKg, minutesLabel, plural, planWeek, repsText, sessionLetter, statusOf, todayIso } from './util';
 import './treino.css';
 
+const AVISO_SAUDE = 'Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.';
 export const NEW_KEY = 'treino12:treino-novo';
 type Tab ='exercicios' | 'detalhes' | 'historico';
 
@@ -105,11 +106,13 @@ export function Detalhe({ id }: { id: string }) {
     <button type="button" className="button secondary" onClick={() => { try { sessionStorage.removeItem(NEW_KEY); } catch { /* sem armazenamento */ } setFresh(false); }}>Entendi</button>
    </div>
   </div> : null}
-  <a className="button block tr-start" href={hrefFor({ tab: 'treino', view: 'executar', id, day: today })}><Icon name="play" size={22} />{resuming ? 'Continuar treino' : 'Começar treino'}</a>
+  {s.ex.length === 0
+   ? <span className="button block tr-start" role="link" aria-disabled="true"><Icon name="play" size={22} />Começar treino</span>
+   : <a className="button block tr-start" href={hrefFor({ tab: 'treino', view: 'executar', id, day: today })}><Icon name="play" size={22} />{resuming ? 'Continuar treino' : 'Começar treino'}</a>}
   <div className="tr-tabs" role="tablist" aria-label="Seções do treino">
    {TABS.map(t => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}><Icon name={t.icon} size={20} />{t.id === 'exercicios' ? `Exercícios (${s.ex.length})` : t.label}</button>)}
   </div>
-  {tab === 'exercicios' ? <><ul className="tr-stack" aria-label="Exercícios do treino">
+  {tab === 'exercicios' ? <>{s.ex.length === 0 ? <div className="tr-empty-card"><strong>Este treino ainda não tem exercícios.</strong><p className="muted">Adicione exercícios para poder começar o treino.</p></div> : null}<ul className="tr-stack" aria-label="Exercícios do treino">
    {s.ex.map((exId, i) => {
     const ex = plan.ex[exId];
     if (!ex) return <li key={exId} className="tr-ex"><h3>Exercício removido</h3></li>;
@@ -140,5 +143,6 @@ export function Detalhe({ id }: { id: string }) {
     })}
    </ul>}
   </div>}
+  <p className="tr-aviso">{AVISO_SAUDE}</p>
  </div>;
 }

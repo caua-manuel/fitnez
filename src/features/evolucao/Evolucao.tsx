@@ -79,10 +79,13 @@ function EmptyState() {
  </section>;
 }
 
+const DISCLAIMER = <p className="ev-disclaimer">Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.</p>;
+
 export function Evolucao({ now = Date.now }: { now?: () => number }) {
  const { state } = useData();
  const [weeks, setWeeks] = useState<Weeks>(12);
  const [metric, setMetric] = useState<Metric>('forca');
+ const [openMeasure, setOpenMeasure] = useState<string | null>(null);
  if (!state) return null;
  const today = localDay(now());
  const { start, sched } = state.settings;
@@ -98,16 +101,16 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
  const strengthOne = sFilled.length === 1 ? sFilled[0].value : null; // com um só ponto: mostra o valor, sem inventar variação
  const meas = state.history.measurements;
  const series = (k: MeasureKey) => measureSeries(meas, range, k);
- const weight = series('p'), waist = series('c'), thigh = series('t'), arm = series('b');
+ const weight = series('p'), waist = series('c'), thigh = series('t'), arm = series('b'), hip = series('q');
  const weekly = (s: typeof weight): ChartPoint[] => weeklyValues(s, range, n).map((v, i) => ({ label: labels[i], value: v }));
  const wDelta = measureDelta(weight), cDelta = measureDelta(waist);
  const cons = consistency(state.history.days, sched, start, today, range);
  const consWeeks = labels.map((label, i) => { const w = cons.byWeek[i]; return { label, done: w?.done ?? 0, planned: w?.planned ?? 0, future: !w }; });
  const consPoints: ChartPoint[] = consWeeks.map(w => ({ label: w.label, value: w.future ? null : pctOf(w.done, w.planned) }));
 
- const hasAny = strength.some(p => p.avgLoadKg !== null) || weight.length + waist.length + thigh.length + arm.length > 0 || cons.done > 0;
+ const hasAny = strength.some(p => p.avgLoadKg !== null) || weight.length + waist.length + hip.length + thigh.length + arm.length > 0 || cons.done > 0;
  const form = <MeasureForm today={today} />;
- if (!hasAny) return <div className="evolucao"><EmptyState />{form}</div>;
+ if (!hasAny) return <div className="evolucao"><EmptyState />{form}{DISCLAIMER}</div>;
 
  const lastOf = (s: typeof weight) => (s.length ? s[s.length - 1].value : null);
  const main: Record<Metric, { title: string; icon: IconName; unit: string; points: ChartPoint[]; pill: string | null; fmt: (v: number) => string; domain?: [number, number]; empty: string }> = {
@@ -123,8 +126,9 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
   : `${m.title}: de ${m.fmt(filled[0].value)} em ${filled[0].label} a ${m.fmt(filled[filled.length - 1].value)} em ${filled[filled.length - 1].label}${m.pill ? `, variação de ${m.pill}` : ''}.`;
 
  const wLast = lastOf(weight);
- const measureRows: Array<{ label: string; s: typeof weight }> = [{ label: 'Cintura', s: waist }, { label: 'Coxa', s: thigh }, { label: 'Braço', s: arm }];
- const anyMeasure = measureRows.some(r => r.s.length > 0);
+ const measureRows: Array<{ label: string; s: typeof weight }> = [{ label: 'Cintura', s: waist }, { label: 'Quadril', s: hip }, { label: 'Coxa', s: thigh }, { label: 'Braço', s: arm }].filter(r => r.s.length > 0);
+ const anyMeasure = measureRows.length > 0;
+ const picked = measureRows.find(r => r.label === openMeasure) ?? null;
  const dayLabel = (iso: string) => iso.split('-').reverse().slice(0, 2).join('/');
 
  return <div className="evolucao"><>
@@ -160,7 +164,16 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
    <section className="card ev-card" aria-labelledby="ev-med-title">
     <div className="ev-head"><Icon name="fita" size={22} weight={1.9} /><h2 id="ev-med-title">Medidas</h2></div>
     {!anyMeasure ? <p className="ev-none">Sem medidas registradas neste período.</p> : <>
-     <dl className="ev-rows">{measureRows.map(r => { const d = measureDelta(r.s); const last = lastOf(r.s); return <div key={r.label} className="ev-row"><dt>{r.label}</dt><dd>{last === null ? '—' : fmtCm(last)}</dd>{d ? <dd className="ev-chip badge done">{formatSigned(d.abs, 'cm')}</dd> : <dd className="ev-chip-empty" aria-hidden="true" />}</div>; })}</dl>
+     <ul className="ev-rows" aria-label="Medidas em centímetros">{measureRows.map(r => { const d = measureDelta(r.s); const last = lastOf(r.s)!; const on = picked?.label === r.label; return <li key={r.label}>
+      <button type="button" className="ev-row ev-row-measure" aria-expanded={on} aria-controls={on ? 'ev-med-detail' : undefined} onClick={() => setOpenMeasure(on ? null : r.label)}>
+       <span className="ev-row-label">{r.label}</span><span className="ev-row-value">{fmtCm(last)}</span>
+       {d ? <span className="ev-chip badge done">{formatSigned(d.abs, 'cm')}</span> : <span className="ev-chip-empty" aria-hidden="true" />}
+      </button></li>; })}</ul>
+     {picked ? <div id="ev-med-detail" className="ev-med-detail">
+      <MiniLine values={picked.s.map(p => p.value)} label={`${picked.label}: ${picked.s.length === 1 ? `${fmtCm(picked.s[0].value)} em ${dayLabel(picked.s[0].day)}` : `de ${fmtCm(picked.s[0].value)} a ${fmtCm(picked.s[picked.s.length - 1].value)}`}.`} />
+      {picked.s.length === 1 ? <p className="ev-none">Uma medida: registre outra para ver a variação.</p> : null}
+      <Table caption={`${picked.label}, registros`} head={['Dia', picked.label]} rows={picked.s.map(p => [dayLabel(p.day), fmtCm(p.value)])} />
+     </div> : <p className="ev-hint ev-tap">Toque em uma medida para ver a evolução.</p>}
     </>}
    </section>
   </div>
@@ -174,5 +187,5 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
    </>}
   </section>
 
- </>{form}</div>;
+ </>{form}{DISCLAIMER}</div>;
 }

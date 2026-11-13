@@ -72,7 +72,7 @@ Referência de comportamento e visual: `legacy/index.html`.
 - `idx` = dias desde a segunda inicial. Antes de 0 é "pré-semana"; de 84 em diante é "concluído".
 - `semana w = floor(idx / 7)`, de 0 a 11. `dia da semana = idx % 7` (0 é segunda).
 - Bloco: semanas 0 a 3 é bloco 1 (B1), 4 a 7 é B2, 8 a 11 é B3.
-- **Deload nas semanas 3, 7 e 11** (as semanas 4, 8 e 12 para o usuário): faz metade das séries, `max(1, ceil(n / 2))`, com a coluna do bloco anterior.
+- **Deload nas semanas 3, 7 e 11** (as semanas 4, 8 e 12 para o usuário): as séries vêm da coluna do bloco CORRENTE, com metade: `max(1, ceil(n / 2))`. Só as repetições usam a coluna do bloco ANTERIOR (na semana 3, que não tem bloco anterior, usa o B1). Exemplo, supino (`s` [4,5,5], `r` ['5–8','4–6','3–5']): semana 3 = 2 séries de 5–8; semana 7 = 3 séries de 5–8; semana 11 = 3 séries de 4–6.
 - RIR por semana: `3, 2–3, 2, 4, 2, 1–2, 1–2, 4, 2, 1–2, 1–2, 4`.
 - Notas: semana 6 (Natal), semana 7 (Réveillon), semana 12 (testes de carga, medidas e fotos).
 

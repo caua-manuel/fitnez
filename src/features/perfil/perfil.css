@@ -91,3 +91,13 @@
 .perfil-import-erro p{margin:0 0 10px;color:var(--destructive);font-weight:600}
 .perfil-salvo{display:flex;align-items:center;gap:6px;min-height:0;margin:0;color:var(--success);font-size:.875rem;font-weight:600}
 .perfil-salvo:empty{display:none}
+
+/* Dados físicos */
+.perfil-edit-titulo{font-size:1.125rem;font-weight:700;margin:0 0 4px}
+.perfil-fisico{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.perfil-fisico label{margin-top:0}
+.perfil-fisico input{width:100%;min-width:0}
+.perfil-edit input[aria-invalid=true]{border-color:var(--destructive)}
+.perfil .perfil-erro{margin-top:6px;color:var(--destructive);font-size:.875rem;font-weight:600;line-height:1.35}
+.perfil .perfil-meta{margin-top:12px;font-size:.9375rem;color:var(--muted-foreground)}
+.perfil .perfil-aviso-saude{margin-top:8px;font-size:.8125rem;line-height:1.4;color:var(--muted-foreground);text-align:center}
