@@ -15,20 +15,20 @@ export interface IllustrationProps {
 }
 
 const C = {
-  bg: 'var(--il-bg, #E4EDFF)',
-  bg2: 'var(--il-bg-2, #CFDEFF)',
+  bg: 'var(--il-bg, #ECECEE)',
+  bg2: 'var(--il-bg-2, #DEDEE1)',
   bodyA: 'var(--il-body-a, #FFFFFF)',
-  bodyB: 'var(--il-body-b, #D3E0F8)',
-  bodyLine: 'var(--il-body-line, #AEBFE3)',
+  bodyB: 'var(--il-body-b, #DCDCE0)',
+  bodyLine: 'var(--il-body-line, #B4B4BA)',
   primary: 'var(--primary, #0A58F0)',
   muscleHi: 'var(--il-muscle-hi, #4F8CFF)',
-  pants: 'var(--il-pants, #1B2A52)',
+  pants: 'var(--il-pants, #2A2A2E)',
   skin: 'var(--il-skin, #F1BE98)',
   hair: 'var(--il-hair, #3A2A22)',
-  metal: 'var(--il-metal, #8794B0)',
-  metalDark: 'var(--il-metal-dark, #26335A)',
-  bench: 'var(--il-bench, #5E6E93)',
-  floor: 'var(--il-floor, #C4D3F2)',
+  metal: 'var(--il-metal, #8A8A92)',
+  metalDark: 'var(--il-metal-dark, #2E2E33)',
+  bench: 'var(--il-bench, #66666E)',
+  floor: 'var(--il-floor, #D2D2D6)',
   leaf: 'var(--success, #0F6B45)',
 };
 

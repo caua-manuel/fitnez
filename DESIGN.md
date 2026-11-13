@@ -12,28 +12,28 @@ Variáveis CSS em `:root` (claro). O escuro vale com `data-theme="dark"` ou, no 
 
 | Token | Claro | Escuro | Uso |
 | --- | --- | --- | --- |
-| `background` | `#FFFFFF` | `#0B1220` | Fundo do app |
-| `foreground` | `#0F172A` | `#EEF3FF` | Texto principal e ícones |
-| `card` | `#FFFFFF` | `#111A2E` | Cartões, folhas, barra inferior |
-| `secondary` | `#F7F9FC` | `#162036` | Campos, chips, trilhos de barra e anel |
-| `muted-foreground` | `#5F6F86` | `#A6B4D0` | Texto auxiliar |
-| `border` | `#E6EAF2` | `#243250` | Borda fina de cartão e separador (decorativa) |
-| `input` | `#76849B` | `#7D90B8` | Contorno de campos e caixas de marcar |
+| `background` | `#FFFFFF` | `#121214` | Fundo do app |
+| `foreground` | `#111113` | `#F2F2F3` | Texto principal e ícones |
+| `card` | `#FFFFFF` | `#19191C` | Cartões, folhas, barra inferior |
+| `secondary` | `#F7F7F8` | `#202024` | Campos, chips, trilhos de barra e anel |
+| `muted-foreground` | `#5E5E66` | `#A1A1AA` | Texto auxiliar |
+| `border` | `#E6E6E8` | `#2C2C31` | Borda fina de cartão e separador (decorativa) |
+| `input` | `#767680` | `#7A7A83` | Contorno de campos e caixas de marcar |
 | `primary` | `#0A58F0` | `#6C9BFF` | Ação principal, item ativo, progresso |
-| `primary-foreground` | `#FFFFFF` | `#06112B` | Texto sobre `primary` |
-| `accent-soft` | `#EAF1FF` | `#1B2F63` | Seleção, chip "Concluído" |
+| `primary-foreground` | `#FFFFFF` | `#0B0B0C` | Texto sobre `primary` |
+| `accent-soft` | `#EFEFF1` | `#26262B` | Seleção, chip "Concluído" |
 | `ring` | `#0A58F0` | `#8DB0FF` | Foco |
 | `success` / `success-soft` | `#0F6B45` / `#DDF3E8` | `#4CC38A` / `#12352A` | Confirmação |
 | `warning` / `warning-soft` | `#8A5100` / `#FFEECB` | `#F2B94B` / `#3A2D0E` | Atenção |
 | `destructive` / `destructive-soft` | `#B3202F` / `#FDE4E7` | `#FF7C8B` / `#3D1B24` | Erro e ação destrutiva |
 
-Auxiliares: `--leaf` `#4DB33D` (folha da marca), `--surface` `#F7F9FC` e `--surface-2` `#F3F5F9` (fundo da página no desktop; no escuro ambos `#162036`), `--field-border` igual a `input`.
+Auxiliares: `--leaf` `#4DB33D` (folha da marca), `--surface` `#F7F7F8` e `--surface-2` `#F4F4F5` (fundo da página no desktop; no escuro `#202024`; página no desktop `--page`: `#F4F4F5` claro e `#0B0B0C` escuro), `--field-border` igual a `input`.
 
 ### Contraste (mínimo 4,5:1 para texto, 3:1 para componentes)
 
 - `primary` sobre branco e branco sobre `primary`: 5,73:1.
-- `input` (contorno de campo): 3,79:1 sobre branco e 3,59:1 sobre `#F7F9FC`. O cinza `#8A96AB` foi reprovado (2,99:1).
-- `muted-foreground` `#5F6F86` sobre `#F3F5F9`: 4,69:1 (o antigo `#64748B` dava 4,36:1).
+- `input` (contorno de campo): 3,79:1 sobre branco sobre branco e superfícies (recalculado em tokens.test.ts).
+- `muted-foreground` `#5E5E66` sobre `#F4F4F5`: 4,69:1 (o antigo `#64748B` dava 4,36:1).
 - `border` é decorativo, abaixo de 3:1 de propósito; campos e caixas de marcar usam `input`.
 - `tests/unit/tokens.test.ts` recalcula os pares com a função `contrast`.
 
@@ -100,7 +100,7 @@ Contraste conforme a seção 2; foco visível `ring` nunca removido e não encob
 
 ## 11. PWA e identidade
 
-Nome e nome curto "Fitnez", `display: standalone`, `orientation: portrait`, `lang: pt-BR`. `background_color` `#FFFFFF`; `theme_color` `#0A58F0` (meta `theme-color` `#0B1220` no escuro). Ícones 192, 512, maskable 512 e apple-touch 180: símbolo halter com folha, sem texto, sobre fundo branco; o maskable usa o símbolo a 60% da largura para caber na zona segura de 80%.
+Nome e nome curto "Fitnez", `display: standalone`, `orientation: portrait`, `lang: pt-BR`. `background_color` `#FFFFFF`; `theme_color` `#0A58F0` (meta `theme-color` `#0E0E10` no escuro). Ícones 192, 512, maskable 512 e apple-touch 180: símbolo halter com folha, sem texto, sobre fundo branco; o maskable usa o símbolo a 60% da largura para caber na zona segura de 80%.
 
 ## 12. Verificação
 

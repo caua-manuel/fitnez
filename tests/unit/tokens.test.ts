@@ -17,7 +17,7 @@ describe.each(['light', 'dark'] as const)('tokens do tema %s', (theme) => {
   it('texto auxiliar sobre cartão >= 4,5', () => { expect(contrast(t.mutedForeground, t.card)).toBeGreaterThanOrEqual(4.5); });
   it('contorno de campo sobre secundário >= 3', () => { expect(contrast(t.input, t.secondary)).toBeGreaterThanOrEqual(3); });
   it('contorno de campo sobre fundo e cartão >= 3', () => { expect(contrast(t.input, t.background)).toBeGreaterThanOrEqual(3); expect(contrast(t.input, t.card)).toBeGreaterThanOrEqual(3); });
-  it('texto auxiliar sobre secundário e fundo da página >= 4,5', () => { for (const bg of [t.secondary, t.background, theme === 'light' ? '#F3F5F9' : t.secondary]) expect(contrast(t.mutedForeground, bg)).toBeGreaterThanOrEqual(4.5); });
+  it('texto auxiliar sobre secundário e fundo da página >= 4,5', () => { for (const bg of [t.secondary, t.background, theme === 'light' ? '#F4F4F5' : t.secondary]) expect(contrast(t.mutedForeground, bg)).toBeGreaterThanOrEqual(4.5); });
   it('borda de campo no CSS usa o token de contorno', () => { expect(css).toContain('--field-border:' + palette.light.input); expect(css.toLowerCase()).toContain('--field-border:' + palette.dark.input.toLowerCase()); });
   it('todo valor aparece literalmente no CSS', () => {
     const b = block(theme === 'light' ? ':root' : '[data-theme="dark"]').toLowerCase();
@@ -28,7 +28,7 @@ describe.each(['light', 'dark'] as const)('tokens do tema %s', (theme) => {
 describe('direção visual premium minimalista', () => {
   it('botão sem brilho e sem pílula; sombra de cartão mínima', () => {
     expect(css).toContain('--shadow-blue:none');
-    expect(css).toContain('--shadow-card:0 1px 2px rgb(16 24 40 / .04)');
+    expect(css).toContain('--shadow-card:0 1px 2px rgb(0 0 0 / .04)');
     expect(css).toContain('--radius-card:16px');
     expect(css).toContain('--radius-button:14px');
   });
@@ -38,7 +38,7 @@ describe('direção visual premium minimalista', () => {
 describe('controles sem rótulo de texto: contraste de componente >= 3 (WCAG 1.4.11)', () => {
   for (const theme of ['light', 'dark'] as const) {
     const t = palette[theme]; const off = scale.switchOff[theme];
-    const surfaces = theme === 'light' ? [t.background, t.card, t.secondary, '#F3F5F9'] : [t.background, t.card, t.secondary];
+    const surfaces = theme === 'light' ? [t.background, t.card, t.secondary, '#F4F4F5'] : [t.background, t.card, t.secondary];
     it(`interruptor desligado (${theme}) contra fundo, cartão e superfícies`, () => { for (const bg of surfaces) expect(contrast(off, bg), bg).toBeGreaterThanOrEqual(3); });
     it(`polegar branco contra trilho desligado (${theme})`, () => { expect(contrast('#FFFFFF', off)).toBeGreaterThanOrEqual(3); });
     it(`interruptor ligado: trilho primário contra cartão e polegar contra trilho (${theme})`, () => { expect(contrast(t.primary, t.card)).toBeGreaterThanOrEqual(3); expect(contrast(t.primaryForeground, t.primary)).toBeGreaterThanOrEqual(3); });

@@ -5,16 +5,16 @@ export type TokenName =
 
 export const palette: Record<'light' | 'dark', Record<TokenName, string>> = {
   light: {
-    background: '#FFFFFF', foreground: '#0F172A', card: '#FFFFFF', secondary: '#F7F9FC',
-    mutedForeground: '#5F6F86', border: '#E6EAF2', input: '#76849B', primary: '#0A58F0',
-    primaryForeground: '#FFFFFF', accentSoft: '#EAF1FF', ring: '#0A58F0', success: '#0F6B45',
+    background: '#FFFFFF', foreground: '#111113', card: '#FFFFFF', secondary: '#F7F7F8',
+    mutedForeground: '#5E5E66', border: '#E6E6E8', input: '#767680', primary: '#0A58F0',
+    primaryForeground: '#FFFFFF', accentSoft: '#EFEFF1', ring: '#0A58F0', success: '#0F6B45',
     successSoft: '#DDF3E8', warning: '#8A5100', warningSoft: '#FFEECB', destructive: '#B3202F',
     destructiveSoft: '#FDE4E7',
   },
   dark: {
-    background: '#0B1220', foreground: '#EEF3FF', card: '#111A2E', secondary: '#162036',
-    mutedForeground: '#A6B4D0', border: '#243250', input: '#7D90B8', primary: '#6C9BFF',
-    primaryForeground: '#06112B', accentSoft: '#1B2F63', ring: '#8DB0FF', success: '#4CC38A',
+    background: '#121214', foreground: '#F2F2F3', card: '#19191C', secondary: '#202024',
+    mutedForeground: '#A1A1AA', border: '#2C2C31', input: '#7A7A83', primary: '#6C9BFF',
+    primaryForeground: '#0B0B0C', accentSoft: '#26262B', ring: '#8DB0FF', success: '#4CC38A',
     successSoft: '#12352A', warning: '#F2B94B', warningSoft: '#3A2D0E', destructive: '#FF7C8B',
     destructiveSoft: '#3D1B24',
   },
@@ -23,13 +23,13 @@ export const palette: Record<'light' | 'dark', Record<TokenName, string>> = {
 /** Tokens de forma e tipografia (espelham as variáveis CSS de styles.css). Azul só em ação principal, item ativo e progresso. */
 export const scale = {
   radius: { card: 16, control: 12, button: 14, sheet: 24, full: 999 },
-  shadow: { card: '0 1px 2px rgba(16,24,40,.04)', button: 'none' },
-  border: { hairline: '1px solid #E6EAF2', field: '#76849B' },
-  surface: { page: '#F3F5F9', soft: '#F7F9FC' },
+  shadow: { card: '0 1px 2px rgba(0,0,0,.04)', button: 'none' },
+  border: { hairline: '1px solid #E6E6E8', field: '#767680' },
+  surface: { page: '#F4F4F5', soft: '#F7F7F8' },
   weight: { regular: 400, medium: 500, semibold: 600, bold: 700, display: 800 },
   sheetWidth: 430,
   /** Trilho do interruptor desligado: >= 3:1 contra fundo, cartão e superfícies (WCAG 1.4.11). */
-  switchOff: { light: '#76849B', dark: '#6F82A8' },
+  switchOff: { light: '#767680', dark: '#7A7A83' },
 } as const;
 
 function luminance(hex: string): number {

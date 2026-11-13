@@ -165,7 +165,7 @@
 .tr-start{min-height:52px;font-size:1rem;font-weight:600}
 .tr-tabs{gap:4px;padding:4px;background:var(--surface-2);border-radius:var(--radius-control)}
 .tr-tabs button{flex:1 1 0;justify-content:center;min-height:44px;border-radius:10px;font-weight:500;color:var(--muted-foreground);padding:0 6px}
-.tr-tabs button[aria-selected=true]{background:var(--card);color:var(--foreground);font-weight:600;box-shadow:0 1px 2px rgb(16 24 40 / .06)}
+.tr-tabs button[aria-selected=true]{background:var(--card);color:var(--foreground);font-weight:600;box-shadow:0 1px 2px rgb(0 0 0 / .06)}
 .tr-tabs button[aria-selected=true] svg{color:var(--primary)}
 .tr-ex{padding:16px;border-radius:var(--radius-card);box-shadow:none}
 .tr-ex-top .grow{min-height:56px;gap:2px}
