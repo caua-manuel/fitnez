@@ -1,0 +1,119 @@
+/* Editor de treinos e exercícios (tela-5, nº 10; tela-4 e tela-6 para menus). Prefixo ed-. */
+.tr-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.tr-title-text{min-width:0}
+.tr-title-row .tr-new{flex:none;min-height:48px;padding:0 18px 0 14px;gap:6px;border-radius:16px;font-size:1rem;margin-top:2px}
+
+.ed-page,.ed-form{display:grid;gap:18px;min-width:0}
+.ed-page>*,.ed-form>*{margin:0;min-width:0}
+.ed-top{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin:-4px 0 0}
+.ed-back{margin-left:-10px}
+.ed-title{margin:0;text-align:center;font-size:1.25rem;font-weight:800;letter-spacing:-.02em;line-height:1.2;overflow-wrap:anywhere}
+.ed-note{color:var(--muted-foreground);font-size:.9375rem;font-weight:500;line-height:1.45}
+.ed-section{margin:10px 0 -4px;font-size:1.25rem;font-weight:800;letter-spacing:-.02em}
+.ed-empty{color:var(--muted-foreground)}
+
+/* Campos */
+.ed-field{display:grid;gap:8px;min-width:0}
+.ed-field>label,.ed-blocks>legend{margin:0;font-size:.9375rem;font-weight:700;color:var(--foreground)}
+.ed-field input[type=text],.ed-field textarea,.ed-select select{width:100%;min-height:52px;padding:0 16px;border:1.5px solid var(--input);border-radius:14px;background:var(--card);color:var(--foreground);font-size:1.0625rem;font-weight:600;text-align:left}
+.ed-field textarea{padding:12px 16px;line-height:1.4;resize:vertical;font-weight:500}
+.ed-field input::placeholder{color:var(--muted-foreground);font-weight:500}
+.ed-field.bad input[type=text],.ed-field.bad textarea,.ed-field.bad select,.ed-stepper.bad{border-color:var(--destructive)}
+.ed-help{margin:0;color:var(--muted-foreground);font-size:.875rem;font-weight:500;line-height:1.4}
+.ed-error{display:flex;align-items:flex-start;gap:6px;margin:0;color:var(--destructive);font-size:.9375rem;font-weight:600;line-height:1.35}
+.ed-error svg{flex:none;margin-top:1px}
+.ed-select{position:relative}
+.ed-select select{appearance:none;-webkit-appearance:none;padding-right:48px}
+.ed-select-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--foreground)}
+
+.ed-stepper{display:flex;align-items:center;min-height:52px;padding:0 4px 0 12px;border:1.5px solid var(--input);border-radius:14px;background:var(--card)}
+.ed-stepper:focus-within{outline:3px solid var(--ring);outline-offset:2px}
+.ed-field .ed-stepper input[type=text]{flex:1 1 auto;min-width:0;min-height:48px;padding:0;border:0;border-radius:0;background:transparent;font-size:1.125rem;font-weight:700;text-align:left;font-variant-numeric:tabular-nums;outline:none}
+.ed-unit{padding-right:6px;color:var(--muted-foreground);font-weight:600}
+.ed-stepper button{flex:none;display:inline-grid;place-items:center;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:12px;background:transparent;color:var(--foreground)}
+@media(hover:hover) and (pointer:fine){.ed-stepper button:hover{background:var(--secondary)}}
+.ed-stepper button:active{background:var(--accent-soft);color:var(--primary)}
+
+.ed-blocks{display:grid;gap:10px;min-width:0;margin:0;padding:0;border:0}
+.ed-blocks>legend{padding:0;margin-bottom:6px}
+.ed-block{display:grid;gap:10px;min-width:0;padding:12px;border-radius:16px;background:var(--secondary)}
+.ed-block-title{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 8px;margin:0}
+.ed-block-title span{color:var(--muted-foreground);font-size:.875rem;font-weight:500}
+.ed-block-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.ed-block-row .ed-field>label{font-size:.875rem;font-weight:600;color:var(--muted-foreground)}
+
+.ed-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:8px}
+.ed-actions.stack{margin-top:10px}
+.ed-actions .button.destructive{min-height:52px}
+
+/* Lista de exercícios do treino */
+.ed-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.ed-ex{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:6px;padding:8px 6px;border:1px solid var(--border);border-radius:20px;background:var(--card);box-shadow:var(--shadow-card)}
+.ed-move{display:grid;justify-items:center}
+.ed-move .icon-button:disabled{opacity:.35}
+.ed-ex-body{min-width:0;display:grid;gap:3px;padding:2px 0}
+.ed-ex-body h4{margin:0;font-size:1.0625rem;font-weight:800;letter-spacing:-.015em;line-height:1.25;overflow-wrap:anywhere}
+.ed-ex-meta{color:var(--muted-foreground);font-size:.9375rem;font-weight:500;line-height:1.35;overflow-wrap:anywhere}
+.ed-menu-wrap{position:relative}
+.ed-menu-wrap .ed-pop{top:46px;right:0;min-width:12rem}
+.tr-menu button.danger,.tr-menu button.danger:hover,.tr-menu button.danger:focus-visible{background:transparent;color:var(--destructive);border:0;font-weight:700}
+@media(hover:hover) and (pointer:fine){.tr-menu button:hover{background:var(--accent-soft)}.tr-menu button.danger:hover{background:var(--accent-soft)}}
+.ed-banner{display:grid;gap:10px;margin:0 0 14px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--card);box-shadow:var(--shadow-card)}
+.ed-banner p{margin:0;line-height:1.45}
+.ed-banner-actions{display:flex;flex-wrap:wrap;gap:8px}
+.ed-saved{margin:0;text-align:center;font-weight:600;color:var(--success-foreground,var(--foreground))}
+.ex-copied{margin:8px 0 0;font-size:.9375rem;font-weight:600;color:var(--muted-foreground)}
+.ex-input[data-suggested=true]{background:var(--accent-soft);color:var(--primary)}
+.ex-copied:empty{margin:0}
+.tr-goal{margin:10px 0 0;font-weight:600}
+.tr-found{margin:6px 0 0;padding:0 4px;color:var(--muted-foreground);font-size:.9375rem}
+.ed-add{margin-top:-2px}
+.ed-more{display:grid;gap:12px;margin-top:10px;padding-top:20px;border-top:1px solid var(--border)}
+.ed-restore{margin-top:18px;text-align:center}
+.ed-linkbtn{min-height:44px;padding:0 12px;border:0;background:transparent;color:var(--primary);font-size:1rem;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+
+/* Folhas */
+.ed-sheet-title{margin:0 0 10px;font-size:1.375rem;font-weight:800;letter-spacing:-.02em;line-height:1.2;overflow-wrap:anywhere}
+.ed-confirm-text p{margin:0 0 10px;line-height:1.45}
+.ed-new-ex{margin:4px 0 8px}
+.ed-pick-search{margin-top:12px}
+.ed-pick-list{display:grid;gap:8px;margin:12px 0 0;padding:0;list-style:none}
+.ed-pick-list button{display:grid;gap:2px;width:100%;min-height:56px;padding:10px 14px;border:1.5px solid var(--border);border-radius:16px;background:var(--card);color:var(--foreground);text-align:left;font-size:1rem;overflow-wrap:anywhere}
+.ed-pick-list button span{color:var(--muted-foreground);font-size:.9375rem;font-weight:500}
+@media(hover:hover) and (pointer:fine){.ed-pick-list button:hover{border-color:var(--primary);background:var(--accent-soft)}}
+
+/* Aviso com Desfazer, acima da barra inferior */
+.ed-toast-wrap{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:12;max-width:28rem;margin:0 auto;pointer-events:none}
+.ed-toast{pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:4px 6px 4px 18px;border-radius:16px;background:var(--foreground);color:var(--background);box-shadow:0 12px 32px rgb(11 23 48 / .3);font-weight:600;animation:ed-toast-in 200ms ease-out}
+.ed-toast-text{min-width:0;overflow-wrap:anywhere}
+.ed-toast-undo{flex:none;min-height:44px;min-width:44px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:inherit;font-size:1rem;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+@keyframes ed-toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.ed-toast{animation:none}}
+
+/* Direção v3: campos e steppers minimalistas */
+.tr-title-row .tr-new{border-radius:var(--radius-button);min-height:48px;font-weight:600}
+.ed-page,.ed-form{gap:20px}
+.ed-title{font-weight:700;font-size:1.125rem;letter-spacing:-.01em}
+.ed-section{font-weight:700;font-size:1.125rem;letter-spacing:-.01em}
+.ed-note,.ed-help{font-weight:400}
+.ed-field>label,.ed-blocks>legend{font-weight:600;font-size:.875rem}
+.ed-field input[type=text],.ed-field textarea,.ed-select select{min-height:48px;border:1px solid var(--field-border);border-radius:var(--radius-control);background:var(--card);font-size:1rem;font-weight:500}
+.ed-field textarea{font-weight:400}
+.ed-field input:focus-visible,.ed-field textarea:focus-visible,.ed-select select:focus-visible{border-color:var(--ring);outline:2px solid var(--ring);outline-offset:0}
+.ed-select-icon{color:var(--muted-foreground)}
+.ed-stepper{min-height:48px;border:1px solid var(--field-border);border-radius:var(--radius-control);background:var(--card)}
+.ed-stepper:focus-within{outline:2px solid var(--ring);outline-offset:0;border-color:var(--ring)}
+.ed-field .ed-stepper input[type=text]{font-size:1rem;font-weight:500}
+.ed-stepper button{color:var(--muted-foreground);border-radius:10px}
+.ed-block{background:var(--surface-2);border-radius:var(--radius-control)}
+.ed-block-title{font-weight:600}
+.ed-block-row .ed-field>label{font-weight:500}
+.ed-ex{border-radius:var(--radius-card);box-shadow:none}
+.ed-ex-body h4{font-weight:700;font-size:1rem}
+.ed-ex-meta{font-weight:400;font-size:.875rem}
+.ed-sheet-title{font-weight:700;font-size:1.25rem}
+.ed-pick-list button{border:1px solid var(--border);border-radius:var(--radius-control);font-weight:600}
+.ed-pick-list button span{font-weight:400;font-size:.875rem}
+.ed-toast{border-radius:var(--radius-control);box-shadow:var(--shadow-sheet);font-weight:500}
+.ed-toast-undo{font-weight:700}
+.ed-linkbtn{font-weight:600}

@@ -1,0 +1,51 @@
+/* Paleta das ilustrações SVG. Os valores claros são também o fallback inline nos componentes. */
+:root {
+  --il-bg: #e4edff;
+  --il-bg-2: #cfdeff;
+  --il-body-a: #ffffff;
+  --il-body-b: #d3e0f8;
+  --il-body-line: #aebfe3;
+  --il-muscle-hi: #4f8cff;
+  --il-pants: #1b2a52;
+  --il-skin: #f1be98;
+  --il-hair: #3a2a22;
+  --il-metal: #8794b0;
+  --il-metal-dark: #26335a;
+  --il-bench: #5e6e93;
+  --il-floor: #c4d3f2;
+}
+
+[data-theme="dark"] {
+  --il-bg: #16254f;
+  --il-bg-2: #1b2f63;
+  --il-body-a: #6580bd;
+  --il-body-b: #405891;
+  --il-body-line: #7d96cf;
+  --il-muscle-hi: #b4cdff;
+  --il-pants: #0d1633;
+  --il-metal: #a3b2d2;
+  --il-metal-dark: #cdd8f2;
+  --il-bench: #8294bd;
+  --il-floor: #263a70;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    --il-bg: #16254f;
+    --il-bg-2: #1b2f63;
+    --il-body-a: #6580bd;
+    --il-body-b: #405891;
+    --il-body-line: #7d96cf;
+    --il-muscle-hi: #b4cdff;
+    --il-pants: #0d1633;
+    --il-metal: #a3b2d2;
+    --il-metal-dark: #cdd8f2;
+    --il-bench: #8294bd;
+    --il-floor: #263a70;
+  }
+}
+
+.il {
+  display: block;
+  flex: none;
+}

@@ -25,3 +25,16 @@ Thumbs.db
 # Logs de agentes e previews locais
 .codex-*
 .devops-preview*
+
+.prototipo-dist*/
+
+# Dados pessoais do dono: NUNCA versionar (repositório público)
+perfil-pessoal*
+*.local.json
+*.local.md
+
+# Capturas de tela de verificação (geradas, pesadas)
+capturas/
+
+# Arquivos temporários de edição de agentes
+*.tmp.*

@@ -27,7 +27,7 @@ async function files(directory: string, relative = ''): Promise<string[]> {
     : [`${relative}${entry.name}`]))).flat();
 }
 const artifact = await files('dist');
-assert.ok(artifact.every(file => /^(?:assets\/[^/]+\.(?:js|css)|index\.html|sw\.js|manifest\.webmanifest|(?:icon-(?:192|512|maskable-512)|apple-touch-icon)\.png)$/.test(file)), 'Arquivo inesperado no artefato público.');
+assert.ok(artifact.every(file => /^(?:assets\/[^/]+\.(?:js|css)|img\/(?:meal|exercise|hero)\/[A-Za-z0-9-]+\.jpg|fonts\/(?:figtree-latin(?:-ext)?-wght-normal\.woff2|Figtree-OFL\.txt)|index\.html|sw\.js|manifest\.webmanifest|(?:icon-(?:192|512|maskable-512)|apple-touch-icon)\.png)$/.test(file)), 'Arquivo inesperado no artefato público.');
 for (const url of urls) {
   assert.equal(typeof url, 'string');
   assert.ok(url.startsWith(base) && !url.includes('..'), `URL fora da base: ${url}`);

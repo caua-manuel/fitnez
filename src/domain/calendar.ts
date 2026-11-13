@@ -1,6 +1,6 @@
 export type DayIso = string;
 export const RIR: readonly string[] = ['3', '2–3', '2', '4', '2', '1–2', '1–2', '4', '2', '1–2', '1–2', '4'];
-export const WEEK_NOTES: Readonly<Record<number, string>> = { 5: 'Semana do Natal: ajuste a rotina se precisar.', 6: 'Semana do Réveillon: ajuste a rotina se precisar.', 11: 'Semana de testes.' };
+export const WEEK_NOTES: Readonly<Record<number, string>> = { 5: 'Semana do Natal.', 6: 'Semana do Réveillon.', 11: 'Semana de testes de carga, medidas e fotos.' };
 export type Phase =
  | { kind: 'pre'; daysUntil: number }
  | { kind: 'done' }

@@ -6,7 +6,7 @@ export function Card({ title, children, className = '' }: { title: string; child
 export function Foundation({ children }: { children: ReactNode }) { return <p className="foundation">{children}</p>; }
 export function BackupReminder() {
  const { protection } = useData();
- return protection?.backupDue ? <aside className="reminder"><strong>Guarde uma cópia dos seus dados</strong><p>Seu backup semanal está pendente. Guarde o arquivo fora deste aparelho e confirme a cópia.</p><a className="text-link" href="#mais">Fazer backup</a></aside> : null;
+ return protection?.backupDue ? <aside className="reminder"><strong>Guarde uma cópia dos seus dados</strong><p>Seu backup semanal está pendente. Guarde o arquivo fora deste aparelho e confirme a cópia.</p><a className="text-link" href="#perfil">Fazer backup</a></aside> : null;
 }
 export function Icon({ name }: { name: string }) {
  const paths: Record<string, ReactNode> = {

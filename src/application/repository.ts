@@ -4,11 +4,13 @@ export type Payload = Record<string, any>;
 export interface Exercise extends Payload { n: string; s: number[]; r: string[]; m: string; t?: string; rest?: number }
 export interface Session extends Payload { name: string; sub?: string; min?: string; ex: string[] }
 export interface Plan extends Payload { ex: Record<string, Exercise>; sess: Record<string, Session>; order: string[]; alt?: string; cond?: string[] }
-export interface DayRecord extends Payload { log?: Record<string, Payload[]>; done?: boolean; feel?: number; over?: string; cond?: Payload; notes?: Record<string, string>; diet?: Payload }
+export interface DayRecord extends Payload { log?: Record<string, Payload[]>; done?: boolean; feel?: number; over?: string; cond?: Payload; notes?: Record<string, string>; diet?: Payload;
+ workout?: { sessionId: string; startedAt: number; finishedAt?: number; status: 'partial' | 'done'; sets: number; volume: number };
+ acts?: Partial<Record<'gym'|'bjj'|'volei'|'cond', boolean>> }
 export interface StateV3 extends Payload {
  v: 3; revision: number;
  catalog: { plan: Plan; diet: Payload; recipes: Payload[]; revision: number; [key: string]: any };
- settings: { start: string; sched: Payload[]; theme: 'auto'|'light'|'dark'; [key: string]: any };
+ settings: { start: string; sched: Payload[]; theme: 'auto'|'light'|'dark'; profile?: { name: string; goal: string }; notifications?: { enabled: boolean; restEnd: boolean }; [key: string]: any };
  history: { days: Record<string, DayRecord>; measurements: Record<string, Payload>; [key: string]: any };
  snapshots: Record<string, Payload>; recovery: Record<string, Payload>;
  meta: { initializedAt: number; updatedAt: number; migrationCompleted: boolean; migrationStatus?: 'none'|'completed'|'pending'|'invalid'; lastBackupGeneratedAt: number|null; lastBackupConfirmedAt: number|null; [key: string]: any };

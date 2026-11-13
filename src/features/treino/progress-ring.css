@@ -1,0 +1,6 @@
+.pr-ring{position:relative;flex:none;display:inline-grid;place-items:center}
+.pr-ring>svg{position:absolute;inset:0;display:block}
+.pr-ring .ring-svg-track{stroke:var(--secondary)}
+.pr-ring .ring-svg-fill{stroke:var(--primary);stroke-linecap:round;transition:stroke-dashoffset 300ms ease-out}
+.pr-value{position:relative;font-size:1.75rem;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--foreground)}
+@media(prefers-reduced-motion:reduce){.pr-ring .ring-svg-fill{transition:none}}

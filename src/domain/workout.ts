@@ -15,9 +15,11 @@ export function parseNumber(v: unknown): number | null {
 export function setsForWeek(ex: Exercise, week: number): { sets: number; reps: string } {
  const block = Math.floor(week / 4) + 1;
  const deload = week % 4 === 3;
- const col = Math.min(2, Math.max(0, deload ? Math.max(0, block - 2) : block - 1));
- const n = ex.s[col] ?? ex.s[0] ?? 0;
- return { sets: deload ? Math.max(1, Math.ceil(n / 2)) : n, reps: ex.r[col] ?? ex.r[0] ?? '' };
+ // Séries: coluna do bloco corrente. Repetições: no deload, coluna do bloco anterior (casos do plano: semanas 3, 7 e 11).
+ const sCol = Math.min(2, Math.max(0, block - 1));
+ const rCol = Math.min(2, Math.max(0, deload ? block - 2 : block - 1));
+ const n = ex.s[sCol] ?? ex.s[0] ?? 0;
+ return { sets: deload ? Math.max(1, Math.ceil(n / 2)) : n, reps: ex.r[rCol] ?? ex.r[0] ?? '' };
 }
 
 export function sessionVolume(entries: SetEntry[][]): number {
