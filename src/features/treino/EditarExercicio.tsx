@@ -8,7 +8,7 @@ import type { DraftErrors, ExerciseDraft } from '../../domain/exerciseDraft';
 import { CamposExercicio } from './Campos';
 import { Topo, VALE_DEPOIS, focusFirstInvalid } from './Topo';
 import { usePlanEditor } from './planActions';
-import { announce } from './UndoToast';
+import { showToast } from '../../ui/UndoToast';
 import './editor.css';
 
 /** Tela de criar/editar exercício (tela-5, nº 10). Sem `ex`, cria um exercício novo e o coloca no treino. */
@@ -39,7 +39,7 @@ export function EditarExercicio({ id, ex }: { id: string; ex?: string }) {
    return addExerciseToSession(saved.plan, id, saved.id);
   });
   setSaving(false);
-  if (ok) { announce(ex ? 'Exercício salvo.' : 'Exercício adicionado ao treino.'); window.location.hash = back; }
+  if (ok) { showToast(ex ? 'Exercício salvo.' : 'Exercício adicionado ao treino.'); window.location.hash = back; }
  };
 
  return <form className="ed-page" onSubmit={submit} noValidate>

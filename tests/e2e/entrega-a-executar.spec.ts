@@ -49,7 +49,7 @@ test.afterEach(async ({ page }) => { expect((page as any).__errors, 'Sem exceç�
 
 const kg = (page: Page, n: number) => page.getByLabel(`Carga (kg), série ${n}`);
 const reps = (page: Page, n: number) => page.getByLabel(`Repetições, série ${n}`);
-const done = (page: Page, n: number) => page.getByRole('button', { name: `Concluir série ${n}` });
+const done = (page: Page, n: number) => page.getByRole('button', { name: `Série ${n} concluída` });
 
 async function start(page: Page, days: Record<string, any> = {}) {
  await seed(page, days);
@@ -90,7 +90,7 @@ test('Executar: série 2 com campos vazios herda os valores da anterior em um to
  await done(page, 2).click();
  await expect(kg(page, 2)).toHaveValue('30');
  await expect(reps(page, 2)).toHaveValue('8');
- await expect(page.getByRole('button', { name: 'Reabrir série 2' })).toBeVisible();
+ await expect(page.getByRole('button', { name: 'Série 2 concluída' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('Executar: sair no meio e voltar mostra Continuar treino com tudo preservado', async ({ page }) => {
@@ -105,7 +105,7 @@ test('Executar: sair no meio e voltar mostra Continuar treino com tudo preservad
  await page.getByRole('link', { name: 'Continuar treino' }).click();
  await expect(kg(page, 1)).toHaveValue('30');
  await expect(reps(page, 1)).toHaveValue('8');
- await expect(page.getByRole('button', { name: 'Reabrir série 1' })).toBeVisible();
+ await expect(page.getByRole('button', { name: 'Série 1 concluída' })).toHaveAttribute('aria-pressed', 'true');
  const rec = await dayRecord(page);
  expect(rec.log.supino[0]).toMatchObject({ kg: '30', reps: '8', done: true });
 });
@@ -129,9 +129,9 @@ test('Executar: recarregar durante o descanso retoma o tempo restante', async ({
 
 test('Executar: Adicionar série cria uma série extra', async ({ page }) => {
  await start(page);
- await expect(page.getByRole('button', { name: /Concluir série \d/ })).toHaveCount(4);
+ await expect(page.getByRole("button", { name: /Série [0-9] concluída/ })).toHaveCount(4);
  await page.getByRole('button', { name: 'Adicionar série' }).click();
- await expect(page.getByRole('button', { name: /Concluir série \d/ })).toHaveCount(5);
+ await expect(page.getByRole("button", { name: /Série [0-9] concluída/ })).toHaveCount(5);
  await expect(kg(page, 5)).toBeVisible();
 });
 
@@ -162,7 +162,7 @@ test('Executar: Concluir treino grava os campos e mostra o resumo real', async (
  expect(rec.log.supino[1]).toMatchObject({ kg: '30', reps: '8', done: true });
  expect(await noHScroll(page)).toBe(true);
  await expect(page.getByRole('link', { name: 'Voltar ao início' })).toBeVisible();
- await expect(page.getByRole('link', { name: 'Ver resultado' })).toBeVisible();
+ await expect(page.getByRole('link', { name: 'Ver treino' })).toBeVisible();
 });
 
 test('Executar: retomar abre no primeiro exercício incompleto', async ({ page }) => {
@@ -197,4 +197,101 @@ test('Executar: Concluir treino com exercícios intocados pede confirmação', a
  await page.getByRole('button', { name: 'Concluir treino' }).click();
  await page.getByRole('dialog').getByRole('button', { name: 'Concluir', exact: true }).click();
  await expect(page).toHaveURL(/#treino\/UA\/concluido\?dia=/);
+});
+
+test('Executar: rótulo da série é estável e o estado fica em aria-pressed', async ({ page }) => {
+ await start(page);
+ const check = done(page, 1);
+ await expect(check).toHaveAttribute('aria-pressed', 'false');
+ await kg(page, 1).fill('30'); await reps(page, 1).fill('8');
+ await check.click();
+ await expect(page.getByRole('button', { name: 'Série 1 concluída' })).toHaveAttribute('aria-pressed', 'true');
+ await expect(page.getByRole('button', { name: /Reabrir/ })).toHaveCount(0);
+ await expect(page.getByRole('button', { name: 'Cronômetro do treino em pausa' })).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('Executar: 320x640 com descanso ativo, o rodapé é enxuto e não cobre o campo focado nem Adicionar série', async ({ page }) => {
+ await page.setViewportSize({ width: 320, height: 640 });
+ await start(page);
+ await kg(page, 1).fill('30'); await reps(page, 1).fill('8');
+ await done(page, 1).click();
+ await expect(page.getByRole('timer')).toBeVisible();
+ const footer = page.locator('.ex-footer');
+ const fh = (await footer.boundingBox())!.height;
+ expect(fh).toBeLessThanOrEqual(640 * 0.25);
+ expect(await noHScroll(page)).toBe(true);
+ for (const name of ['−15 s', '+15 s', 'Pular', 'Concluir treino']) {
+  const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+  expect(box.height).toBeGreaterThanOrEqual(44);
+  expect(box.x + box.width).toBeLessThanOrEqual(320);
+ }
+ const clear = async (loc: ReturnType<Page['locator']>) => {
+  const top = (await footer.boundingBox())!.y;
+  const b = (await loc.boundingBox())!;
+  expect(b.y + b.height, 'acima do rodapé').toBeLessThanOrEqual(top + 0.5);
+  expect(b.y).toBeGreaterThanOrEqual(0);
+ };
+ await reps(page, 2).focus(); // primeiro campo vazio, focado por teclado
+ await clear(reps(page, 2));
+ await reps(page, 4).focus(); // última série, mais perto do rodapé
+ await clear(reps(page, 4));
+ const add = page.getByRole('button', { name: 'Adicionar série' });
+ await add.scrollIntoViewIfNeeded();
+ await clear(add);
+ await add.click();
+ await expect(kg(page, 5)).toBeAttached();
+ await kg(page, 5).focus();
+ await clear(kg(page, 5));
+});
+
+test('Executar: concluir Upper A e depois registrar Upper B no mesmo dia mantém os dois', async ({ page }) => {
+ await start(page);
+ await kg(page, 1).fill('30'); await reps(page, 1).fill('8');
+ await done(page, 1).click();
+ await page.getByRole('button', { name: 'Concluir treino' }).click();
+ await page.getByRole('dialog', { name: 'Concluir o treino?' }).getByRole('button', { name: 'Concluir', exact: true }).click();
+ await expect(page).toHaveURL(/#treino\/UA\/concluido\?dia=/);
+ // Segundo treino do dia (Upper B não repete exercícios do Upper A).
+ await page.goto(`#treino/UB/executar?dia=${today()}`);
+ await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible();
+ const ex = page.getByLabel(/^Repetições, série 1$/);
+ await ex.fill('10');
+ const carga = page.getByLabel(/^Carga \(kg\), série 1$/);
+ if (await carga.count()) await carga.fill('20');
+ await done(page, 1).click();
+ await page.getByRole('button', { name: 'Concluir treino' }).click();
+ const dlg = page.getByRole('dialog', { name: 'Concluir o treino?' });
+ if (await dlg.count()) await dlg.getByRole('button', { name: 'Concluir', exact: true }).click();
+ await expect(page).toHaveURL(/#treino\/UB\/concluido\?dia=/);
+ const rec = await dayRecord(page);
+ expect(rec.workouts.UA).toMatchObject({ status: 'done', sets: 1 });
+ expect(rec.workouts.UB).toMatchObject({ status: 'done', sets: 1 });
+ await page.reload();
+ for (const id of ['UA', 'UB']) {
+  await page.goto(`#treino/${id}`);
+  await expect(page.getByRole('link', { name: 'Ver resultado' })).toBeVisible();
+ }
+ const after = await dayRecord(page);
+ expect(after.workouts.UA.status).toBe('done');
+});
+
+test('Executar: Continuar treino volta ao exercício em que a pessoa estava', async ({ page }) => {
+ await start(page);
+ await page.getByRole('button', { name: 'Próximo exercício' }).click();
+ await page.getByRole('button', { name: 'Próximo exercício' }).click();
+ await expect(page.getByText('Exercício 3 de 10')).toBeVisible();
+ await page.getByRole('link', { name: 'Voltar ao treino' }).click();
+ await page.getByRole('link', { name: /Começar treino|Continuar treino/ }).click();
+ await expect(page.getByText('Exercício 3 de 10')).toBeVisible();
+});
+
+test('Executar: ao iniciar um treino com exercícios que já têm séries hoje, avisa sem apagar nada', async ({ page }) => {
+ const rows = [{ kg: '30', reps: '8', done: true }];
+ await seed(page, { [today()]: { log: { supino: rows }, workouts: { UB: { sessionId: 'UB', startedAt: 1, finishedAt: 2, status: 'done', sets: 1, volume: 240 } }, workout: { sessionId: 'UB', startedAt: 1, finishedAt: 2, status: 'done', sets: 1, volume: 240 }, acts: { gym: true } } });
+ await page.goto(`#treino/UA/executar?dia=${today()}`);
+ await expect(page.getByText('Estes exercícios já têm séries registradas hoje:')).toBeVisible();
+ await expect(page.getByRole('note')).toContainText('Supino com halteres');
+ const rec = await dayRecord(page);
+ expect(rec.log.supino).toEqual(rows);
+ expect(rec.workouts.UB.status).toBe('done');
 });

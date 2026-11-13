@@ -5,6 +5,8 @@ import { dayTotals, dayTargetForProfile, progress, markEaten, unmarkEaten } from
 import type { DietDay, DietOption, MealKey } from '../../domain/diet';
 import { catalogOf, dayTypeFor, readDay } from './dietData';
 
+export interface MealSnapshot { pick: string | undefined; eaten: boolean; consumed: NonNullable<DietDay['consumed']>[MealKey] }
+
 /** Leitura do dia e gravação por commit. A regra (marcar, desmarcar, totais) vem de src/domain/diet.ts. */
 export function useDietDay(day: DayIso) {
  const { state, commit } = useData();
@@ -39,5 +41,17 @@ export function useDietDay(day: DayIso) {
   },
   mark(meal: MealKey, opt: DietOption) { update(d => markEaten({ ...d, pick: { ...d.pick, [meal]: opt.key } }, meal, opt)); },
   unmark(meal: MealKey) { update(d => unmarkEaten(d, meal)); },
+  /** Foto de uma refeição (opção escolhida, consumo e cópia consumida) para desfazer sem tocar nas outras refeições. */
+  snapshotMeal(meal: MealKey): MealSnapshot {
+   return { pick: dd.pick[meal], eaten: Boolean(dd.eaten[meal]), consumed: dd.consumed?.[meal] ? { ...dd.consumed[meal]! } : undefined };
+  },
+  restoreMeal(meal: MealKey, snap: MealSnapshot) {
+   update(d => {
+    const pick = { ...d.pick }; if (snap.pick === undefined) delete pick[meal]; else pick[meal] = snap.pick;
+    const eaten = { ...d.eaten }; if (snap.eaten) eaten[meal] = true; else delete eaten[meal];
+    const consumed = { ...d.consumed }; if (snap.consumed) consumed[meal] = snap.consumed; else delete consumed[meal];
+    return { ...d, pick, eaten, consumed };
+   });
+  },
  };
 }

@@ -134,3 +134,16 @@ li:first-child>.ev-row-measure{border-top:0}
 .ev-med-detail{border-top:1px solid var(--border);padding-top:4px}
 .ev-tap{margin:6px 0 0;font-size:.8125rem}
 .ev-disclaimer{margin:16px 4px 8px;font-size:.8125rem;line-height:1.4;color:var(--muted-foreground);text-align:center}
+
+/* Medidas fora do plano, checkbox do perfil, linha de medida com seta */
+.ev-out{list-style:none;margin:0;padding:0}
+.ev-out li{display:grid;gap:2px;padding:10px 0;border-top:1px solid var(--border)}
+.ev-out li:first-child{border-top:0}
+.ev-out-day{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-weight:700;font-variant-numeric:tabular-nums}
+.ev-out-vals{color:var(--muted-foreground);font-size:.9375rem}
+.ev-check{display:flex;align-items:flex-start;gap:12px;min-height:44px;margin:0 0 14px;padding:10px 0;cursor:pointer}
+.ev-check input{flex:none;width:24px;height:24px;margin:0;accent-color:var(--primary)}
+.ev-check span{display:grid;gap:2px;font-weight:600}
+.ev-check small{font-size:.8125rem;font-weight:400;color:var(--muted-foreground)}
+.ev-period .ui-menu{left:0;right:0}
+.ev-period-btn{display:flex;align-items:center}

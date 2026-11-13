@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
 import { isLower, muscleGroupOf } from '../../domain/muscleGroups';
@@ -6,13 +6,15 @@ import { suggestNext } from '../../domain/progression';
 import { adjustRest, restRemaining } from '../../domain/restTimer';
 import { countDoneSets, lastPerformance, sessionVolume, setsForWeek } from '../../domain/workout';
 import type { SetEntry } from '../../domain/workout';
+import { getWorkout, overlappingExercises, upsertWorkout } from '../../domain/workoutRecord';
+import type { WorkoutMeta } from '../../domain/workoutRecord';
 import type { Exercise, StateV3 } from '../../application/repository';
 import { notifyRestEnd } from '../../pwa/notifications';
 import { Icon } from '../../ui/icons';
 import { Thumb } from '../../ui/Thumb';
 import { Glyph } from './glyphs';
-import { GROUP_LABEL, firstIncomplete, formatDay, formatKg, planWeek, todayIso } from './util';
-import { ConfirmDialog } from './Sheet';
+import { ConfirmSheet } from '../../ui/Sheet';
+import { GROUP_LABEL, firstIncomplete, formatDay, formatKg, planWeek, readCursor, todayIso, writeCursor } from './util';
 import './treino.css';
 
 const REST_KEY = 'treino12:descanso';
@@ -63,25 +65,23 @@ function initialRows(state: StateV3, id: string, day: string, week: number): Rec
  return out;
 }
 
-function Sheet({ rest, name, now, ended, onAdjust, onClose }: { rest: Rest; name: string; now: number; ended: boolean; onAdjust: (d: number) => void; onClose: () => void }) {
+function RestPanel({ rest, name, now, ended, onAdjust, onClose }: { rest: Rest; name: string; now: number; ended: boolean; onAdjust: (d: number) => void; onClose: () => void }) {
  const left = restRemaining(rest.endsAt, now);
  const pct = rest.total > 0 ? Math.min(100, Math.max(0, (left / rest.total) * 100)) : 0;
- return <section className={`ex-sheet${ended ? ' ended' : ''}`} aria-label="Descanso">
-  <div className="ex-sheet-top">
-   <div>
-    <strong>{ended ? 'Descanso terminado' : 'Descanso'}</strong>
-    <span className="tr-meta" style={{ display: 'block' }}>{name}</span>
+ return <section className={`ex-sheet compact${ended ? ' ended' : ''}`} aria-label="Descanso">
+  <div className="ex-rest-row">
+   <div className="ex-rest-time">
+    <span className="ex-clock num" role="timer" aria-label={`Tempo de descanso restante, ${name}`}>{clock(left)}</span>
+    <span className="ex-rest-state" aria-hidden="true">{ended ? 'Próxima série' : 'Descanso'}</span>
    </div>
-   <span className="ex-clock num" role="timer" aria-label="Tempo de descanso restante">{clock(left)}</span>
+   <div className="ex-sheet-actions">
+    <button type="button" className="button secondary" onClick={() => onAdjust(-15)}>−15 s</button>
+    <button type="button" className="button secondary" onClick={() => onAdjust(15)}>+15 s</button>
+    <button type="button" className="button secondary" onClick={onClose}>{ended ? 'Fechar' : 'Pular'}</button>
+   </div>
   </div>
   <div className="ex-bar" aria-hidden="true"><span style={{ width: `${pct}%` }} /></div>
   <p className="visually-hidden" role="status">{ended ? 'Descanso terminado. Próxima série.' : ''}</p>
-  {ended ? <p className="ex-done-text"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10" /></svg> Próxima série.</p> : null}
-  <div className="ex-sheet-actions">
-   <button type="button" className="button secondary" onClick={() => onAdjust(-15)}>−15 s</button>
-   <button type="button" className="button secondary" onClick={() => onAdjust(15)}>+15 s</button>
-   <button type="button" className="button secondary" onClick={onClose}>{ended ? 'Fechar' : 'Pular'}</button>
-  </div>
  </section>;
 }
 
@@ -101,6 +101,7 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
  const [busy, setBusy] = useState(false);
  const [copied, setCopied] = useState<{ i: number; exId: string; text: string } | null>(null);
  const [askFinish, setAskFinish] = useState(false);
+ const [overlap, setOverlap] = useState<string[]>([]);
  // Pausa do cronômetro do treino (só visual e da sessão aberta; o tempo parado não entra na duração final).
  const [pausedAt, setPausedAt] = useState<number | null>(null);
  const [pausedMs, setPausedMs] = useState(0);
@@ -109,12 +110,19 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
 
  useEffect(() => {
   if (!state || rows) return;
-  startedRef.current = state.history.days[day]?.workout?.sessionId === id ? state.history.days[day]!.workout!.startedAt : Date.now();
+  const rec = state.history.days[day], plan0 = state.catalog.plan;
+  const own = getWorkout(rec, id);
+  startedRef.current = own?.startedAt ?? Date.now();
   const init = initialRows(state, id, day, week);
+  const ids = (plan0.sess[id]?.ex ?? []).filter(e => plan0.ex[e]);
   setRows(init);
-  setIdx(firstIncomplete(init, (state.catalog.plan.sess[id]?.ex ?? []).filter(e => state.catalog.plan.ex[e])));
+  // Retoma onde a pessoa estava; sem cursor, cai no primeiro exercício incompleto.
+  setIdx(readCursor(day, id, ids.length) ?? firstIncomplete(init, ids));
   setRest(readRest(id, day));
+  // Aviso (sem apagar nada): séries de hoje que vieram de outro treino.
+  if (!own) setOverlap(overlappingExercises(rec, plan0, id).map(e => plan0.ex[e]?.n ?? 'Exercício'));
  }, [state, rows, id, day, week]);
+ useEffect(() => { if (rows) writeCursor(day, id, idx); }, [rows, day, id, idx]);
 
  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(t); }, []);
 
@@ -130,6 +138,17 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
   const name = plan?.ex[rest.exId]?.n ?? 'Exercício';
   notifyRestEnd(name).catch(() => undefined);
  }, [rest, ended, now, id, day, plan]);
+
+ // Mede a altura real do rodapé fixo e a publica em --ex-footer-h (espaçador e scroll-padding dependem dela).
+ const observer = useRef<ResizeObserver | null>(null);
+ const footerRef = useCallback((node: HTMLDivElement | null) => {
+  observer.current?.disconnect(); observer.current = null;
+  const root = document.documentElement;
+  if (!node) { root.style.removeProperty('--ex-footer-h'); return; }
+  const publish = () => root.style.setProperty('--ex-footer-h', `${Math.ceil(node.getBoundingClientRect().height)}px`);
+  publish();
+  if (typeof ResizeObserver !== 'undefined') { observer.current = new ResizeObserver(publish); observer.current.observe(node); }
+ }, []);
 
  const back = <a className="tr-back" href={hrefFor({ tab: 'treino', view: 'detalhe', id })}>← Voltar</a>;
  const backIcon = <a className="icon-button ex-back" href={hrefFor({ tab: 'treino', view: 'detalhe', id })} aria-label="Voltar ao treino"><Icon name="voltar" size={24} /></a>;
@@ -161,14 +180,15 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
     const planned = setsForWeek(plan.ex[e]!, week).sets;
     if (r.some(s => s.done || s.kg !== '' || s.reps !== '') || r.length !== planned || log[e]) log[e] = r.map(s => ({ ...s }));
    }
-   const prev = rec.workout;
-   const workout: NonNullable<typeof rec.workout> = {
-    sessionId: id, startedAt: prev?.sessionId === id ? prev.startedAt : startedRef.current,
+   const prev = getWorkout(rec, id);
+   const meta: WorkoutMeta = {
+    sessionId: id, startedAt: prev?.startedAt ?? startedRef.current,
     status: finish || prev?.status === 'done' ? 'done' : 'partial', sets, volume,
    };
-   if (finish) workout.finishedAt = finishedAt; else if (prev?.sessionId === id && prev.finishedAt) workout.finishedAt = prev.finishedAt;
+   if (finish) meta.finishedAt = finishedAt; else if (prev?.finishedAt) meta.finishedAt = prev.finishedAt;
    const acts = finish ? { ...(rec.acts ?? {}), gym: true } : rec.acts;
-   draft.history.days[day] = { ...rec, log, workout, ...(acts ? { acts } : {}) };
+   // Só o treino `id` muda: os demais treinos do dia ficam como estão.
+   draft.history.days[day] = { ...upsertWorkout({ ...rec, log }, meta), ...(acts ? { acts } : {}) };
    return draft;
   });
   setSaveError(!ok);
@@ -241,7 +261,7 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
   setBusy(true);
   const ok = await persist(rows, true);
   setBusy(false);
-  if (ok) { writeRest(id, day, null); window.location.hash = hrefFor({ tab: 'treino', view: 'concluido', id, day }); }
+  if (ok) { writeRest(id, day, null); writeCursor(day, id, null); window.location.hash = hrefFor({ tab: 'treino', view: 'concluido', id, day }); }
  };
 
  const days = state.history.days;
@@ -258,11 +278,12 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
   <div className="ex-top">
    {backIcon}
    <span className="ex-elapsed num"><span className="visually-hidden">Tempo de treino </span>{elapsed((pausedAt ?? now) - startedRef.current - pausedMs)}</span>
-   <button type="button" className="ex-pause" aria-label={pausedAt === null ? 'Pausar cronômetro do treino' : 'Continuar cronômetro do treino'} aria-pressed={pausedAt !== null} onClick={togglePause}>
+   <button type="button" className="ex-pause" aria-label="Cronômetro do treino em pausa" aria-pressed={pausedAt !== null} onClick={togglePause}>
     {pausedAt === null ? <Glyph name="pausa" size={22} /> : <Icon name="play" size={20} />}
    </button>
   </div>
   <p className="ex-sess">{sess.name}</p>
+  {overlap.length > 0 ? <p className="ex-overlap" role="note"><strong>Estes exercícios já têm séries registradas hoje:</strong> {overlap.join(', ')}. As séries continuam salvas e nada é apagado; o que você registrar aqui as atualiza.</p> : null}
   <div className="ex-name">
    <span className="ex-count">Exercício {idx + 1} de {exIds.length}</span>
    <h2>{ex.n}</h2>
@@ -286,7 +307,7 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
     <span className="ex-n num">{i + 1}</span>
     <input className="ex-input num" inputMode="decimal" enterKeyHint="next" autoComplete="off" aria-label={`${repsLabel(ex)}, série ${i + 1}`} value={s.reps} aria-invalid={problem !== '' && !s.done && s.reps === ''} data-suggested={copied?.exId === exId && copied.i === i && s.reps !== '' ? 'true' : undefined} onChange={e => setField(i, 'reps', e.target.value)} />
     {hasKgField(ex) ? <input className="ex-input num" inputMode="decimal" enterKeyHint="done" autoComplete="off" aria-label={`${kgLabel(ex)}, série ${i + 1}`} value={s.kg} data-suggested={copied?.exId === exId && copied.i === i && s.kg !== '' ? 'true' : undefined} onChange={e => setField(i, 'kg', e.target.value)} /> : null}
-    <button type="button" className={`ex-check${s.done ? ' on' : ''}`} aria-label={s.done ? `Reabrir série ${i + 1}` : `Concluir série ${i + 1}`} aria-pressed={s.done} onClick={() => toggle(i)}>
+    <button type="button" className={`ex-check${s.done ? ' on' : ''}`} aria-label={`Série ${i + 1} concluída`} aria-pressed={s.done} onClick={() => toggle(i)}>
      <span className="ex-check-box" aria-hidden="true"><Icon name="marca" size={20} weight={3} /></span>
     </button>
    </div>)}
@@ -296,23 +317,22 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
   <button type="button" className="ex-add" onClick={addSet}><Icon name="plus" size={20} />Adicionar série</button>
   {saveError ? <p className="ex-problem" role="alert">Não foi possível salvar agora. O que você digitou continua na tela; conclua uma série ou o treino para tentar de novo.</p> : null}
 
-  <div className="ex-spacer" style={{ height: rest || askRest ? 280 : 120 }} aria-hidden="true" />
-  <div className="ex-footer">
-   {rest ? <Sheet rest={rest} name={restName} now={now} ended={ended} onAdjust={adjust} onClose={closeRest} /> : null}
-   {!rest && askRest ? <section className="ex-sheet" aria-label="Descanso">
-    <label htmlFor="rest-sec"><strong>Descanso (s)</strong></label>
-    <p className="tr-meta" style={{ margin: 0 }}>Este exercício ainda não tem tempo de descanso definido.</p>
+  <div className="ex-spacer" aria-hidden="true" />
+  <div className="ex-footer" ref={footerRef}>
+   {rest ? <RestPanel rest={rest} name={restName} now={now} ended={ended} onAdjust={adjust} onClose={closeRest} /> : null}
+   {!rest && askRest ? <section className="ex-sheet compact" aria-label="Descanso">
+    <label htmlFor="rest-sec" className="ex-ask-label"><strong>Descanso (s)</strong> <span className="tr-meta">Este exercício não tem tempo definido.</span></label>
     <div className="ex-sheet-actions two">
      <input id="rest-sec" className="ex-input num" inputMode="numeric" value={askValue} onChange={e => setAskValue(e.target.value.replace(/\D/g, ''))} />
-     <button type="button" className="button secondary" onClick={() => { const n = Number(askValue); if (n > 0) beginRest(askRest, n); }}>Iniciar descanso</button>
+     <button type="button" className="button secondary" onClick={() => { const n = Number(askValue); if (n > 0) beginRest(askRest, n); }}>Iniciar</button>
      <button type="button" className="button secondary" onClick={() => setAskRest(null)}>Pular</button>
     </div>
    </section> : null}
-   <button type="button" className="button block" disabled={doneSets === 0 || busy} aria-describedby={doneSets === 0 ? 'ex-hint' : undefined} onClick={tryFinish}>Concluir treino</button>
-   {doneSets === 0 ? <p id="ex-hint" className="tr-meta" style={{ margin: '4px 0 0', textAlign: 'center' }}>Conclua ao menos uma série para finalizar.</p> : null}
+   <button type="button" className="button block ex-finish" disabled={doneSets === 0 || busy} aria-describedby={doneSets === 0 ? 'ex-hint' : undefined} onClick={tryFinish}>Concluir treino</button>
+   {doneSets === 0 ? <p id="ex-hint" className="visually-hidden">Conclua ao menos uma série para finalizar.</p> : null}
   </div>
-  {askFinish ? <ConfirmDialog title="Concluir o treino?" tone="neutral" confirmLabel="Concluir" cancelLabel="Continuar treinando" onCancel={() => setAskFinish(false)} onConfirm={() => { void finish(); }}>
+  {askFinish ? <ConfirmSheet title="Concluir o treino?" destructive={false} confirmLabel="Concluir" cancelLabel="Continuar treinando" onCancel={() => setAskFinish(false)} onConfirm={() => { void finish(); }}>
    <p>Você registrou {touched} de {exIds.length} exercícios. Concluir mesmo assim?</p>
-  </ConfirmDialog> : null}
+  </ConfirmSheet> : null}
  </div>;
 }

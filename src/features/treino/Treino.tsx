@@ -12,7 +12,6 @@ import { CartaoTreino } from './Cartao';
 import { EditarTreino } from './EditarTreino';
 import { EditarExercicio } from './EditarExercicio';
 import { NovoTreino } from './NovoTreino';
-import { UndoHost } from './UndoToast';
 import { Icon } from '../../ui/icons';
 import { WEEKDAYS, minutesLabel, plural, shortDay, statusOf, todayIso, weekDays } from './util';
 import './treino.css';
@@ -41,7 +40,7 @@ function MeuPlano() {
     const date = `${weekday} · ${shortDay(day)}`;
     if (act.kind === 'gym') {
      const s = plan.sess[act.sessionId];
-     const status = phase.kind === 'week' ? statusOf(rec) : 'pending';
+     const status = phase.kind === 'week' ? statusOf(rec, act.sessionId) : 'pending';
      if (!s) return <li key={day}><CartaoTreino name="Treino removido" date={date} /></li>;
      return <li key={day}><CartaoTreino id={act.sessionId} name={s.name} href={hrefFor({ tab: 'treino', view: 'detalhe', id: act.sessionId })} date={date} exercises={plural(s.ex.length, 'exercício', 'exercícios')} minutes={minutesLabel(s.min)} status={phase.kind === 'week' ? status : null} /></li>;
     }
@@ -78,5 +77,5 @@ export function Treino({ route }: { route: Extract<Route, { tab: 'treino' }> }) 
    {tab === 'plano' ? <MeuPlano /> : <Biblioteca />}
    <p className="tr-aviso">{AVISO_SAUDE}</p>
   </div>;
- return <>{content}{route.view === 'executar' ? null : <UndoHost />}</>;
+ return content;
 }

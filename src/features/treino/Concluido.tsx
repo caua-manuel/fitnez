@@ -1,5 +1,6 @@
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
+import { getWorkout } from '../../domain/workoutRecord';
 import { Icon } from '../../ui/icons';
 import type { IconName } from '../../ui/icons';
 import { Glyph } from './glyphs';
@@ -17,9 +18,9 @@ export function Concluido({ id, day: dayParam }: { id: string; day?: string }) {
  const { state } = useData();
  if (!state) return null;
  const day = dayParam ?? todayIso();
- const rec = state.history.days[day], w = rec?.workout;
+ const rec = state.history.days[day], w = getWorkout(rec, id);
  const plan = state.catalog.plan;
- if (!w || w.sessionId !== id || w.status !== 'done') {
+ if (!w || w.status !== 'done') {
   return <section className="card"><p>Não há treino concluído para este dia.</p><a className="tr-back" href={hrefFor({ tab: 'treino', view: 'detalhe', id })}>← Voltar ao treino</a></section>;
  }
  const exercises = (plan.sess[id]?.ex ?? []).filter(e => (rec?.log?.[e] ?? []).some(r => r.done === true)).length;
@@ -41,7 +42,7 @@ export function Concluido({ id, day: dayParam }: { id: string; day?: string }) {
   <p className="ok-volume"><span className="muted">Volume</span> <strong className="num">{w.volume.toLocaleString('pt-BR')} kg</strong></p>
   <div className="ok-actions">
    <a className="button block" href={hrefFor({ tab: 'inicio' })}>Voltar ao início</a>
-   <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'detalhe', id })}>Ver resultado</a>
+   <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'detalhe', id })}>Ver treino</a>
   </div>
  </section>;
 }

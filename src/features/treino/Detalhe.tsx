@@ -14,6 +14,9 @@ import { Glyph } from './glyphs';
 import { usePlanEditor } from './planActions';
 import { ProgressRing } from './ProgressRing';
 import { StatusBadge } from './Cartao';
+import { Menu } from '../../ui/Menu';
+import { ConfirmSheet } from '../../ui/Sheet';
+import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
 import { GROUP_LABEL, dayBelongsTo, formatDay, formatKg, minutesLabel, plural, planWeek, repsText, sessionLetter, statusOf, todayIso } from './util';
 import './treino.css';
 
@@ -28,8 +31,8 @@ function performanceText(ex: Exercise, sets: SetEntry[]): string {
 }
 
 function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first }: { state: StateV3; id: string; ex: Exercise; week: number; today: string; onHistory: () => void; treinoId: string; first: boolean }) {
- const [open, setOpen] = useState(false);
  const [expanded, setExpanded] = useState(first);
+ const [confirmRemove, setConfirmRemove] = useState(false);
  const { removeExercise } = usePlanEditor();
  const days = state.history.days;
  const group = muscleGroupOf(id, ex);
@@ -42,7 +45,6 @@ function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first }
   : sug.reason === 'reduzir' ? `reduzir a carga${weighted && sug.kg !== null ? ` (${formatKg(sug.kg)} kg)` : ''} e manter ${sug.reps}`
   : weighted && sug.kg !== null ? `${formatKg(sug.kg)} kg · ${sug.reps}${sug.reason === 'manter' ? ' (manter a carga)' : ''}` : sug.reps;
  const todayDone = (days[today]?.log?.[id] ?? []).filter(r => r.done === true).length;
- const menuId = `menu-${id}`;
  const bodyId = `corpo-${id}`;
  return <li className={`tr-ex ${expanded ? 'is-open' : 'is-closed'}`}>
   <div className="tr-ex-top">
@@ -54,13 +56,15 @@ function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first }
      <span className="tr-plan"><strong className="num">{plural(plan.sets, 'série', 'séries')}</strong> · <span className="num">{repsText(ex, plan.reps)}</span></span>
     </span>
    </button></h3>
-   <button type="button" className="icon-button tr-more-ex" aria-label={`Mais opções de ${ex.n}`} aria-expanded={open} aria-controls={menuId} onClick={() => setOpen(o => !o)}><Icon name="mais" size={22} weight={2} /></button>
+   <Menu className="tr-more-ex" label={`Mais opções de ${ex.n}`} trigger={<Icon name="mais" size={22} weight={2} />} items={[
+    { label: "Editar exercício", href: hrefFor({ tab: "treino", view: "exercicio", id: treinoId, ex: id }) },
+    { label: "Ver histórico do treino", onClick: onHistory },
+    { label: "Remover do treino", danger: true, onClick: () => setConfirmRemove(true) },
+   ]} />
   </div>
-  {open ? <div className="tr-menu" id={menuId}>
-   <a href={hrefFor({ tab: 'treino', view: 'exercicio', id: treinoId, ex: id })}>Editar exercício</a>
-   <button type="button" onClick={() => { setOpen(false); onHistory(); }}>Ver histórico do treino</button>
-   <button type="button" className="danger" onClick={() => { setOpen(false); void removeExercise(treinoId, id); }}>Remover do treino</button>
-  </div> : null}
+  {confirmRemove ? <ConfirmSheet title={`Remover ${ex.n} do treino?`} confirmLabel="Remover do treino" onCancel={() => setConfirmRemove(false)} onConfirm={() => { setConfirmRemove(false); void removeExercise(treinoId, id); }}>
+   <p>O exercício sai só deste treino. O histórico fica guardado e você poderá desfazer por 6 segundos.</p>
+  </ConfirmSheet> : null}
   <div id={bodyId} hidden={!expanded}>
   <p className="tr-goal num">Meta: {plural(plan.sets, 'série', 'séries')} · {repsText(ex, plan.reps)}</p>
   {todayDone > 0 ? <p className="muted tr-last">Hoje: {todayDone} de {plan.sets} {plan.sets === 1 ? 'série feita' : 'séries feitas'}.</p> : null}
@@ -86,8 +90,10 @@ export function Detalhe({ id }: { id: string }) {
  const phase = phaseOf(state.settings.start, today);
  const dur = minutesLabel(s.min);
  const letter = sessionLetter(plan, id);
- const wk = state.history.days[today]?.workout;
- const resuming = wk?.sessionId === id && wk.status === 'partial';
+ const todayRec = state.history.days[today];
+ const finishedToday = isDone(todayRec, id);
+ const resuming = getWorkout(todayRec, id)?.status === 'partial';
+ const planPct = phase.kind === 'week' ? Math.round(phase.progress * 100) : 0;
  const logged = Object.keys(state.history.days).filter(d => dayBelongsTo(plan, state.history.days[d], id)).sort().reverse();
  return <div className="tr-detail">
   <a className="icon-button tr-backbtn" href={hrefFor({ tab: 'treino', view: 'lista' })} aria-label="Voltar aos treinos"><Icon name="voltar" size={24} /></a>
@@ -97,7 +103,10 @@ export function Detalhe({ id }: { id: string }) {
     <h2>{s.name}</h2>
     <p className="in-meta tr-hero-meta"><span><Icon name="relogio" size={20} />{dur ?? 'Duração não definida'}</span><span><Glyph name="barras" size={20} />{plural(s.ex.length, 'exercício', 'exercícios')}</span></p>
    </div>
-   {phase.kind === 'week' ? <ProgressRing percent={phase.progress * 100} size={96} stroke={11} label={`Semana ${phase.week + 1} de 12, ${Math.round(phase.progress * 100)}%`} /> : null}
+   {phase.kind === 'week' ? <div className="tr-ring-box">
+    <ProgressRing percent={phase.progress * 100} size={96} stroke={11} label={`Semana ${phase.week + 1} de 12: ${planPct}% do plano`} />
+    <p className="tr-ring-cap" aria-hidden="true">Semana {phase.week + 1} de 12<br />{planPct}% do plano</p>
+   </div> : null}
   </div>
   {fresh ? <div className="ed-banner" role="status">
    <p><strong>Treino criado.</strong> Para usá-lo num dia da semana, toque em Trocar treino, no Início.</p>
@@ -108,6 +117,10 @@ export function Detalhe({ id }: { id: string }) {
   </div> : null}
   {s.ex.length === 0
    ? <span className="button block tr-start" role="link" aria-disabled="true"><Icon name="play" size={22} />Começar treino</span>
+   : finishedToday ? <>
+    <a className="button block tr-start" href={hrefFor({ tab: 'treino', view: 'concluido', id, day: today })}><Icon name="marca" size={22} weight={2.6} />Ver resultado</a>
+    <a className="button secondary block tr-redo" href={hrefFor({ tab: 'treino', view: 'executar', id, day: today })}>Refazer hoje</a>
+   </>
    : <a className="button block tr-start" href={hrefFor({ tab: 'treino', view: 'executar', id, day: today })}><Icon name="play" size={22} />{resuming ? 'Continuar treino' : 'Começar treino'}</a>}
   <div className="tr-tabs" role="tablist" aria-label="Seções do treino">
    {TABS.map(t => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}><Icon name={t.icon} size={20} />{t.id === 'exercicios' ? `Exercícios (${s.ex.length})` : t.label}</button>)}
@@ -131,11 +144,13 @@ export function Detalhe({ id }: { id: string }) {
    {logged.length === 0 ? <p className="tr-empty">Sem registro anterior.</p> : <ul className="tr-stack" aria-label="Histórico do treino">
     {logged.map(d => {
      const rec = state.history.days[d]!;
-     const status = statusOf(rec);
-     const keys = Object.keys(rec.log ?? {}).filter(k => (rec.log?.[k] ?? []).some(r => r.done === true));
+     const status = statusOf(rec, id);
+     const wk = getWorkout(rec, id);
+     const several = listWorkouts(rec).length > 1;
+     const keys = Object.keys(rec.log ?? {}).filter(k => (rec.log?.[k] ?? []).some(r => r.done === true) && (!several || s.ex.includes(k)));
      return <li key={d} className="tr-ex">
       <div className="tr-hist-top"><h3>{formatDay(d)}</h3><StatusBadge status={status} /></div>
-      {rec.workout ? <p className="muted num">{rec.workout.sets} séries · {formatKg(rec.workout.volume)} kg de volume</p> : null}
+      {wk ? <p className="muted num">{wk.sets} {wk.sets === 1 ? 'série' : 'séries'} · {formatKg(wk.volume)} kg de volume</p> : null}
       <ul className="exercise-list">
        {keys.map(k => <li key={k}><strong>{plan.ex[k]?.n ?? 'Exercício removido'}</strong><span>{(rec.log![k] ?? []).filter(r => r.done === true).length} séries feitas</span></li>)}
       </ul>

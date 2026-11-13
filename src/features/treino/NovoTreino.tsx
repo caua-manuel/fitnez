@@ -8,7 +8,7 @@ import type { DraftErrors, ExerciseDraft } from '../../domain/exerciseDraft';
 import { Campo, CamposExercicio } from './Campos';
 import { Topo, focusFirstInvalid } from './Topo';
 import { usePlanEditor } from './planActions';
-import { announce } from './UndoToast';
+import { showToast } from '../../ui/UndoToast';
 import './editor.css';
 
 export interface SessionFields { name: string; sub: string; min: string }
@@ -45,7 +45,7 @@ export function NovoTreino() {
   setSaving(true);
   const ok = await apply(p => createSessionWithExercise(p, input, ex).plan);
   setSaving(false);
-  if (ok) { try { sessionStorage.setItem('treino12:treino-novo', created.id); } catch { /* sem armazenamento: só o aviso */ } announce('Treino criado.');window.location.hash = hrefFor({ tab: 'treino', view: 'detalhe', id: created.id }); }
+  if (ok) { try { sessionStorage.setItem('treino12:treino-novo', created.id); } catch { /* sem armazenamento: só o aviso */ } showToast('Treino criado.');window.location.hash = hrefFor({ tab: 'treino', view: 'detalhe', id: created.id }); }
  };
 
  return <form className="ed-page" onSubmit={submit} noValidate>

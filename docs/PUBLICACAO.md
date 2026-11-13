@@ -51,9 +51,8 @@ disparo manual. As Actions estão fixadas por SHA oficial verificado em
 
 1. Instala o lockfile com `npm ci` e verifica advisories moderados ou superiores.
 2. Executa testes de base, TypeScript, testes unitários/integração e build.
-3. Instala Chromium e executa o E2E com base controlada `/Projeto-Treino/`.
-4. Reconstrói com a base real derivada do repositório no ambiente CI.
-5. Somente em `main`, envia `dist/` e publica o artefato no ambiente `github-pages`.
+3. Instala Chromium e executa o E2E; build, preview e E2E usam `VITE_BASE_PATH=/fitnez/` (nome do repositório). Localmente o padrão segue `/Projeto-Treino/`; o `playwright.config.ts` deriva URL e preview da mesma variável (`E2E_PORT` troca a porta, padrão 4173) e escolhe `npm`/`npm.cmd` por plataforma.
+4. Somente em `main` **e** com a variável de repositório `PUBLICAR_PAGES` igual a `true`, envia `dist/` e publica no ambiente `github-pages`. Sem a variável, o workflow só verifica e constrói (trava de publicação; o Pages não está habilitado e a publicação aguarda autorização do dono).
 
 Pull requests não recebem permissões de publicação. O job de verificação tem
 leitura de conteúdo/Pages; somente o job de publicação recebe `pages: write`
@@ -62,6 +61,14 @@ Pages precisa existir no repositório; o workflow não habilita o serviço
 silenciosamente nem concede permissões a si mesmo.
 
 ## Habilitar no GitHub após autorização de publicação
+
+Passo a passo do dono (não executado até a autorização):
+
+- **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+- **Settings → Secrets and variables → Actions → Variables → New repository variable**: nome `PUBLICAR_PAGES`, valor `true`.
+- Rodar o workflow (push em `main` ou *Run workflow*). Endereço esperado: `https://caua-manuel.github.io/fitnez/`. Para voltar a bloquear, apagar a variável ou mudar o valor.
+
+Detalhes:
 
 1. Revisar os dados pessoais da documentação antes de criar um repositório
    público. O GitHub Free oferece Pages para repositórios públicos; requisitos

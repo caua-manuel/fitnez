@@ -1,41 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
-import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
+import { useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { useData } from '../../app/DataProvider';
 import { Icon } from '../../ui/icons';
+import { Sheet, ConfirmSheet } from '../../ui/Sheet';
+import { Menu } from '../../ui/Menu';
+import { showToast } from '../../ui/UndoToast';
 import type { DayIso } from '../../domain/calendar';
 import type { DietOption, MealKey } from '../../domain/diet';
-import { MealThumb, UndoToast } from './parts';
+import { MealThumb } from './parts';
 import { MealTop } from './Refeicao';
 import { MEAL_LOWER, MEAL_NAME, catalogOf, fmt, nextKey, parseDecimal, showDecimal } from './dietData';
-
-/** Folha de rodapé com foco contido, Escape para fechar e retorno do foco ao elemento de origem. */
-function Sheet({ title, onClose, children, initialFocus }: { title: string; onClose: () => void; children: ReactNode; initialFocus?: string }) {
- const ref = useRef<HTMLDivElement>(null);
- useEffect(() => {
-  const origin = document.activeElement as HTMLElement | null;
-  const root = ref.current;
-  const target = (initialFocus ? root?.querySelector<HTMLElement>(initialFocus) : null) ?? root?.querySelector<HTMLElement>('input,textarea,button');
-  target?.focus();
-  return () => { origin?.isConnected ? origin.focus() : null; };
- // eslint-disable-next-line react-hooks/exhaustive-deps
- }, []);
- const onKey = (e: KeyboardEvent) => {
-  if (e.key === 'Escape') { e.stopPropagation(); onClose(); return; }
-  if (e.key !== 'Tab') return;
-  const items = Array.from(ref.current?.querySelectorAll<HTMLElement>('input,textarea,button,a[href]') ?? []).filter(el => !el.hasAttribute('disabled'));
-  if (!items.length) return;
-  const first = items[0], last = items[items.length - 1];
-  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
- };
- return <>
-  <div className="sheet-backdrop" onClick={onClose} />
-  <div className="sheet dt-sheet" role="dialog" aria-modal="true" aria-label={title} ref={ref} onKeyDown={onKey}>
-   <h2 className="dt-sheet-title">{title}</h2>
-   {children}
-  </div>
- </>;
-}
 
 interface Fields { name: string; items: string; kcal: string; p: string; c: string; g: string }
 const EMPTY: Fields = { name: '', items: '', kcal: '', p: '', c: '', g: '' };
@@ -79,7 +53,7 @@ function OptionForm({ initial, title, hasRecipe, onSave, onClose }: { initial: F
  const sum = nk !== null && np !== null && nc !== null && ng !== null ? Math.round(np * 4 + nc * 4 + ng * 9) : null;
  const mismatch = sum !== null && nk !== null && nk > 0 && Math.abs(sum - nk) / nk > 0.1 ? sum : null;
  const common = (k: keyof Fields) => ({ id: `dt-f-${k}`, value: f[k], onChange: set(k), 'aria-invalid': errors[k] ? true : undefined, 'aria-describedby': errors[k] ? `dt-e-${k}` : undefined });
- return <Sheet title={title} onClose={onClose} initialFocus="#dt-f-name">
+ return <Sheet title={title} onClose={onClose} initialFocus="#dt-f-name" className="dt-sheet">
   <form onSubmit={submit} noValidate className="dt-form">
    {field('name', <input type="text" autoComplete="off" maxLength={120} {...common('name')} />)}
    {field('items', <textarea rows={5} {...common('items')} />)}
@@ -103,17 +77,8 @@ const toFields = (o: DietOption): Fields => ({ name: o.name, items: o.items.join
 
 export function GerenciarOpcoes({ meal, day, today }: { meal: MealKey; day: DayIso; today: DayIso; setDay: (d: DayIso) => void }) {
  const { state, commit } = useData();
- const [menu, setMenu] = useState<string | null>(null);
  const [form, setForm] = useState<{ mode: 'new' | 'edit'; key?: string } | null>(null);
  const [confirm, setConfirm] = useState<DietOption | null>(null);
- const [toast, setToast] = useState<{ message: string; prev: DietOption[]; id: number } | null>(null);
- const menuRoot = useRef<HTMLDivElement>(null);
- useEffect(() => {
-  if (!menu) return;
-  const close = (e: Event) => { if (!(e.target as HTMLElement).closest?.('.dt-menu-wrap')) setMenu(null); };
-  document.addEventListener('pointerdown', close);
-  return () => document.removeEventListener('pointerdown', close);
- }, [menu]);
  if (!state) return null;
  const options = catalogOf(state)[meal];
 
@@ -123,22 +88,21 @@ export function GerenciarOpcoes({ meal, day, today }: { meal: MealKey; day: DayI
   s.catalog.revision = (s.catalog.revision ?? 0) + 1;
   return s;
  });
- const withMenuFocus = (key: string, fn: () => void) => { setMenu(null); fn(); void key; };
 
  const onSave = (v: Omit<DietOption, 'key'>) => {
   if (!form) return;
   if (form.mode === 'new') void saveList([...options, { key: nextKey(options), ...v }]);
   else void saveList(options.map(o => (o.key === form.key ? { ...o, ...v } : o)));
-  setToast({ message: 'Opção salva', prev: options, id: Date.now() });
+  const prev = options;
+  showToast('Opção salva', () => void saveList(prev));
   setForm(null);
  };
- const duplicate = (o: DietOption) => { const i = options.findIndex(x => x.key === o.key); const copy = { ...o, key: nextKey(options), name: `${o.name} (cópia)`, items: [...o.items] }; void saveList([...options.slice(0, i + 1), copy, ...options.slice(i + 1)]); setToast({ message: 'Opção duplicada', prev: options, id: Date.now() }); };
+ const duplicate = (o: DietOption) => { const i = options.findIndex(x => x.key === o.key); const copy = { ...o, key: nextKey(options), name: `${o.name} (cópia)`, items: [...o.items] }; void saveList([...options.slice(0, i + 1), copy, ...options.slice(i + 1)]); const prev = options; showToast('Opção duplicada', () => void saveList(prev)); };
  const remove = (o: DietOption) => {
   const prev = options; setConfirm(null);
   void saveList(options.filter(x => x.key !== o.key));
-  setToast({ message: 'Opção excluída', prev, id: Date.now() });
+  showToast('Opção excluída', () => void saveList(prev));
  };
- const undo = () => { if (toast) void saveList(toast.prev); setToast(null); };
  const editing = form?.mode === 'edit' ? options.find(o => o.key === form.key) : undefined;
 
  return <div className="dt dt-manage">
@@ -153,27 +117,20 @@ export function GerenciarOpcoes({ meal, day, today }: { meal: MealKey; day: DayI
      <strong className="dt-opt-name">{o.name}</strong>
      <span className="dt-opt-kcal">{fmt(o.kcal)} kcal</span>
     </div>
-    <div className="dt-menu-wrap" ref={menu === o.key ? menuRoot : undefined}>
-     <button type="button" className="icon-button dt-dots" aria-label={`Mais ações da opção ${i + 1}, ${o.name}`} aria-haspopup="menu" aria-expanded={menu === o.key} onClick={() => setMenu(menu === o.key ? null : o.key)} onKeyDown={e => { if (e.key === 'Escape') setMenu(null); }}><Icon name="mais" size={26} className="dots-h" /></button>
-     {menu === o.key ? <div className="dt-menu" role="menu" aria-label={`Ações de ${o.name}`} onKeyDown={e => { if (e.key === 'Escape') { setMenu(null); (e.currentTarget.parentElement?.querySelector('.dt-dots') as HTMLElement | null)?.focus(); } }}>
-      <button type="button" role="menuitem" autoFocus onClick={() => withMenuFocus(o.key, () => setForm({ mode: 'edit', key: o.key }))}>Editar</button>
-      <button type="button" role="menuitem" onClick={() => withMenuFocus(o.key, () => duplicate(o))}>Duplicar</button>
-      <button type="button" role="menuitem" className="danger" disabled={options.length < 2} aria-describedby={options.length < 2 ? 'dt-last' : undefined} onClick={() => withMenuFocus(o.key, () => setConfirm(o))}>Excluir</button>
-      {options.length < 2 ? <p className="dt-menu-help" id="dt-last">Mantenha ao menos uma opção.</p> : null}
-     </div> : null}
-    </div>
+    <Menu label={`Mais ações da opção ${i + 1}, ${o.name}`} className="dt-menu-wrap" buttonClassName="icon-button dt-dots" trigger={<Icon name="mais" size={26} className="dots-h" />}
+     items={[
+      { label: 'Editar', onClick: () => setForm({ mode: 'edit', key: o.key }) },
+      { label: 'Duplicar', onClick: () => duplicate(o) },
+      ...(options.length > 1 ? [{ label: 'Excluir', danger: true, onClick: () => setConfirm(o) }] : []),
+     ]} />
    </li>)}
   </ul>
+  {options.length === 1 ? <p className="dt-menu-help">Mantenha ao menos uma opção: com uma só, Excluir não aparece no menu.</p> : null}
   <button type="button" className="button secondary block dt-add" onClick={() => setForm({ mode: 'new' })}><Icon name="plus" size={20} weight={2} />Adicionar nova opção</button>
 
   {form && (form.mode === 'new' || editing) ? <OptionForm key={`${form.mode}-${form.key ?? 'novo'}`} title={form.mode === 'new' ? `Nova opção de ${MEAL_LOWER[meal]}` : 'Editar opção'} initial={editing ? toFields(editing) : EMPTY} hasRecipe={Boolean(editing?.rec)} onSave={onSave} onClose={() => setForm(null)} /> : null}
-  {confirm ? <Sheet title={`Excluir ${confirm.name}?`} onClose={() => setConfirm(null)} initialFocus="[data-cancel]">
-   <p className="dt-confirm-text">A opção sai do cardápio de {MEAL_NAME[meal].toLowerCase()}. Os dias que você já registrou continuam como estão. Você poderá desfazer por 8 segundos.</p>
-   <div className="dt-form-actions">
-    <button type="button" className="button secondary" data-cancel onClick={() => setConfirm(null)}>Cancelar</button>
-    <button type="button" className="button destructive" onClick={() => remove(confirm)}>Excluir opção</button>
-   </div>
-  </Sheet> : null}
-  {toast ? <UndoToast key={toast.id} message={toast.message} duration={toast.message === 'Opção excluída' ? 8000 : 5000} onUndo={undo} onDone={() => setToast(null)} /> : null}
+  {confirm ? <ConfirmSheet title={`Excluir ${confirm.name}?`} confirmLabel="Excluir opção" onCancel={() => setConfirm(null)} onConfirm={() => remove(confirm)}>
+   <p className="dt-confirm-text">A opção sai do cardápio de {MEAL_NAME[meal].toLowerCase()}. Os dias que você já registrou continuam como estão. Você poderá desfazer por 6 segundos.</p>
+  </ConfirmSheet> : null}
  </div>;
 }

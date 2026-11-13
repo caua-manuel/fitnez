@@ -118,7 +118,7 @@ test('Treino: Detalhe mostra último desempenho e sugestão rotulada, sem preenc
  await expect(page.getByText('Sem registro anterior')).toHaveCount(9);
  // Menu de três pontos
  await first.getByRole('button', { name: /Mais opções/ }).click();
- await expect(first.getByRole('link', { name: 'Editar exercício' })).toBeVisible();
+ await expect(first.getByRole('menuitem', { name: 'Editar exercício' })).toBeVisible();
  // Histórico: exercício que saiu do plano aparece como removido
  await page.getByRole('tab', { name: 'Histórico' }).click();
  await expect(page.getByText('Exercício removido').first()).toBeVisible();
@@ -165,7 +165,7 @@ for (const scheme of ['light', 'dark'] as const) {
   await page.emulateMedia({ colorScheme: scheme });
   await seed(page); await biblioteca(page);
   await page.getByRole('button', { name: 'Mais opções de Upper A' }).click();
-  const item = page.getByRole('button', { name: 'Excluir treino', exact: true });
+  const item = page.getByRole('menuitem', { name: 'Excluir treino', exact: true });
   await expect(item).toBeVisible();
   const { color, bg } = await paint(item);
   expect(color).not.toBe(bg);
@@ -176,7 +176,7 @@ for (const scheme of ['light', 'dark'] as const) {
 test('Treino: Remover do treino no detalhe tem contraste AA', async ({ page }) => {
  await seed(page); await page.goto('#treino/UA');
  await page.getByRole('button', { name: 'Mais opções de Supino com halteres' }).click();
- const item = page.getByRole('button', { name: 'Remover do treino', exact: true });
+ const item = page.getByRole('menuitem', { name: 'Remover do treino', exact: true });
  const { color, bg } = await paint(item);
  expect(ratio(color, bg)).toBeGreaterThanOrEqual(4.5);
 });
@@ -267,4 +267,65 @@ test('Treino: busca sem resultado mostra lista vazia com Limpar busca', async ({
  await expect(page.getByText('Nenhum treino encontrado.')).toBeVisible();
  await page.getByRole('button', { name: 'Limpar busca' }).click();
  await expect(page.getByRole('list', { name: 'Treinos da biblioteca' }).getByRole('listitem')).toHaveCount(4);
+});
+
+test('Treino: Remover do treino no detalhe pede confirmação e mantém o Desfazer', async ({ page }) => {
+ await seed(page); await page.goto('#treino/UA');
+ await page.getByRole('button', { name: 'Mais opções de Supino com halteres' }).click();
+ await page.getByRole('menuitem', { name: 'Remover do treino', exact: true }).click();
+ const dialog = page.getByRole('dialog', { name: /Remover Supino com halteres do treino?/ });
+ await expect(dialog).toContainText('O histórico fica guardado');
+ await dialog.getByRole('button', { name: 'Cancelar' }).click();
+ await expect(page.getByRole('heading', { name: 'Supino com halteres', level: 3 })).toBeVisible();
+ await page.getByRole('button', { name: 'Mais opções de Supino com halteres' }).click();
+ await page.getByRole('menuitem', { name: 'Remover do treino', exact: true }).click();
+ await page.getByRole('dialog').getByRole('button', { name: 'Remover do treino' }).click();
+ await expect(page.getByRole('heading', { name: 'Supino com halteres', level: 3 })).toHaveCount(0);
+ await page.getByRole('button', { name: 'Desfazer' }).click();
+ await expect(page.getByRole('heading', { name: 'Supino com halteres', level: 3 })).toBeVisible();
+});
+
+test('Treino: concluído hoje, o detalhe oferece Ver resultado e Refazer hoje, e o anel tem rótulo', async ({ page }) => {
+ await seed(page, { days: { [today()]: { workout: { sessionId: 'UA', startedAt: 1, finishedAt: 2, status: 'done', sets: 3, volume: 690 }, acts: { gym: true }, log: { supino: [{ kg: '30', reps: '8', done: true }] } } } });
+ await page.goto('#treino/UA');
+ await expect(page.getByRole('link', { name: 'Começar treino' })).toHaveCount(0);
+ await expect(page.getByRole('link', { name: 'Refazer hoje' })).toBeVisible();
+ await expect(page.getByRole('progressbar', { name: /^Semana \d+ de 12: \d+% do plano$/ })).toBeVisible();
+ await expect(page.getByText(/% do plano/).first()).toBeVisible();
+ await page.getByRole('link', { name: 'Ver resultado' }).click();
+ await expect(page).toHaveURL(/#treino\/UA\/concluido\?dia=/);
+ await expect(page.getByRole('heading', { name: 'Treino concluído!' })).toBeVisible();
+});
+
+test('Treino: dois treinos no mesmo dia, um não apaga o outro (lista, detalhe, biblioteca)', async ({ page }) => {
+ const hoje = today();
+ await seed(page, { days: { [hoje]: {
+  log: { supino: [{ kg: '30', reps: '8', done: true }] },
+  workouts: { UA: { sessionId: 'UA', startedAt: 1, finishedAt: 2, status: 'done', sets: 1, volume: 240 }, UB: { sessionId: 'UB', startedAt: 3, finishedAt: 4, status: 'done', sets: 2, volume: 100 } },
+  workout: { sessionId: 'UB', startedAt: 3, finishedAt: 4, status: 'done', sets: 2, volume: 100 },
+ } } });
+ for (const id of ['UA', 'UB']) {
+  await page.goto(`#treino/${id}`);
+  await expect(page.getByRole('link', { name: 'Ver resultado' })).toBeVisible();
+  await page.goto(`#treino/${id}/concluido?dia=${hoje}`);
+  await expect(page.getByRole('heading', { name: 'Treino concluído!' })).toBeVisible();
+ }
+ await page.goto('#treino'); await biblioteca(page);
+ for (const n of ['Upper A', 'Upper B']) await expect(page.getByRole('listitem').filter({ hasText: n }).first()).not.toContainText('Ainda não feito');
+});
+
+test('Treino: menu ⋮ do cartão usa teclado (setas, Home, End, Escape devolve o foco)', async ({ page }) => {
+ await seed(page); await biblioteca(page);
+ const botao = page.getByRole('button', { name: 'Mais opções de Upper A' });
+ await botao.focus(); await page.keyboard.press('Enter');
+ await expect(page.getByRole('menuitem', { name: 'Abrir treino' })).toBeFocused();
+ await page.keyboard.press('End');
+ await expect(page.getByRole('menuitem', { name: 'Excluir treino' })).toBeFocused();
+ await page.keyboard.press('Home');
+ await expect(page.getByRole('menuitem', { name: 'Abrir treino' })).toBeFocused();
+ await page.keyboard.press('ArrowDown');
+ await expect(page.getByRole('menuitem', { name: 'Editar treino' })).toBeFocused();
+ await page.keyboard.press('Escape');
+ await expect(page.getByRole('menu')).toHaveCount(0);
+ await expect(botao).toBeFocused();
 });

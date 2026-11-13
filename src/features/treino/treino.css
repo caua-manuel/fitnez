@@ -21,12 +21,7 @@
 .tr-facts{display:flex;flex-wrap:wrap;gap:4px 12px;color:var(--muted-foreground);font-size:.9375rem;font-weight:500}
 .tr-facts span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .tr-foot .badge{margin-left:auto;min-height:32px;padding:0 12px;font-size:.875rem}
-.tr-more{position:absolute;top:8px;right:8px}
-.tr-pop{position:absolute;top:52px;right:10px;z-index:4;min-width:11rem;background:var(--card);box-shadow:0 8px 28px rgb(11 23 48 / .2);margin:0}
-.tr-menu{display:grid;gap:4px;margin-top:8px;padding:8px;border:1px solid var(--border);border-radius:14px;background:var(--secondary)}
-.tr-pop.tr-menu{margin-top:0}
-.tr-menu a,.tr-menu button{display:flex;align-items:center;justify-content:flex-start;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:var(--foreground);font-weight:600;font-size:1rem;text-decoration:none}
-.tr-menu a:hover{background:var(--accent-soft)}
+.tr-card .tr-more{position:absolute;top:8px;right:8px}
 .tr-meta{font-size:.9375rem;color:var(--muted-foreground);font-weight:500}
 .tr-back{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
 .tr-empty{padding:24px 0;color:var(--muted-foreground);display:grid;gap:12px;justify-items:start}
@@ -159,10 +154,6 @@
 .tr-name{font-size:1.0625rem;font-weight:700;letter-spacing:-.01em}
 .tr-line,.tr-facts{font-size:.875rem;font-weight:400}
 .tr-foot .badge{min-height:28px;font-size:.8125rem;font-weight:500;padding:0 10px}
-.tr-pop{box-shadow:var(--shadow-sheet);border-radius:var(--radius-control)}
-.tr-menu{background:var(--card);border-radius:var(--radius-control)}
-.tr-menu a,.tr-menu button{font-weight:500;border-radius:8px}
-.tr-menu a:hover,.tr-menu button:hover{background:var(--surface-2)}
 .tr-search input[type=search]{min-height:48px;padding-left:46px;border-radius:var(--radius-control);box-shadow:none}
 .tr-search-icon{left:16px;color:var(--muted-foreground)}
 .tr-filters{gap:8px}
@@ -266,3 +257,31 @@
 .tr-empty-card{display:grid;gap:12px;justify-items:start;padding:20px;border:1px dashed var(--field-border);border-radius:var(--radius-card);background:var(--card)}
 .tr-empty-card p{margin:0}
 .tr-empty-card strong{font-size:1.0625rem}
+
+/* Rodapé compacto da execução: altura real medida (--ex-footer-h) e foco nunca sob o rodapé */
+html:has(.ex-footer){scroll-padding-bottom:calc(var(--ex-footer-h,132px) + 16px)}
+.ex-wrap input,.ex-wrap button{scroll-margin-bottom:calc(var(--ex-footer-h,132px) + 16px)}
+.ex-spacer{height:calc(var(--ex-footer-h,132px) + 8px)}
+.ex-footer{gap:8px;padding:8px 16px calc(8px + env(safe-area-inset-bottom));max-height:45vh;overflow:auto}
+.ex-sheet.compact{padding:8px 10px 10px;gap:6px;border-radius:var(--radius-control)}
+.ex-rest-row{display:flex;align-items:center;gap:8px;min-width:0}
+.ex-rest-time{display:grid;flex:none;min-width:3.75rem;line-height:1.1}
+.ex-sheet.compact .ex-clock{font-size:1.5rem;font-weight:700}
+.ex-rest-state{font-size:.75rem;color:var(--muted-foreground)}
+.ex-sheet.ended .ex-rest-state{color:var(--success)}
+.ex-sheet.compact .ex-sheet-actions{flex:1 1 auto;min-width:0;gap:6px}
+.ex-sheet.compact .ex-sheet-actions .button{min-height:44px;padding:0 4px;font-size:.875rem;white-space:normal;line-height:1.1}
+.ex-sheet.compact .ex-sheet-actions.two{grid-template-columns:minmax(3.5rem,5rem) minmax(0,1fr) minmax(0,1fr)}
+.ex-sheet.compact .ex-bar{height:4px}
+.ex-ask-label{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;line-height:1.25}
+.ex-finish{min-height:44px;font-size:1rem}
+.tr-tabs button{white-space:normal;line-height:1.15;overflow-wrap:anywhere}
+.tr-facts span{white-space:normal}
+@media(max-height:26rem){.ex-footer{position:static;max-height:none}.ex-spacer{display:none}html:has(.ex-footer){scroll-padding-bottom:1rem}}
+@media(max-width:23.75rem){.ex-footer{padding-left:10px;padding-right:10px}.ex-sheet.compact .ex-sheet-actions .button{font-size:.8125rem}}
+
+/* Detalhe: legenda do anel do plano, "Refazer hoje" e aviso de exercícios repetidos no dia */
+.tr-ring-box{flex:none;display:grid;justify-items:center;gap:4px}
+.tr-ring-cap{margin:0;max-width:7.5rem;text-align:center;font-size:.8125rem;font-weight:600;line-height:1.3;color:var(--muted-foreground)}
+.tr-redo{min-height:48px}
+.ex-overlap{margin:10px 0 0;padding:10px 12px;border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:var(--radius-control);background:var(--surface-2);font-size:.9375rem;line-height:1.4}

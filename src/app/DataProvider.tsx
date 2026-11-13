@@ -6,7 +6,7 @@ import type { Initialization, Protection, Repository, StateV3 } from '../applica
 interface DataContextValue {
  repository: Repository; state: StateV3 | null; initialization: Initialization | null;
  protection: Protection | null; loading: boolean; busy: boolean; saving: boolean;
- error: string; notice: string; refresh: () => Promise<void>;
+ error: string; notice: string; clearNotice: () => void; refresh: () => Promise<void>;
  requestPersistence: () => Promise<void>;
  commit: (mutate: (draft: StateV3) => StateV3) => Promise<boolean>;
  run: <T>(action: () => Promise<T>, message?: string) => Promise<T | undefined>;
@@ -22,6 +22,7 @@ export function DataProvider({ repository, children }: { repository: Repository;
  const [error, setError] = useState('');
  const [notice, setNotice] = useState('');
  const running = useRef(false);
+ const clearNotice = useCallback(() => setNotice(''), []);
  const committer = useRef<ReturnType<typeof createCommitter> | null>(null);
  if (!committer.current) committer.current = createCommitter({ repository, onState: s => setState(s), onError: m => setError(m) });
  const persistenceResult = useRef<Protection | null>(null);
@@ -59,6 +60,6 @@ export function DataProvider({ repository, children }: { repository: Repository;
   const result = await run(() => repository.protection({ requestPersistence: true }), 'Solicitação de armazenamento concluída. Consulte o resultado acima.');
   if (result) { persistenceResult.current = result; setProtection(result); }
  }, [repository, run]);
- return <DataContext.Provider value={{ repository, state, initialization, protection, loading, busy, saving, error, notice, refresh, run, requestPersistence, commit }}>{children}</DataContext.Provider>;
+ return <DataContext.Provider value={{ repository, state, initialization, protection, loading, busy, saving, error, notice, clearNotice, refresh, run, requestPersistence, commit }}>{children}</DataContext.Provider>;
 }
 export function useData() { const data = useContext(DataContext); if (!data) throw new Error('Dados indisponíveis.'); return data; }

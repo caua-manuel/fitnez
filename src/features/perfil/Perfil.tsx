@@ -5,6 +5,7 @@ import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
 import { Card, formatInstant } from '../../ui/components';
 import { Icon } from '../../ui/icons';
+import { showToast } from '../../ui/UndoToast';
 import type { IconName } from '../../ui/icons';
 import { shouldShowBackupReminder } from '../../domain/userData';
 import { phaseOf, weekLabel } from '../../domain/calendar';
@@ -17,7 +18,7 @@ import { diaLocal, refeicoesRegistradas, treinosConcluidos } from './metricas';
 import './perfil.css';
 
 const persistenceLabels = { granted:'Concedido', denied:'Não concedido pelo navegador', unavailable:'Não disponível neste navegador', error:'Não foi possível consultar', 'not-requested':'Ainda não concedido' };
-const themes = [['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']] as const;
+const themes = [['auto', 'Automático', 'Auto'], ['light', 'Claro', 'Claro'], ['dark', 'Escuro', 'Escuro']] as const;
 const NO_FILE = 'Nenhum arquivo selecionado';
 const NUMBER = new Intl.NumberFormat('pt-BR');
 
@@ -57,7 +58,6 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
  const [notifyNote, setNotifyNote] = useState('');
  const [notifyBusy, setNotifyBusy] = useState(false);
  const [importError, setImportError] = useState('');
- const [saved, setSaved] = useState(false);
  const importErrorRef = useRef<HTMLDivElement>(null);
  const previewHeading = useRef<HTMLHeadingElement>(null);
  const fileInput = useRef<HTMLInputElement>(null);
@@ -67,7 +67,6 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
  const conflict = initialization?.status === 'migration-conflict';
  useEffect(() => { if (preview) previewHeading.current?.focus(); }, [preview]);
  useEffect(() => { if (importError) { importErrorRef.current?.scrollIntoView({ block: 'center' }); importErrorRef.current?.focus({ preventScroll: true }); } }, [importError]);
- useEffect(() => { if (!saved) return; const t = window.setTimeout(() => setSaved(false), 4000); return () => window.clearTimeout(t); }, [saved]);
  useEffect(() => { if (editing === 'name') nameInput.current?.focus(); if (editing === 'goal') goalInput.current?.focus(); if (editing === 'body') ageInput.current?.focus(); }, [editing]);
  useEffect(() => { if (conflict) setBackupOpen(true); }, [conflict]);
  if (!state) return null;
@@ -86,6 +85,28 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
  const taxa = consist.pct !== null && (consist.done > 0 || feitos > 0 || refeicoes > 0) ? consist.pct : null;
  const hasWeight = typeof profile?.weightKg === 'number';
  const bodyParts = [profile?.age !== undefined ? `${profile.age} anos` : '', hasWeight ? `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(profile!.weightKg!)} kg` : '', profile?.heightCm !== undefined ? `${profile.heightCm} cm` : ''].filter(Boolean);
+ const lastMeasure = (() => {
+  let best: { date: string; kg: number } | null = null;
+  for (const [date, m] of Object.entries(state.history.measurements ?? {})) {
+   const raw = String((m as { p?: unknown } | null)?.p ?? '').trim().replace(',', '.');
+   const kg = Number(raw);
+   if (!raw || !Number.isFinite(kg) || kg < 30 || kg > 300) continue;
+   if (!best || date > best.date) best = { date, kg };
+  }
+  return best;
+ })();
+ const kgFmt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
+ const useMeasured = async () => {
+  if (!lastMeasure) return;
+  const previous = profile?.weightKg;
+  const kg = lastMeasure.kg;
+  const ok = await commit(s => { s.settings.profile = { ...(s.settings.profile ?? { name: '', goal: '' }), weightKg: kg }; return s; });
+  if (ok) showToast(`Peso do perfil: ${kgFmt.format(kg)} kg`, () => void commit(s => {
+   const p = { ...(s.settings.profile ?? { name: '', goal: '' }) };
+   if (previous === undefined) delete p.weightKg; else p.weightKg = previous;
+   s.settings.profile = p; return s;
+  }));
+ };
  const proteinText = hasWeight ? `Meta de proteína: ${NUMBER.format(proteinTargetG(profile!.weightKg))} g por dia, 2,4 g por kg` : '';
  const pct = phase.kind === 'week' ? Math.round(phase.progress * 100) : phase.kind === 'done' ? 100 : 0;
  const planText = phase.kind === 'week' ? weekLabel(phase.week) : phase.kind === 'done' ? 'Plano concluído' : `Começa em ${phase.daysUntil} ${phase.daysUntil === 1 ? 'dia' : 'dias'}`;
@@ -112,7 +133,7 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
    if (value.heightCm !== undefined) next.heightCm = value.heightCm;
    s.settings.profile = next; return s;
   });
-  if (ok) { setEditing(null); setSaved(true); }
+  if (ok) { setEditing(null); showToast('Perfil salvo'); }
  }
  function setTheme(value: 'auto' | 'light' | 'dark') { void commit(s => { s.settings.theme = value; return s; }); }
  async function toggleNotifications() {
@@ -167,7 +188,6 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
     <button type="button" className="perfil-pill" aria-expanded={editing !== null} onClick={() => openEditor('name')}><Icon name="editar" size={18} />Editar perfil</button>
    </div>
   </header>
-  <p className="perfil-salvo" role="status">{saved ? <><Icon name="marca" size={16} />Salvo</> : null}</p>
 
   {editing ? <form className="card perfil-edit" noValidate aria-labelledby="perfil-edit-titulo" onSubmit={e => void saveProfile(e)}>
    <h2 id="perfil-edit-titulo" className="perfil-edit-titulo">Dados físicos</h2>
@@ -209,6 +229,7 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
     <span className="grow"><strong>Dados físicos</strong><small className={bodyParts.length ? undefined : 'perfil-vazio'}>{bodyParts.length ? bodyParts.join(' · ') : 'Idade, peso e altura'}</small>{proteinText ? <small>{proteinText}</small> : null}</span>
     <Icon name="seta" size={22} />
    </button></li>
+   {lastMeasure ? <li className="perfil-medida"><p>Última medida de peso: {kgFmt.format(lastMeasure.kg)} kg em {lastMeasure.date.slice(8, 10)}/{lastMeasure.date.slice(5, 7)}. O peso do perfil e o peso medido na Evolução são independentes.</p>{profile?.weightKg !== lastMeasure.kg ? <button type="button" className="button secondary" disabled={busy} onClick={() => void useMeasured()}>Usar como peso do perfil</button> : null}</li> : null}
    <li><a className="list-row perfil-link perfil-plano" href={hrefFor({ tab: 'treino', view: 'lista' })}>
     <span className="icon-tile soft"><Icon name="calendario" size={26} /></span>
     <span className="grow"><strong>Meu plano</strong><small>{planText}</small>
@@ -224,7 +245,7 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
     <legend className="visually-hidden">Tema do aplicativo</legend>
     <span className="icon-tile soft sm"><Icon name={state.settings.theme === 'light' ? 'sol' : 'lua'} size={22} /></span>
     <span className="grow"><strong>Tema do aplicativo</strong><small>Escolha o formato de exibição</small></span>
-    <div className="segmented perfil-seg">{themes.map(([value, label]) => <button type="button" key={value} aria-pressed={state.settings.theme === value} onClick={() => setTheme(value)}>{value === 'light' ? <Icon name="sol" size={18} /> : value === 'dark' ? <Icon name="lua" size={18} /> : null}{label}</button>)}</div>
+    <div className="segmented perfil-seg">{themes.map(([value, label, short]) => <button type="button" key={value} aria-label={label} aria-pressed={state.settings.theme === value} onClick={() => setTheme(value)}>{value === 'light' ? <Icon name="sol" size={18} /> : value === 'dark' ? <Icon name="lua" size={18} /> : null}<span aria-hidden="true" className="perfil-lbl-long">{label}</span><span aria-hidden="true" className="perfil-lbl-short">{short}</span></button>)}</div>
    </fieldset>
 
    <div className="list-row perfil-notify">

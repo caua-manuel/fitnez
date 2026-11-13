@@ -10,11 +10,11 @@ import { Icon } from '../../ui/icons';
 import { Glyph } from './glyphs';
 import { CamposTreino } from './NovoTreino';
 import type { SessionFields } from './NovoTreino';
-import { MenuMais } from './Menu';
-import { ConfirmDialog, Sheet } from './Sheet';
+import { Menu } from '../../ui/Menu';
+import { ConfirmSheet, Sheet } from '../../ui/Sheet';
 import { Topo, VALE_DEPOIS, focusFirstInvalid } from './Topo';
 import { usePlanEditor } from './planActions';
-import { announce } from './UndoToast';
+import { showToast } from '../../ui/UndoToast';
 import { GROUP_LABEL, normalize, plural } from './util';
 import './editor.css';
 
@@ -32,7 +32,7 @@ function Picker({ sessionId, onClose }: { sessionId: string; onClose: () => void
  const inSession = new Set(plan.sess[sessionId]?.ex ?? []);
  const query = normalize(q);
  const rows = Object.keys(plan.ex).filter(id => !inSession.has(id) && (!query || normalize(plan.ex[id].n).includes(query)));
- return <Sheet title="Adicionar exercício" onClose={onClose} initialFocus="#ed-pick-q" id="ed-pick">
+ return <Sheet title="Adicionar exercício" onClose={onClose} initialFocus="#ed-pick-q">
   <a className="button block ed-new-ex" href={hrefFor({ tab: 'treino', view: 'exercicio', id: sessionId })}><Icon name="plus" size={22} weight={2.5} />Criar exercício novo</a>
   <p className="ed-help">Ou escolha um que já existe no seu catálogo.</p>
   <div className="tr-search ed-pick-search">
@@ -42,7 +42,7 @@ function Picker({ sessionId, onClose }: { sessionId: string; onClose: () => void
   </div>
   {rows.length === 0 ? <p className="muted">{query ? 'Nenhum exercício encontrado.' : 'Todos os exercícios do catálogo já estão neste treino.'}</p> :
    <ul className="ed-pick-list" aria-label="Exercícios do catálogo">
-    {rows.map(id => <li key={id}><button type="button" onClick={() => { void apply(p => addExerciseToSession(p, sessionId, id)).then(ok => { if (ok) announce(`${plan.ex[id].n} adicionado ao treino.`); }); onClose(); }}>
+    {rows.map(id => <li key={id}><button type="button" onClick={() => { void apply(p => addExerciseToSession(p, sessionId, id)).then(ok => { if (ok) showToast(`${plan.ex[id].n} adicionado ao treino.`); }); onClose(); }}>
      <strong>{plan.ex[id].n}</strong><span>{meta(id, plan.ex[id])}</span>
     </button></li>)}
    </ul>}
@@ -57,6 +57,7 @@ export function EditarTreino({ id }: { id: string }) {
  const [errors, setErrors] = useState<Partial<Record<'name' | 'sub' | 'min', string>>>({});
  const [picker, setPicker] = useState(false);
  const [confirm, setConfirm] = useState(false);
+ const [removing, setRemoving] = useState<string | null>(null);
  const [moved, setMoved] = useState('');
  const [saved, setSaved] = useState(false);
  const addBtn = useRef<HTMLButtonElement>(null);
@@ -70,7 +71,7 @@ export function EditarTreino({ id }: { id: string }) {
   setErrors(r.errors);
   if (!r.value) { focusFirstInvalid(); return; }
   const value = r.value;
-  void apply(p => updateSession(p, id, value)).then(ok => { if (ok) { setF({ name: value.name, sub: value.sub ?? '', min: value.min ?? '' }); announce('Treino salvo.'); setSaved(true); } });
+  void apply(p => updateSession(p, id, value)).then(ok => { if (ok) { setF({ name: value.name, sub: value.sub ?? '', min: value.min ?? '' }); showToast('Treino salvo.'); setSaved(true); } });
  };
  const move = (i: number, to: number) => {
   const exId = s.ex[i];
@@ -109,9 +110,9 @@ export function EditarTreino({ id }: { id: string }) {
        <h4>{name}</h4>
        <span className="ed-ex-meta">{ex ? meta(exId, ex) : 'Este exercício não existe mais no catálogo.'}</span>
       </div>
-      <MenuMais label={`Mais opções de ${name}`} items={[
+      <Menu label={`Mais opções de ${name}`} trigger={<Icon name="mais" size={24} weight={2.4} />} items={[
        ...(ex ? [{ label: 'Editar exercício', href: hrefFor({ tab: 'treino', view: 'exercicio', id, ex: exId }) }] : []),
-       { label: 'Remover do treino', danger: true, onClick: () => { void removeExercise(id, exId); } },
+       { label: 'Remover do treino', danger: true, onClick: () => setRemoving(exId) },
       ]} />
      </li>;
     })}
@@ -125,10 +126,14 @@ export function EditarTreino({ id }: { id: string }) {
   </div>
 
   {picker ? <Picker sessionId={id} onClose={() => setPicker(false)} /> : null}
-  {confirm ? <ConfirmDialog title={`Excluir ${s.name}?`} confirmLabel="Excluir treino" onCancel={() => setConfirm(false)}
+  {removing ? <ConfirmSheet title={`Remover ${plan.ex[removing]?.n ?? 'exercício'} do treino?`} confirmLabel="Remover do treino" onCancel={() => setRemoving(null)}
+   onConfirm={() => { const exId = removing; setRemoving(null); void removeExercise(id, exId); }}>
+   <p>O exercício sai só deste treino. O histórico fica guardado e você poderá desfazer por 6 segundos.</p>
+  </ConfirmSheet> : null}
+  {confirm ? <ConfirmSheet title={`Excluir ${s.name}?`} confirmLabel="Excluir treino" onCancel={() => setConfirm(false)}
    onConfirm={() => { setConfirm(false); void remove(id).then(ok => { if (ok) window.location.hash = hrefFor({ tab: 'treino', view: 'lista' }); }); }}>
    <p>O treino sai do seu plano. O histórico dos treinos já feitos continua salvo, e os exercícios continuam no catálogo.</p>
-   <p>Você poderá desfazer por 8 segundos.</p>
-  </ConfirmDialog> : null}
+   <p>Você poderá desfazer por 6 segundos.</p>
+  </ConfirmSheet> : null}
  </div>;
 }

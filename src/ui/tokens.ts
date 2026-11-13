@@ -28,6 +28,8 @@ export const scale = {
   surface: { page: '#F3F5F9', soft: '#F7F9FC' },
   weight: { regular: 400, medium: 500, semibold: 600, bold: 700, display: 800 },
   sheetWidth: 430,
+  /** Trilho do interruptor desligado: >= 3:1 contra fundo, cartão e superfícies (WCAG 1.4.11). */
+  switchOff: { light: '#76849B', dark: '#6F82A8' },
 } as const;
 
 function luminance(hex: string): number {

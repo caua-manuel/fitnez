@@ -13,6 +13,12 @@ import { Treino } from '../features/treino/Treino';
 import { Dieta } from '../features/dieta/Dieta';
 import { MEAL_NAME } from '../features/dieta/dietData';
 import { usePwa } from '../pwa/usePwa';
+import { Sheet } from '../ui/Sheet';
+import { ToastHost } from '../ui/UndoToast';
+import { shouldShowBackupReminder } from '../domain/userData';
+
+/** Tempo em que o aviso de sucesso fica na tela; ele também some ao trocar de tela ou ao ser dispensado. */
+const NOTICE_MS = 8000;
 
 /** Cada aba declara se mostra o título (h1) grande com subtítulo; onde a referência não mostra título, o h1 fica só para leitores de tela. */
 const headings: Record<Route['tab'], { title: string; subtitle?: string }> = {
@@ -33,6 +39,9 @@ export function App() {
  const pwa = usePwa();
  useEffect(() => { const change = () => setRoute(readRoute()); window.addEventListener('hashchange', change); return () => window.removeEventListener('hashchange', change); }, []);
  const routeKey = hrefFor(route);
+ const { notice, clearNotice } = data; const [avisosOpen, setAvisosOpen] = useState(false);
+ useEffect(() => { clearNotice(); setAvisosOpen(false); }, [routeKey, clearNotice]);
+ useEffect(() => { if (!notice) return; const t = window.setTimeout(clearNotice, NOTICE_MS); return () => window.clearTimeout(t); }, [notice, clearNotice]);
  useEffect(() => { heading.current?.focus({ preventScroll: true }); window.scrollTo(0, 0); }, [routeKey]);
  const theme = data.state?.settings.theme ?? 'auto';
  useEffect(() => {
@@ -53,13 +62,15 @@ export function App() {
  const title = mealRoute ? MEAL_NAME[mealRoute] : baseTitle;
  const showTitle = Boolean(subtitle) && !mealRoute;
  const executing = route.tab === 'treino' && route.view === 'executar';
+ const backupPending = shouldShowBackupReminder(data.state, data.protection?.backupDue);
+ const hasAvisos = backupPending || pwa.updateAvailable;
  const name = (data.state?.settings.profile?.name as string | undefined)?.trim();
  return <>
   <a className="skip" href="#conteudo" onClick={e => { e.preventDefault(); document.getElementById('conteudo')?.focus(); }}>Pular para o conteúdo</a>
   {executing || mealRoute ? null : <header className="app-header">
    <a className="brand" href={hrefFor({ tab: 'inicio' })} aria-label="Fitnez, ir para o início"><Logo size={34} withTagline /></a>
    <div className="header-actions">
-    <a className="icon-button" href={hrefFor({ tab: 'perfil' })} aria-label={pwa.updateAvailable ? 'Avisos: há uma nova versão' : 'Notificações e lembretes'}><Icon name="sino" />{pwa.updateAvailable ? <span className="bell-dot" aria-hidden="true" /> : null}</a>
+    <button type="button" className="icon-button" aria-label={hasAvisos ? 'Avisos, há novidades' : 'Avisos'} aria-haspopup="dialog" onClick={() => setAvisosOpen(true)}><Icon name="sino" />{hasAvisos ? <span className="bell-dot" aria-hidden="true" /> : null}</button>
     <a className="icon-button avatar" href={hrefFor({ tab: 'perfil' })} aria-label="Abrir perfil">{name ? name.charAt(0).toUpperCase() : <Icon name="perfil" />}</a>
    </div>
   </header>}
@@ -67,7 +78,7 @@ export function App() {
   <main id="conteudo" tabIndex={-1}>
    <div className={showTitle ? 'page-heading' : undefined}><h1 ref={heading} tabIndex={-1} className={showTitle ? undefined : 'visually-hidden'}>{title}</h1>{subtitle && showTitle ? <p className="page-detail">{subtitle}</p> : null}</div>
    {data.error ? <div className="error" role="alert"><strong>Não foi possível concluir</strong><p>{data.error}</p><button className="secondary" disabled={data.busy} onClick={() => void data.run(data.refresh, 'Dados relidos neste aparelho.')}>Reler dados e tentar novamente</button></div> : null}
-   {data.notice ? <p className="success" role="status">{data.notice}</p> : null}
+   <div className={notice ? "success notice-bar" : undefined}><div role="status">{notice ? <p>{notice}</p> : null}</div>{notice ? <button type="button" aria-label="Dispensar aviso" onClick={clearNotice}>Dispensar</button> : null}</div>
    {data.loading ? <p className="loading" role="status">Abrindo seus dados…</p> : data.state ? <>
     {data.initialization?.status === 'ready' && data.initialization.warnings.length ? <aside className="warning"><strong>Atenção à recuperação</strong>{data.initialization.warnings.map((w, i) => <p key={i}>{w}</p>)}</aside> : null}
     {data.initialization?.status === 'migration-conflict' && route.tab !== 'perfil' ? <aside className="warning"><strong>Encontramos duas fontes diferentes</strong><p>Escolha no Perfil qual histórico será usado. As fontes originais continuam preservadas.</p><a href={hrefFor({ tab: 'perfil' })}>Escolher origem dos dados</a></aside> : null}
@@ -81,6 +92,14 @@ export function App() {
    <p className={flash ? 'save-status' : 'visually-hidden'} role="status">{data.saving ? 'Salvando…' : data.state && !data.error ? 'Salvo neste aparelho' : ''}</p>
    <p className="visually-hidden" role="status">{offlineText}</p>
   </main>
+  {avisosOpen ? <Sheet title="Avisos" onClose={() => setAvisosOpen(false)}>
+   {hasAvisos ? <ul className="avisos">
+    {backupPending ? <li className="aviso-item"><strong>Guarde uma cópia dos seus dados</strong><p>Seu backup semanal está pendente.</p><a className="text-link" href={hrefFor({ tab: 'perfil' })} onClick={() => setAvisosOpen(false)}>Fazer backup</a></li> : null}
+    {pwa.updateAvailable ? <li className="aviso-item"><strong>Nova versão pronta</strong><p>Atualize para usar a versão mais recente.</p><div className="actions"><button type="button" className="button" disabled={data.busy || data.saving} onClick={pwa.applyUpdate}>Atualizar agora</button></div></li> : null}
+   </ul> : <p className="muted">Nenhum aviso no momento.</p>}
+   <div className="sheet-actions"><button type="button" className="button secondary" onClick={() => setAvisosOpen(false)}>Fechar</button></div>
+  </Sheet> : null}
+  <ToastHost />
   {executing ? null : <TabBar current={route.tab} />}
  </>;
 }

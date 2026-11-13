@@ -2,6 +2,7 @@ import type { DayRecord, Payload, Plan } from '../application/repository';
 import { addDays, mondayOf } from './calendar';
 import type { DayIso } from './calendar';
 import { parseNumber } from './workout';
+import { doneCount } from './workoutRecord';
 
 // Regras puras da aba Evolução. Nada aqui inventa número: sem registro, o resultado é null ou lista vazia.
 export interface Range { from: DayIso; to: DayIso }
@@ -75,6 +76,22 @@ export function measureSeries(measurements: Record<string, Payload>, range: Rang
  }
  return out;
 }
+export interface OutsideMeasure { day: DayIso; when: 'antes' | 'depois'; values: Partial<Record<MeasureKey, number>> }
+/**
+ * Medidas válidas salvas em datas fora das 12 semanas do plano (antes da segunda do início ou depois do fim), em ordem de data.
+ * Nenhuma medida salva fica invisível: o gráfico cobre o plano e esta lista cobre o resto.
+ */
+export function measuresOutsidePlan(measurements: Record<string, Payload>, start: DayIso): OutsideMeasure[] {
+ const first = mondayOf(start), last = addDays(first, 83);
+ const out: OutsideMeasure[] = [];
+ for (const day of Object.keys(measurements).sort()) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || (day >= first && day <= last)) continue;
+  const values: Partial<Record<MeasureKey, number>> = {};
+  for (const k of ['p', 'c', 'q', 't', 'b'] as MeasureKey[]) { const v = parseMeasure(measurements[day]?.[k]); if (v !== null) values[k] = v; }
+  if (Object.keys(values).length) out.push({ day, when: day < first ? 'antes' : 'depois', values });
+ }
+ return out;
+}
 export interface Delta { abs: number; pct: number }
 export function measureDelta(series: MeasurePoint[]): Delta | null {
  if (series.length < 2) return null;
@@ -122,11 +139,15 @@ export function consistency(days: Record<string, DayRecord>, sched: Payload[], s
   const kind = sched[(daysBetween(first, day) % 7 + 7) % 7]?.k;
   if (kind !== 'gym' && kind !== 'bjj' && kind !== 'volei') continue;
   const rec = days[day];
-  const ok = kind === 'gym' ? rec?.workout?.status === 'done' : rec?.acts?.[kind as 'bjj' | 'volei'] === true;
+  // Academia: cada treino concluído no dia conta como feito; previsto = 1 por dia agendado, ou mais se houver mais concluídos.
+  const gymDone = kind === 'gym' ? doneCount(rec) : 0;
+  const ok = kind === 'gym' ? gymDone > 0 : rec?.acts?.[kind as 'bjj' | 'volei'] === true;
   if (day === today && !ok) continue;
   const w = byWeek[weekOf(day, from)];
-  w.planned += 1; planned += 1;
-  if (ok) { w.done += 1; done += 1; }
+  const units = kind === 'gym' ? Math.max(1, gymDone) : 1;
+  const hit = kind === 'gym' ? gymDone : ok ? 1 : 0;
+  w.planned += units; planned += units;
+  w.done += hit; done += hit;
  }
  return { done, planned, pct: planned ? Math.round((done / planned) * 100) : null, byWeek };
 }

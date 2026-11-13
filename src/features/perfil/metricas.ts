@@ -1,9 +1,10 @@
 import type { DayIso } from '../../domain/calendar';
 import type { DayRecord } from '../../application/repository';
+import { doneCount } from '../../domain/workoutRecord';
 
-/** Dias com treino de academia concluído (workout.status 'done'). */
+/** Treinos de academia concluídos em todos os dias (um dia pode ter mais de um). */
 export function treinosConcluidos(days: Record<string, DayRecord>): number {
- return Object.values(days).filter(d => d?.workout?.status === 'done').length;
+ return Object.values(days).reduce((n, d) => n + doneCount(d), 0);
 }
 
 /** Soma das refeições marcadas como comidas em todos os dias. */

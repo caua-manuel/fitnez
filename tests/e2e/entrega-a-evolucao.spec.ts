@@ -79,7 +79,7 @@ test('Evolução: registrar medidas com vírgula grava em history.measurements e
  await form.getByLabel('Cintura').fill('86');
  await form.getByLabel('Braço').fill('34,5');
  await form.getByRole('button', { name: 'Salvar medidas' }).click();
- await expect(page.getByText('Medidas de hoje salvas neste aparelho.')).toBeVisible();
+ await expect(page.getByText('Medidas de hoje salvas neste aparelho.').first()).toBeVisible();
  await expect(page.getByRole('region', { name: 'Peso corporal', exact: true }).locator('.ev-big')).toHaveText('78,2 kg');
  await expect(page.getByRole('region', { name: 'Medidas', exact: true }).getByText('86 cm')).toBeVisible();
  await expect(page.getByRole('region', { name: 'Medidas', exact: true }).getByText('34,5 cm')).toBeVisible();
@@ -174,7 +174,7 @@ test('Evolução: medida de data passada grava nessa data, mostra confirmação 
  await dlg.getByLabel('Data').fill(past);
  await dlg.getByLabel('Peso').fill('81,4');
  await dlg.getByRole('button', { name: 'Salvar medidas' }).click();
- await expect(page.getByText(/Medidas de \d{2}\/\d{2}\/\d{4} salvas neste aparelho\./)).toBeVisible();
+ await expect(page.getByText(/Medidas de \d{2}\/\d{2}\/\d{4} salvas neste aparelho./).first()).toBeVisible();
  await expect(page.getByRole('region', { name: 'Peso corporal', exact: true }).locator('.ev-big')).toHaveText('81,4 kg');
  expect((await dbState(page)).history.measurements[past].p).toBe('81,4');
 });
@@ -209,7 +209,7 @@ test('Evolução: registrar quadril e coxa persiste ao recarregar, grava a chave
  await dlg.getByLabel('Quadril').fill('98,5');
  await dlg.getByLabel('Coxa').fill('56');
  await dlg.getByRole('button', { name: 'Salvar medidas' }).click();
- await expect(page.getByText('Medidas de hoje salvas neste aparelho.')).toBeVisible();
+ await expect(page.getByText('Medidas de hoje salvas neste aparelho.').first()).toBeVisible();
  const med = page.getByRole('region', { name: 'Medidas', exact: true });
  await expect(med).toContainText('Quadril');
  await expect(med.getByText('98,5 cm')).toBeVisible();
@@ -233,10 +233,14 @@ test('Evolução: quadril e coxa mostram variação entre duas datas e a mini-s�
  await expect(med.getByText('99 cm')).toBeVisible();
  await expect(med.getByRole('button', { name: /Cintura/ })).toContainText('−1,5 cm');
  await expect(med.getByRole('button', { name: /Coxa/ })).toContainText('−1 cm');
- await med.getByRole('button', { name: /Quadril/ }).click();
- await expect(med.getByRole('img', { name: /Quadril: de 101 cm a 99 cm/ })).toBeVisible();
- await expect(med.getByRole('table', { name: 'Quadril, registros' })).toBeAttached();
  await expect(med.getByRole('button', { name: /Quadril/ })).toContainText('−2 cm');
+ await med.getByRole('button', { name: /Quadril/ }).click();
+ const sheet = page.getByRole('dialog', { name: 'Quadril' });
+ await expect(sheet.getByRole('img', { name: /Quadril: de 101 cm em \d{2}\/\d{2} a 99 cm/ })).toBeVisible();
+ await expect(sheet.getByRole('table', { name: 'Quadril, registros' })).toBeAttached();
+ const box = (await sheet.getByRole('img').boundingBox())!; expect(box.y + box.height).toBeLessThanOrEqual(801); // gráfico visível, sem rolar
+ await page.keyboard.press('Escape');
+ await expect(sheet).toHaveCount(0);
 });
 
 test('Evolução: quadril absurdo é recusado e nada é gravado', async ({ page }) => {
@@ -248,4 +252,46 @@ test('Evolução: quadril absurdo é recusado e nada é gravado', async ({ page 
  await expect(dlg.getByRole('alert')).toContainText('Quadril: informe um valor entre 10 e 250 cm');
  await expect(dlg.getByLabel('Quadril')).toHaveValue('900');
  expect(Object.keys((await dbState(page)).history.measurements)).toHaveLength(0);
+});
+
+test('Evolução: medidas anteriores ao início do plano aparecem em "Medidas fora do plano"', async ({ page }) => {
+ const early = addDays(monday(today()), -30);
+ await seed(page, { measurements: { [early]: { p: '80,5', c: '90' } } });
+ await expect(page.getByRole('heading', { name: 'Registre seu primeiro treino para ver sua evolução' })).toHaveCount(0);
+ const sec = page.getByRole('region', { name: 'Medidas fora do plano' });
+ await expect(sec).toContainText('Antes do plano');
+ await expect(sec).toContainText('Peso 80,5 kg · Cintura 90 cm');
+ await expect(sec).toContainText(early.split('-').reverse().join('/'));
+ expect(await noHScroll(page)).toBe(true);
+});
+
+test('Evolução: seletor de período por teclado (setas e Escape)', async ({ page }) => {
+ await seed(page, populated());
+ const btn = page.getByRole('button', { name: /Período: Últimas 12 semanas/ });
+ await btn.focus(); await page.keyboard.press('ArrowDown');
+ await expect(page.getByRole('listbox', { name: 'Período' })).toBeVisible();
+ await page.keyboard.press('ArrowUp'); await page.keyboard.press('Enter');
+ await expect(page.getByRole('button', { name: /Período: Últimas 8 semanas/ })).toBeFocused();
+ await page.keyboard.press('ArrowDown'); await expect(page.getByRole('listbox')).toBeVisible(); await page.keyboard.press('Escape');
+ await expect(page.getByRole('listbox')).toHaveCount(0);
+});
+
+test('Evolução: ao salvar peso de hoje oferece atualizar o peso do perfil e a meta de proteína acompanha', async ({ page }) => {
+ await seed(page);
+ await page.getByRole('button', { name: /Registrar medidas/ }).click();
+ const dlg = page.getByRole('dialog', { name: 'Registrar medidas' });
+ await expect(dlg.getByRole('checkbox')).toHaveCount(0);
+ await dlg.getByLabel('Peso').fill('90');
+ const box = dlg.getByRole('checkbox', { name: /Atualizar o peso do perfil para 90 kg/ });
+ await expect(box).toBeChecked();
+ await dlg.getByRole('button', { name: 'Salvar medidas' }).click();
+ await expect(page.getByRole('status').filter({ hasText: 'Peso do perfil atualizado para 90 kg.' })).toBeVisible();
+ expect((await dbState(page)).settings.profile.weightKg).toBe(90);
+ // desmarcado: não mexe no perfil
+ await page.getByRole('button', { name: /Registrar medidas/ }).click();
+ await dlg.getByLabel('Peso').fill('85');
+ await dlg.getByRole('checkbox').uncheck();
+ await dlg.getByRole('button', { name: 'Salvar medidas' }).click();
+ await expect(page.getByRole('button', { name: /Registrar medidas/ })).toBeVisible();
+ expect((await dbState(page)).settings.profile.weightKg).toBe(90);
 });

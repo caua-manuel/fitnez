@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { contrast, palette } from '../../src/ui/tokens';
+import { contrast, palette, scale } from '../../src/ui/tokens';
 
 const css = readFileSync('src/ui/styles.css', 'utf8');
 
@@ -33,4 +33,19 @@ describe('direção visual premium minimalista', () => {
     expect(css).toContain('--radius-button:14px');
   });
   it('folha de 430px no computador', () => { expect(css).toContain('--sheet-width:430px'); });
+});
+
+describe('controles sem rótulo de texto: contraste de componente >= 3 (WCAG 1.4.11)', () => {
+  for (const theme of ['light', 'dark'] as const) {
+    const t = palette[theme]; const off = scale.switchOff[theme];
+    const surfaces = theme === 'light' ? [t.background, t.card, t.secondary, '#F3F5F9'] : [t.background, t.card, t.secondary];
+    it(`interruptor desligado (${theme}) contra fundo, cartão e superfícies`, () => { for (const bg of surfaces) expect(contrast(off, bg), bg).toBeGreaterThanOrEqual(3); });
+    it(`polegar branco contra trilho desligado (${theme})`, () => { expect(contrast('#FFFFFF', off)).toBeGreaterThanOrEqual(3); });
+    it(`interruptor ligado: trilho primário contra cartão e polegar contra trilho (${theme})`, () => { expect(contrast(t.primary, t.card)).toBeGreaterThanOrEqual(3); expect(contrast(t.primaryForeground, t.primary)).toBeGreaterThanOrEqual(3); });
+    it(`caixa, círculo da refeição e rádio desmarcados usam o contorno de campo (${theme})`, () => { for (const bg of surfaces) expect(contrast(t.input, bg), bg).toBeGreaterThanOrEqual(3); });
+  }
+  it('valores do interruptor aparecem no CSS', () => {
+    expect(block('.switch')).toContain('--switch-off:' + scale.switchOff.light);
+    expect(css.toLowerCase()).toContain('[data-theme="dark"] .switch{--switch-off:' + scale.switchOff.dark.toLowerCase() + '}');
+  });
 });

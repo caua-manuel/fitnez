@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from '../../ui/icons';
 import { Thumb } from '../../ui/Thumb';
@@ -55,28 +55,6 @@ export function CheckButton({ on, label, onClick, choose }: { on: boolean; label
  return <button type="button" className={`dt-check${on ? ' on' : ''}${choose ? ' choose' : ''}`} aria-pressed={choose ? undefined : on} aria-label={label} title={label} onClick={onClick}>
   <span className="dt-check-dot" aria-hidden="true">{on ? <Icon name="marca" size={18} weight={3} /> : choose ? <Icon name="plus" size={16} weight={2.2} /> : null}</span>
  </button>;
-}
-
-/** Aviso com Desfazer por 8 s; pausa enquanto há foco ou ponteiro sobre ele. */
-export function UndoToast({ message, onUndo, onDone, duration }: { message: string; onUndo?: () => void; onDone: () => void; duration?: number }) {
- const total = duration ?? (onUndo ? 8000 : 3000);
- const paused = useRef(false);
- const left = useRef(total);
- useEffect(() => {
-  left.current = total;
-  const id = window.setInterval(() => {
-   if (paused.current) return;
-   left.current -= 250;
-   if (left.current <= 0) onDone();
-  }, 250);
-  return () => window.clearInterval(id);
- // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [message]);
- const pause = () => { paused.current = true; }, resume = () => { paused.current = false; };
- return <div className="dt-toast" role="status" onMouseEnter={pause} onMouseLeave={resume} onFocus={pause} onBlur={resume}>
-  <span>{message}</span>
-  {onUndo ? <button type="button" onClick={onUndo}>Desfazer</button> : null}
- </div>;
 }
 
 export function Notice({ icon, children }: { icon?: ReactNode; children: ReactNode }) {

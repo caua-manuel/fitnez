@@ -59,7 +59,7 @@ test('Editor: criar treino com exercício de 90 s e a execução usa o timer de 
  await page.getByRole('link', { name: 'Começar treino' }).click();
  await expect(page.getByRole('heading', { name: 'Remada de teste', level: 2 })).toBeVisible();
  await page.getByLabel('Carga (kg), série 1').fill('20'); await page.getByLabel('Repetições, série 1').fill('10');
- await page.getByRole('button', { name: 'Concluir série 1' }).click();
+ await page.getByRole('button', { name: 'Série 1 concluída' }).click();
  await expect(page.getByRole('timer')).toHaveText(/1:30/);
 });
 
@@ -72,10 +72,10 @@ test('Editor: editar o descanso de um exercício existente e a execução usa o 
  await page.getByLabel('Descanso entre séries (segundos)').fill('45');
  await page.getByRole('button', { name: 'Salvar', exact: true }).click();
  await expect(page).toHaveURL(/#treino\/UA\/editar$/);
- await expect(page.getByText('Exercício salvo.')).toBeVisible();
+ await expect(page.getByRole('status').filter({ hasText: 'Exercício salvo.' })).toBeVisible();
  await page.goto('#treino/UA/executar?dia=' + today());
  await page.getByLabel('Carga (kg), série 1').fill('30'); await page.getByLabel('Repetições, série 1').fill('8');
- await page.getByRole('button', { name: 'Concluir série 1' }).click();
+ await page.getByRole('button', { name: 'Série 1 concluída' }).click();
  await expect(page.getByRole('timer')).toHaveText(/0:45/);
 });
 
@@ -138,7 +138,14 @@ test('Editor: remover exercício da sessão com Desfazer e reordenar por botões
  await page.getByRole('button', { name: 'Subir Supino com halteres' }).click();
  await expect(items.first()).toContainText('Supino com halteres');
  await items.first().getByRole('button', { name: /Mais opções/ }).click();
- await page.getByRole('button', { name: 'Remover do treino' }).click();
+ await page.getByRole('menuitem', { name: 'Remover do treino' }).click();
+ const confirmar = page.getByRole('dialog', { name: /Remover Supino com halteres do treino?/ });
+ await expect(confirmar).toBeVisible();
+ await confirmar.getByRole('button', { name: 'Cancelar' }).click();
+ await expect(items).toHaveCount(10);
+ await items.first().getByRole('button', { name: /Mais opções/ }).click();
+ await page.getByRole('menuitem', { name: 'Remover do treino' }).click();
+ await page.getByRole('dialog').getByRole('button', { name: 'Remover do treino' }).click();
  await expect(items).toHaveCount(9);
  expect((await stored(page)).catalog.plan.ex.supino).toBeTruthy();
  await page.getByRole('button', { name: 'Desfazer' }).click();
@@ -198,5 +205,5 @@ test('Editor: salvar dados do treino confirma "Treino salvo."', async ({ page })
  await page.getByLabel('Nome do treino').fill('Upper A renomeado');
  await page.getByRole('button', { name: 'Salvar dados do treino' }).click();
  await expect(page.getByText('✓ Treino salvo.')).toBeVisible();
- await expect(page.getByText('Treino salvo.', { exact: true })).toBeVisible();
+ await expect(page.getByRole('status').filter({ hasText: /^Treino salvo.$/ })).toBeVisible();
 });

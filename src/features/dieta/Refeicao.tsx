@@ -5,8 +5,9 @@ import { Icon } from '../../ui/icons';
 import type { DayIso } from '../../domain/calendar';
 import { applyAdjustments } from '../../domain/diet';
 import type { DietOption, MealKey } from '../../domain/diet';
+import { showToast } from '../../ui/UndoToast';
 import { DayNav, MealThumb } from './parts';
-import { MEAL_LOWER, MEAL_NAME, fmt } from './dietData';
+import { MEAL_LOWER, MEAL_NAME, fmt, optionNumber } from './dietData';
 import { useDietDay } from './useDietDay';
 
 interface Props { meal: MealKey; day: DayIso; today: DayIso; setDay: (d: DayIso) => void }
@@ -34,11 +35,11 @@ function Recipe({ id }: { id: string }) {
  return <details className="dt-recipe">
   <summary><span>Ver receita</span><Icon name="chevron" size={20} /></summary>
   <div className="dt-recipe-body">
-   <h4>{String(r.n)}</h4>
+   <h3>{String(r.n)}</h3>
    {r.t ? <p className="muted">Preparo: {String(r.t)}</p> : null}
-   <h5>Ingredientes</h5>
+   <h4>Ingredientes</h4>
    <ul>{(r.ing as string[]).map((x, i) => <li key={i}>{x}</li>)}</ul>
-   <h5>Modo de preparo</h5>
+   <h4>Modo de preparo</h4>
    <ol>{(r.pas as string[]).map((x, i) => <li key={i}>{x}</li>)}</ol>
    {r.dica ? <p className="dt-tip"><strong>Dica:</strong> {String(r.dica)}</p> : null}
   </div>
@@ -46,13 +47,21 @@ function Recipe({ id }: { id: string }) {
 }
 
 export function Refeicao({ meal, day, today, setDay }: Props) {
- const { dd, catalog, type, choose, mark, unmark } = useDietDay(day);
+ const { dd, catalog, type, choose, mark, unmark, snapshotMeal, restoreMeal } = useDietDay(day);
  const [info, setInfo] = useState(false);
  const options = catalog[meal];
  const pickedKey = dd.pick[meal];
  const picked = options.find(o => o.key === pickedKey);
  const eaten = Boolean(dd.eaten[meal]);
   const isToday = day === today;
+ // Trocar a opção de uma refeição já consumida muda o consumo na hora: avisa e permite desfazer (a cópia consumida volta como estava).
+ const pickOption = (o: DietOption) => {
+  if (o.key === pickedKey) return;
+  const snap = snapshotMeal(meal);
+  choose(meal, o);
+  if (eaten) showToast(`Opção trocada: ${MEAL_NAME[meal]} opção ${optionNumber(options, o.key)}`, () => restoreMeal(meal, snap));
+ };
+ const unmarkWithUndo = () => { const snap = snapshotMeal(meal); unmark(meal); showToast(`${MEAL_NAME[meal]} desmarcado`, () => restoreMeal(meal, snap)); };
  const note = picked ? applyAdjustments(picked, type, meal).note : options[0] ? applyAdjustments(options[0], type, meal).note : undefined;
 
  return <div className="dt dt-meal-screen">
@@ -65,13 +74,14 @@ export function Refeicao({ meal, day, today, setDay }: Props) {
    <p>Selecione a refeição que você consumiu {isToday ? 'hoje' : 'neste dia'}.</p>
   </div>
   {note ? <p className="dt-note dt-adjust-note">{note}</p> : null}
+  {!picked && !eaten && options.length ? <p className="help" id="dt-pick-help">Escolha uma opção abaixo para poder marcar como consumido.</p> : null}
 
   {options.length === 0 ? <div className="card"><p>Esta refeição não tem opções. Cadastre uma em Gerenciar opções.</p><a className="button secondary" href={hrefFor({ tab: 'dieta', meal, manage: true, day: isToday ? undefined : day })}>Gerenciar opções</a></div> : <div className="dt-options" role="radiogroup" aria-label={`Opções de ${MEAL_LOWER[meal]}`}>
    {options.map((o: DietOption, i) => {
     const on = o.key === pickedKey;
     return <div key={o.key} className={`dt-opt${on ? ' on' : ''}`}>
      <label className="dt-opt-main">
-      <input type="radio" name={`opcao-${meal}`} value={o.key} checked={on} onChange={() => choose(meal, o)} />
+      <input type="radio" name={`opcao-${meal}`} value={o.key} checked={on} onChange={() => pickOption(o)} />
       <MealThumb meal={meal} option={o.key} size={72} />
       <span className="dt-opt-text">
        <span className="dt-tag">Opção {i + 1}</span>
@@ -89,12 +99,9 @@ export function Refeicao({ meal, day, today, setDay }: Props) {
 
   <div className="dt-sticky">
    {eaten ? <>
-    <p className="dt-eaten-msg" role="status"><Icon name="marca" size={18} weight={2.2} />Consumido neste dia</p>
-    <button type="button" className="button secondary block" onClick={() => unmark(meal)}>Desmarcar consumo</button>
-   </> : <>
-    <button type="button" className="button block" disabled={!picked} onClick={() => picked && mark(meal, picked)}><Icon name="marca" size={20} weight={2.2} />Marcar como consumido</button>
-    {!picked ? <p className="help dt-sticky-help">Escolha uma opção acima para marcar.</p> : null}
-   </>}
+    <p className="dt-eaten-msg"><Icon name="marca" size={18} weight={2.2} />Consumido neste dia</p>
+    <button type="button" className="button secondary dt-bar-btn" onClick={unmarkWithUndo}>Desmarcar consumo</button>
+   </> : <button type="button" className="button block dt-bar-btn" disabled={!picked} aria-describedby={picked ? undefined : 'dt-pick-help'} onClick={() => picked && mark(meal, picked)}><Icon name="marca" size={20} weight={2.2} />Marcar como consumido</button>}
   </div>
  </div>;
 }

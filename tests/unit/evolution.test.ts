@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DayRecord, Plan } from '../../src/application/repository';
 import {
- consistency, planConsistency, periodRange, strengthChange, strengthSeries, waistDelta, waistSeries, hipDelta, hipSeries, weightDelta, weightSeries, measureSeries, parseMeasure, formatSigned, weeklyValues, pctOf,
+ consistency, planConsistency, periodRange, strengthChange, strengthSeries, waistDelta, waistSeries, hipDelta, hipSeries, weightDelta, weightSeries, measureSeries, parseMeasure, formatSigned, weeklyValues, pctOf, measuresOutsidePlan,
 } from '../../src/domain/evolution';
 
 // 2026-11-16 é segunda-feira.
@@ -177,4 +177,19 @@ describe('weeklyValues / pctOf', () => {
   expect(weeklyValues([], periodRange('2026-11-01', 12, START), 2)).toEqual([null, null]);
  });
  it('pctOf', () => { expect(pctOf(5, 6)).toBe(83); expect(pctOf(0, 0)).toBeNull(); });
+});
+
+describe('measuresOutsidePlan', () => {
+ const meas = {
+  '2026-11-04': { p: '80,5' }, '2026-11-11': { c: '90', q: 'abc' }, '2026-11-16': { p: '80' }, '2027-02-07': { p: '79' }, '2027-02-10': { t: '57,5' },
+  '2026-11-01': { p: '' }, 'lixo': { p: '80' },
+ };
+ it('lista as medidas válidas antes e depois do plano, em ordem, e ignora as de dentro e as inválidas', () => {
+  const out = measuresOutsidePlan(meas, START);
+  expect(out.map(o => [o.day, o.when])).toEqual([['2026-11-04', 'antes'], ['2026-11-11', 'antes'], ['2027-02-10', 'depois']]);
+  expect(out[0].values).toEqual({ p: 80.5 });
+  expect(out[1].values).toEqual({ c: 90 });
+  expect(out[2].values).toEqual({ t: 57.5 });
+ });
+ it('sem medidas fora do plano devolve lista vazia', () => { expect(measuresOutsidePlan({}, START)).toEqual([]); });
 });

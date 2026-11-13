@@ -5,7 +5,7 @@ import seedPlan from '../../../data/plan.json';
 import type { Plan } from '../../application/repository';
 import { restoreSeedPlan } from '../../domain/planEdit';
 import { Icon } from '../../ui/icons';
-import { ConfirmDialog } from './Sheet';
+import { ConfirmSheet } from '../../ui/Sheet';
 import { usePlanEditor } from './planActions';
 import { CartaoTreino } from './Cartao';
 import { formatDay, lastDoneDay, minutesLabel, normalize, plural, sessionIds, sessionKind } from './util';
@@ -56,10 +56,10 @@ export function Biblioteca() {
   <div className="ed-restore">
    <button type="button" className="ed-linkbtn" onClick={() => setRestore(true)}>Restaurar treinos originais</button>
   </div>
-  {restore ? <ConfirmDialog title="Restaurar treinos originais?" confirmLabel="Restaurar treinos" onCancel={() => setRestore(false)}
+  {restore ? <ConfirmSheet title="Restaurar treinos originais?" confirmLabel="Restaurar treinos" onCancel={() => setRestore(false)}
    onConfirm={() => { setRestore(false); void withUndo('Treinos originais restaurados.', p => restoreSeedPlan(p, seedPlan.plan as unknown as Plan)); }}>
    <p>Os treinos e os exercícios originais do plano voltam como estavam. Treinos que você criou saem da lista, e as mudanças que fez nos exercícios originais são desfeitas.</p>
-   <p><strong>O histórico dos treinos já feitos é preservado.</strong> Você poderá desfazer por 8 segundos.</p>
-  </ConfirmDialog> : null}
+   <p><strong>O histórico dos treinos já feitos é preservado.</strong> Você poderá desfazer por 6 segundos.</p>
+  </ConfirmSheet> : null}
  </div>;
 }

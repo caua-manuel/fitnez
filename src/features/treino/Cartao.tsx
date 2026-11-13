@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { hrefFor } from '../../app/router';
 import { Icon } from '../../ui/icons';
 import type { IconName } from '../../ui/icons';
 import { Glyph } from './glyphs';
-import { ConfirmDialog } from './Sheet';
+import { Menu } from '../../ui/Menu';
+import { ConfirmSheet } from '../../ui/Sheet';
 import { usePlanEditor } from './planActions';
 import { STATUS_LABEL } from './util';
 import type { DayStatus } from './util';
@@ -17,16 +18,8 @@ export function StatusBadge({ status }: { status: DayStatus }) {
 export function CartaoTreino({ id, name, href, icon = 'treino', date, exercises, minutes, status, menu = true, headingLevel = 3 }: {
  id?: string; name: string; href?: string; icon?: IconName; date?: ReactNode; exercises?: string; minutes?: string | null; status?: DayStatus | null; menu?: boolean; headingLevel?: 2 | 3;
 }) {
- const [open, setOpen] = useState(false);
  const [confirm, setConfirm] = useState(false);
  const { duplicate, remove } = usePlanEditor();
- const box = useRef<HTMLDivElement>(null);
- useEffect(() => {
-  if (!open) return;
-  const away = (e: PointerEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
-  document.addEventListener('pointerdown', away);
-  return () => document.removeEventListener('pointerdown', away);
- }, [open]);
  const Heading = `h${headingLevel}` as 'h3';
  const body = <>
   <span className="icon-tile tr-tile"><Icon name={icon} size={28} weight={1.8} /></span>
@@ -42,21 +35,19 @@ export function CartaoTreino({ id, name, href, icon = 'treino', date, exercises,
    </span>
   </div>
  </>;
- const menuId = `menu-card-${id ?? name}`;
- return <div className="tr-card" ref={box} onKeyDown={e => { if (e.key === 'Escape' && open) { setOpen(false); (box.current?.querySelector('.tr-more') as HTMLElement | null)?.focus(); } }}>
+ return <div className="tr-card">
   {href ? <a className="tr-row" href={href}>{body}</a> : <div className="tr-row static">{body}</div>}
   {menu && id ? <>
-   <button type="button" className="icon-button tr-more" aria-label={`Mais opções de ${name}`} aria-expanded={open} aria-haspopup="true" aria-controls={menuId} onClick={() => setOpen(o => !o)}><Icon name="mais" size={22} weight={2} /></button>
-   {open ? <div className="tr-menu tr-pop" id={menuId}>
-    <a href={hrefFor({ tab: 'treino', view: 'detalhe', id })}>Abrir treino</a>
-    <a href={hrefFor({ tab: 'treino', view: 'editar', id })}>Editar treino</a>
-    <button type="button" onClick={() => { setOpen(false); (box.current?.querySelector('.tr-more') as HTMLElement | null)?.focus(); void duplicate(id); }}>Duplicar treino</button>
-    <button type="button" className="danger" onClick={() => setConfirm(true)}>Excluir treino</button>
-   </div> : null}
-   {confirm ? <ConfirmDialog title={`Excluir ${name}?`} confirmLabel="Excluir treino" onCancel={() => setConfirm(false)} onConfirm={() => { setConfirm(false); setOpen(false); void remove(id); }}>
+   <Menu className="tr-more" label={`Mais opções de ${name}`} trigger={<Icon name="mais" size={22} weight={2} />} items={[
+    { label: 'Abrir treino', href: hrefFor({ tab: 'treino', view: 'detalhe', id }) },
+    { label: 'Editar treino', href: hrefFor({ tab: 'treino', view: 'editar', id }) },
+    { label: 'Duplicar treino', onClick: () => { void duplicate(id); } },
+    { label: 'Excluir treino', danger: true, onClick: () => setConfirm(true) },
+   ]} />
+   {confirm ? <ConfirmSheet title={`Excluir ${name}?`} confirmLabel="Excluir treino" onCancel={() => setConfirm(false)} onConfirm={() => { setConfirm(false); void remove(id); }}>
     <p>O treino sai do seu plano. O histórico dos treinos já feitos continua salvo, e os exercícios continuam no catálogo.</p>
-    <p>Você poderá desfazer por 8 segundos.</p>
-   </ConfirmDialog> : null}
+    <p>Você poderá desfazer por 6 segundos.</p>
+   </ConfirmSheet> : null}
   </> : null}
  </div>;
 }

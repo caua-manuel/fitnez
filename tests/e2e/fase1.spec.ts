@@ -31,7 +31,7 @@ for(const mode of ['denied','error','granted']) test(`persistência ${mode} perm
 test('clipboard negado exibe erro e permite download',async({page})=>{await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async()=>{throw Error('negado sintético');}}}));await open(page);await page.getByRole('button',{name:'Copiar backup',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Use Baixar backup');expect((await download(page)).app).toBe('treino12');});
 test('IndexedDB indisponível exibe erro sem anunciar salvo',async({page})=>{await page.addInitScript(()=>Object.defineProperty(window,'indexedDB',{value:undefined}));await page.goto('#perfil');await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByText('Salvo neste aparelho',{exact:true})).toHaveCount(0);});
 test('falha real entre writes IndexedDB aborta importação sem perder estado ou recovery',async({page})=>{await open(page);const before=await state(page);await upload(page,synthetic());await expect(page.getByRole('heading',{name:'Prévia da importação'})).toBeVisible();await page.evaluate(()=>{const original=IDBObjectStore.prototype.put;(window as any).__qaPut=original;IDBObjectStore.prototype.put=function(...args:any[]){if(this.name==='state')throw new DOMException('Quota sintética QA','QuotaExceededError');return original.apply(this,args as [any,IDBValidKey]);};});await page.getByRole('button',{name:'Confirmar importação',exact:true}).click();await expect(page.getByRole('alert')).toBeVisible();await page.evaluate(()=>{IDBObjectStore.prototype.put=(window as any).__qaPut;});expect(await state(page)).toEqual(before);await expect(page.getByText('Backup importado.',{exact:false})).toHaveCount(0);await page.reload();expect(await state(page)).toEqual(before);});
-test('PWA produção: precache completo, cinco rotas e reabertura offline',async({page,context})=>{await open(page);await expect(page.getByText('Disponível offline',{exact:true})).toBeVisible();await page.evaluate(async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise<void>(resolve=>navigator.serviceWorker.addEventListener('controllerchange',()=>resolve(),{once:true}));});await page.getByRole('button',{name:'Escuro',exact:true}).click();await context.setOffline(true);for(const [,label]of routes){await page.getByRole('navigation',{name:'Navegação principal'}).getByRole('link',{name:label,exact:true}).click();await expect(page.getByRole('heading',{name:label,exact:true,level:1})).toBeAttached();}await page.reload();await expect(page.getByText('Sem conexão · disponível offline',{exact:true})).toBeVisible();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');const reopened=await context.newPage();await reopened.goto('http://127.0.0.1:4173/Projeto-Treino/#treino');await expect(reopened.getByRole('heading',{name:'Treino',exact:true,level:1})).toBeAttached();await reopened.close();await context.setOffline(false);});
+test('PWA produção: precache completo, cinco rotas e reabertura offline',async({page,context})=>{await open(page);await expect(page.getByText('Disponível offline',{exact:true})).toBeVisible();await page.evaluate(async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise<void>(resolve=>navigator.serviceWorker.addEventListener('controllerchange',()=>resolve(),{once:true}));});await page.getByRole('button',{name:'Escuro',exact:true}).click();await context.setOffline(true);for(const [,label]of routes){await page.getByRole('navigation',{name:'Navegação principal'}).getByRole('link',{name:label,exact:true}).click();await expect(page.getByRole('heading',{name:label,exact:true,level:1})).toBeAttached();}await page.reload();await expect(page.getByText('Sem conexão · disponível offline',{exact:true})).toBeVisible();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');const reopened=await context.newPage();await reopened.goto('#treino');await expect(reopened.getByRole('heading',{name:'Treino',exact:true,level:1})).toBeAttached();await reopened.close();await context.setOffline(false);});
 
 
 
@@ -54,13 +54,13 @@ test('Perfil: backup inválido mostra o erro junto ao campo, com ação coerente
  await expect(page.getByRole('alert')).toHaveCount(0);
 });
 
-test('Perfil: salvar nome e objetivo mostra "Salvo" em role=status', async ({ page }) => {
+test('Perfil: salvar nome e objetivo mostra "Perfil salvo" em role=status', async ({ page }) => {
  await open(page);
  await page.getByRole('button', { name: 'Editar perfil' }).click();
  await page.getByLabel('Seu nome').fill('Teste');
  await page.getByLabel('Seu objetivo').fill('Ganhar força');
  await page.getByRole('button', { name: 'Salvar', exact: true }).click();
- await expect(page.getByRole('status').filter({ hasText: /^Salvo$/ })).toBeVisible();
+ await expect(page.getByRole('status').filter({ hasText: /^Perfil salvo$/ })).toBeVisible();
  expect((await state(page)).settings.profile).toMatchObject({ name: 'Teste', goal: 'Ganhar força' });
 });
 
@@ -76,10 +76,47 @@ test('Perfil: dados físicos validam por campo, preservam entrada e mostram meta
  await expect(page.getByLabel('Peso (kg)')).toHaveValue('80,5');
  await page.getByLabel('Idade (anos)').fill('30');
  await page.getByRole('button', { name: 'Salvar', exact: true }).click();
- await expect(page.getByRole('status').filter({ hasText: /^Salvo$/ })).toBeVisible();
+ await expect(page.getByRole('status').filter({ hasText: /^Perfil salvo$/ })).toBeVisible();
  expect((await state(page)).settings.profile).toMatchObject({ age: 30, weightKg: 80.5, heightCm: 180 });
  await expect(page.getByText('Meta de proteína: 193 g por dia, 2,4 g por kg')).toBeVisible();
  await page.getByRole('button', { name: /^Meu objetivo/ }).click();
  await expect(page.getByLabel('Seu objetivo')).toBeFocused();
  await expect(page.getByText(/não substituem nutricionista, médico ou educador físico/)).toBeVisible();
+});
+
+test('Perfil: tema em 360 px não quebra palavra; Automático mantém nome acessível completo', async ({ page }) => {
+ await page.setViewportSize({ width: 360, height: 740 });
+ await open(page);
+ const auto = page.getByRole('button', { name: 'Automático', exact: true });
+ await expect(auto).toBeVisible();
+ await expect(auto).toContainText('Auto');
+ const box = await auto.evaluate(el => ({ sw: el.scrollWidth, cw: el.clientWidth, h: el.getBoundingClientRect().height }));
+ expect(box.sw).toBeLessThanOrEqual(box.cw + 1);
+ expect(box.h).toBeLessThan(60);
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('Perfil: mostra a última medida de peso e permite usá-la como peso do perfil (com Desfazer)', async ({ page }) => {
+ await open(page);
+ await page.goto('#evolucao'); await page.waitForLoadState('networkidle');
+ await page.getByRole('button', { name: /Registrar medidas/ }).click();
+ await page.getByLabel(/Peso/).first().fill('78,6');
+ await page.getByRole('button', { name: /^Salvar/ }).click();
+ await page.goto('#perfil');
+ await expect(page.getByText(/Última medida de peso: 78,6 kg em \d\d\/\d\d/)).toBeVisible();
+ // Peso do perfil editado depois da medida: os dois ficam independentes e o botão reaparece.
+ await page.getByRole('button', { name: /^Dados físicos/ }).click();
+ await page.getByLabel('Idade (anos)').fill('30');
+ await page.getByLabel('Peso (kg)').fill('80');
+ await page.getByLabel('Altura (cm)').fill('180');
+ await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+ await page.getByRole('button', { name: 'Usar como peso do perfil' }).click();
+ await expect.poll(async () => (await state(page)).settings.profile.weightKg).toBe(78.6);
+ await page.getByRole('button', { name: 'Desfazer' }).click();
+ await expect.poll(async () => (await state(page)).settings.profile.weightKg).toBe(80);
+});
+
+test('Perfil: no primeiro uso, sem dados do usuário, não há aviso de backup pendente', async ({ page }) => {
+ await open(page);
+ await expect(page.getByText('Seu backup semanal está pendente.', { exact: false })).toHaveCount(0);
 });

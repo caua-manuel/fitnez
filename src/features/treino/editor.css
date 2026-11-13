@@ -54,10 +54,6 @@
 .ed-ex-body{min-width:0;display:grid;gap:3px;padding:2px 0}
 .ed-ex-body h4{margin:0;font-size:1.0625rem;font-weight:800;letter-spacing:-.015em;line-height:1.25;overflow-wrap:anywhere}
 .ed-ex-meta{color:var(--muted-foreground);font-size:.9375rem;font-weight:500;line-height:1.35;overflow-wrap:anywhere}
-.ed-menu-wrap{position:relative}
-.ed-menu-wrap .ed-pop{top:46px;right:0;min-width:12rem}
-.tr-menu button.danger,.tr-menu button.danger:hover,.tr-menu button.danger:focus-visible{background:transparent;color:var(--destructive);border:0;font-weight:700}
-@media(hover:hover) and (pointer:fine){.tr-menu button:hover{background:var(--accent-soft)}.tr-menu button.danger:hover{background:var(--accent-soft)}}
 .ed-banner{display:grid;gap:10px;margin:0 0 14px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--card);box-shadow:var(--shadow-card)}
 .ed-banner p{margin:0;line-height:1.45}
 .ed-banner-actions{display:flex;flex-wrap:wrap;gap:8px}
@@ -73,8 +69,6 @@
 .ed-linkbtn{min-height:44px;padding:0 12px;border:0;background:transparent;color:var(--primary);font-size:1rem;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 
 /* Folhas */
-.ed-sheet-title{margin:0 0 10px;font-size:1.375rem;font-weight:800;letter-spacing:-.02em;line-height:1.2;overflow-wrap:anywhere}
-.ed-confirm-text p{margin:0 0 10px;line-height:1.45}
 .ed-new-ex{margin:4px 0 8px}
 .ed-pick-search{margin-top:12px}
 .ed-pick-list{display:grid;gap:8px;margin:12px 0 0;padding:0;list-style:none}
@@ -83,12 +77,6 @@
 @media(hover:hover) and (pointer:fine){.ed-pick-list button:hover{border-color:var(--primary);background:var(--accent-soft)}}
 
 /* Aviso com Desfazer, acima da barra inferior */
-.ed-toast-wrap{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:12;max-width:28rem;margin:0 auto;pointer-events:none}
-.ed-toast{pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:4px 6px 4px 18px;border-radius:16px;background:var(--foreground);color:var(--background);box-shadow:0 12px 32px rgb(11 23 48 / .3);font-weight:600;animation:ed-toast-in 200ms ease-out}
-.ed-toast-text{min-width:0;overflow-wrap:anywhere}
-.ed-toast-undo{flex:none;min-height:44px;min-width:44px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:inherit;font-size:1rem;font-weight:800;text-decoration:underline;text-underline-offset:3px}
-@keyframes ed-toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){.ed-toast{animation:none}}
 
 /* Direção v3: campos e steppers minimalistas */
 .tr-title-row .tr-new{border-radius:var(--radius-button);min-height:48px;font-weight:600}
@@ -111,9 +99,6 @@
 .ed-ex{border-radius:var(--radius-card);box-shadow:none}
 .ed-ex-body h4{font-weight:700;font-size:1rem}
 .ed-ex-meta{font-weight:400;font-size:.875rem}
-.ed-sheet-title{font-weight:700;font-size:1.25rem}
 .ed-pick-list button{border:1px solid var(--border);border-radius:var(--radius-control);font-weight:600}
 .ed-pick-list button span{font-weight:400;font-size:.875rem}
-.ed-toast{border-radius:var(--radius-control);box-shadow:var(--shadow-sheet);font-weight:500}
-.ed-toast-undo{font-weight:700}
 .ed-linkbtn{font-weight:600}

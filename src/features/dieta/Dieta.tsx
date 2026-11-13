@@ -6,9 +6,10 @@ import { Icon } from '../../ui/icons';
 import { mondayOf } from '../../domain/calendar';
 import type { DayIso } from '../../domain/calendar';
 import { applyAdjustments, weeklyReview } from '../../domain/diet';
-import type { DietDay, MealKey } from '../../domain/diet';
+import type { MealKey } from '../../domain/diet';
+import { showToast } from '../../ui/UndoToast';
 import { todayIso } from '../treino/util';
-import { Cup, CheckButton, DayNav, KcalRing, MealThumb, UndoToast } from './parts';
+import { Cup, CheckButton, DayNav, KcalRing, MealThumb } from './parts';
 import { DAY_TYPE_LABEL, MEALS, MEAL_NAME, dayLabel, fmt, nf1, optionNumber, weeklyAverages } from './dietData';
 import { useDietDay } from './useDietDay';
 import { Refeicao } from './Refeicao';
@@ -36,8 +37,7 @@ export function Dieta({ route }: { route: DietRoute }) {
 
 function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d: DayIso) => void }) {
  const { state, commit } = useData();
- const { dd, catalog, type, target, totals, prog, update, toggleEaten } = useDietDay(day);
- const [toast, setToast] = useState<{ message: string; prev?: DietDay; id: number; undo?: () => void } | null>(null);
+ const { dd, catalog, type, target, totals, prog, update, toggleEaten, snapshotMeal, restoreMeal } = useDietDay(day);
  const isToday = day === today;
  const link = (meal: MealKey) => hrefFor({ tab: 'dieta', meal, day: isToday ? undefined : day });
  const over = totals.kcal > target.kcal;
@@ -52,9 +52,8 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
  const dismissed = state!.settings.dietReviewDismissed === week;
  const dismiss = () => {
   void commit(s => { s.settings.dietReviewDismissed = week; return s; });
-  setToast({ message: 'Revisão dispensada por esta semana', id: Date.now(), undo: () => void commit(s => { delete s.settings.dietReviewDismissed; return s; }) });
+  showToast('Revisão dispensada por esta semana', () => void commit(s => { delete s.settings.dietReviewDismissed; return s; }));
  };
- const undoToast = () => { if (toast?.undo) toast.undo(); else if (toast?.prev) { const prev = toast.prev; update(() => prev); } setToast(null); };
 
  return <div className="dt">
   <DayNav day={day} today={today} onChange={setDay} />
@@ -96,12 +95,12 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
       {kcal !== null ? <span className="dt-meal-kcal">{fmt(kcal)} kcal</span> : null}
      </a>
      <CheckButton on={eaten} choose={!eaten && !picked}
-      label={eaten ? `Desmarcar ${MEAL_NAME[m]}` : picked ? `Marcar ${MEAL_NAME[m]} como consumido` : `Escolher opção de ${MEAL_NAME[m]}`}
+      label={!eaten && !picked ? `Escolher opção de ${MEAL_NAME[m]}` : `${MEAL_NAME[m]} consumido`}
       onClick={() => {
-       const before = dd;
+       const snap = snapshotMeal(m);
        const r = toggleEaten(m);
        if (r === 'needs-pick') { window.location.hash = link(m); return; }
-       setToast({ message: r === 'marked' ? `${MEAL_NAME[m]} marcado como consumido` : `${MEAL_NAME[m]} desmarcado`, prev: before, id: Date.now() });
+       showToast(r === 'marked' ? `${MEAL_NAME[m]} marcado como consumido` : `${MEAL_NAME[m]} desmarcado`, () => restoreMeal(m, snap));
       }} />
     </li>;
    })}
@@ -129,7 +128,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
 
   <div className="list-row dt-crea">
    <div className="grow"><strong>Creatina</strong><small>{dd.crea ? 'Tomada hoje' : 'Ainda não tomada'}</small></div>
-   <CheckButton on={dd.crea} label={dd.crea ? 'Desmarcar creatina' : 'Marcar creatina como tomada'} onClick={() => { const before = dd; update(d => ({ ...d, crea: !d.crea })); setToast({ message: dd.crea ? 'Creatina desmarcada' : 'Creatina marcada como tomada', prev: before, id: Date.now() }); }} />
+   <CheckButton on={dd.crea} label="Creatina tomada" onClick={() => { const was = dd.crea; update(d => ({ ...d, crea: !was })); showToast(was ? 'Creatina desmarcada' : 'Creatina marcada como tomada', () => update(d => ({ ...d, crea: was }))); }} />
   </div>
 
   {!dismissed ? <section className="card dt-review" aria-labelledby="dt-review-h">
@@ -144,6 +143,5 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
   </section> : null}
 
   <p className="dt-disclaimer">Calorias e proteínas são estimativas e variam com marca, preparo e porção. O app não substitui nutricionista ou médico.</p>
-  {toast ? <UndoToast key={toast.id} message={toast.message} duration={5000} onUndo={undoToast} onDone={() => setToast(null)} /> : null}
  </div>;
 }

@@ -69,7 +69,7 @@ test('Dieta: marcar refeição atualiza anel e totais na hora; trocar opção at
  await page.locator('.dt-opt-main').nth(1).click();
  await page.getByRole('link', { name: 'Voltar para a Dieta' }).click();
  await expect(ring(page)).toHaveAttribute('aria-valuenow', '501');
- await page.getByRole('button', { name: 'Desmarcar Café da manhã' }).click();
+ await page.getByRole('button', { name: 'Café da manhã consumido' }).click();
  await expect(page.getByText('0 de 5')).toBeVisible();
  await expect(ring(page)).toHaveAttribute('aria-valuenow', '0');
  expect(await noHScroll(page)).toBe(true);
@@ -81,7 +81,7 @@ test('Dieta: check da lista sem opção abre a refeição; com opção marca dir
  await expect(page).toHaveURL(/#dieta\/almoco/);
  await page.locator('.dt-opt-main').first().click();
  await page.getByRole('link', { name: 'Voltar para a Dieta' }).click();
- await page.getByRole('button', { name: 'Marcar Almoço como consumido' }).click();
+ await page.getByRole('button', { name: 'Almoço consumido' }).click();
  await expect(ring(page)).toHaveAttribute('aria-valuenow', '759');
 });
 
@@ -91,11 +91,11 @@ test('Dieta: água em copos e creatina persistem após recarregar', async ({ pag
  await expect(page.getByText('1,5 L de 3,0 L')).toBeVisible();
  await page.getByRole('button', { name: /^Copo 3 de/ }).click();
  await expect(page.getByText('1,0 L de 3,0 L')).toBeVisible();
- await page.getByRole('button', { name: 'Marcar creatina como tomada' }).click();
- await expect(page.getByRole('button', { name: 'Desmarcar creatina' })).toBeVisible();
+ await page.getByRole('button', { name: 'Creatina tomada' }).click();
+ await expect(page.getByRole('button', { name: 'Creatina tomada', pressed: true })).toBeVisible();
  await page.waitForTimeout(600);
  await page.reload();
- await expect(page.getByRole('button', { name: 'Desmarcar creatina' })).toBeVisible();
+ await expect(page.getByRole('button', { name: 'Creatina tomada', pressed: true })).toBeVisible();
 });
 
 test('Dieta: editar opção vale para todos os dias e não altera dia já registrado', async ({ page }) => {
@@ -176,13 +176,13 @@ test('Dieta: círculo marca e desmarca direto com aviso e Desfazer; sem opção 
  await page.goto('#dieta/cafe');
  await page.locator('.dt-opt-main').first().click();
  await page.getByRole('link', { name: 'Voltar para a Dieta' }).click();
- await page.getByRole('button', { name: 'Marcar Café da manhã como consumido' }).click();
+ await page.getByRole('button', { name: 'Café da manhã consumido' }).click();
  await expect(page.getByRole('status').filter({ hasText: 'Café da manhã marcado como consumido' })).toBeVisible();
  await expect(ring(page)).toHaveAttribute('aria-valuenow', '495');
  await page.getByRole('button', { name: 'Desfazer' }).click();
  await expect(ring(page)).toHaveAttribute('aria-valuenow', '0');
- await page.getByRole('button', { name: 'Marcar Café da manhã como consumido' }).click();
- await page.getByRole('button', { name: 'Desmarcar Café da manhã' }).click();
+ await page.getByRole('button', { name: 'Café da manhã consumido' }).click();
+ await page.getByRole('button', { name: 'Café da manhã consumido' }).click();
  await expect(page.getByRole('status').filter({ hasText: 'Café da manhã desmarcado' })).toBeVisible();
  await expect(ring(page)).toHaveAttribute('aria-valuenow', '0');
 });
@@ -234,4 +234,45 @@ test('Dieta: dia futuro não quebra a tela', async ({ page }) => {
  await page.goto(`#dieta?dia=${tomorrow()}`);
  await expect(page.getByRole('list', { name: 'Refeições' })).toBeVisible();
  expect(await noHScroll(page)).toBe(true);
+});
+
+test('Dieta: trocar opção de refeição já consumida avisa e Desfazer restaura a cópia consumida', async ({ page }) => {
+ await seed(page);
+ await consume(page, 'almoco', 0);
+ await page.locator('.dt-opt-main').nth(1).click();
+ await expect(page.getByRole('status').filter({ hasText: 'Opção trocada: Almoço opção 2' })).toHaveCount(1);
+ await page.getByRole('button', { name: 'Desfazer' }).click();
+ await page.getByRole('link', { name: 'Voltar para a Dieta' }).click();
+ await expect(page.getByText('Opção 1 · ', { exact: false }).first()).toBeVisible();
+ await expect(ring(page)).toHaveAttribute('aria-valuenow', '759');
+});
+
+test('Dieta: Desmarcar consumo tem Desfazer e a barra fixa é compacta', async ({ page }) => {
+ await seed(page);
+ await consume(page, 'cafe', 0);
+ const bar = await page.locator('.dt-sticky').boundingBox();
+ expect(bar!.height).toBeLessThanOrEqual(60);
+ await page.getByRole('button', { name: 'Desmarcar consumo' }).click();
+ await expect(page.getByRole('button', { name: 'Marcar como consumido' })).toBeVisible();
+ await page.getByRole('button', { name: 'Desfazer' }).click();
+ await expect(page.getByText('Consumido neste dia')).toBeVisible();
+});
+
+test('Dieta: menu das opções usa teclado (setas, Escape e retorno de foco)', async ({ page }) => {
+ await seed(page);
+ await page.goto('#dieta/lanche/gerenciar');
+ const trigger = page.getByRole('button', { name: /^Mais ações da opção 1/ });
+ await trigger.focus(); await page.keyboard.press('Enter');
+ await expect(page.getByRole('menuitem', { name: 'Editar' })).toBeFocused();
+ await page.keyboard.press('ArrowDown');
+ await expect(page.getByRole('menuitem', { name: 'Duplicar' })).toBeFocused();
+ await page.keyboard.press('Escape');
+ await expect(trigger).toBeFocused();
+});
+
+test('Dieta: cartões de indicador não quebram "2.450 kcal" em 1280 px', async ({ page }) => {
+ await page.setViewportSize({ width: 1280, height: 800 });
+ await seed(page);
+ const h = await page.locator('.dt-stat strong').first().evaluate(el => el.getBoundingClientRect().height);
+ expect(h).toBeLessThan(26);
 });

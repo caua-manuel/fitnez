@@ -17,6 +17,9 @@ jobs:
   verificar-e-construir:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # Base real do repositório (nome: fitnez); build, e2e e artefato usam a mesma.
+      VITE_BASE_PATH: /fitnez/
     permissions:
       contents: read
       pages: read
@@ -36,27 +39,22 @@ jobs:
         run: npm audit --audit-level=moderate
       - name: Verificar tipos, testes e artefato
         run: npm run check
-        env:
-          VITE_BASE_PATH: /Projeto-Treino/
       - name: Instalar Chromium de teste
         run: npx playwright install --with-deps chromium
       - name: Testar fluxos e modo offline no navegador
         run: npm run test:e2e
-        env:
-          VITE_BASE_PATH: /Projeto-Treino/
-      - name: Construir na base real do repositório
-        run: npm run build
       - name: Preparar GitHub Pages
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.PUBLICAR_PAGES == 'true'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Enviar somente dist
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.PUBLICAR_PAGES == 'true'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist
 
   publicar:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    # Trava: só publica com a variável de repositório PUBLICAR_PAGES = 'true'.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.PUBLICAR_PAGES == 'true'
     needs: verificar-e-construir
     runs-on: ubuntu-latest
     timeout-minutes: 10

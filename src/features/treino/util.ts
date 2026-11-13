@@ -3,6 +3,7 @@ import { addDays, mondayOf, phaseOf } from '../../domain/calendar';
 import type { DayIso } from '../../domain/calendar';
 import { isLower, muscleGroupOf } from '../../domain/muscleGroups';
 import type { MuscleGroup } from '../../domain/muscleGroups';
+import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
 
 export function todayIso(): DayIso {
  const d = new Date();
@@ -46,14 +47,16 @@ export function sessionIds(plan: Plan): string[] {
 
 export function dayBelongsTo(plan: Plan, day: DayRecord | undefined, id: string): boolean {
  if (!day) return false;
- if (day.workout) return day.workout.sessionId === id;
+ if (listWorkouts(day).length > 0) return getWorkout(day, id) !== null;
  return (plan.sess[id]?.ex ?? []).some(e => (day.log?.[e] ?? []).some(r => r.done === true));
 }
 
 export type DayStatus = 'done' | 'partial' | 'pending';
-export function statusOf(day: DayRecord | undefined): DayStatus {
- if (day?.workout?.status === 'done' || day?.acts?.gym === true) return 'done';
- if (day?.workout?.status === 'partial') return 'partial';
+/** Situação de UM treino no dia. `acts.gym` (legado) só vale quando o dia não tem registro por treino. */
+export function statusOf(day: DayRecord | undefined, id: string): DayStatus {
+ if (isDone(day, id)) return 'done';
+ if (getWorkout(day, id)?.status === 'partial') return 'partial';
+ if (listWorkouts(day).length === 0 && day?.acts?.gym === true) return 'done';
  return 'pending';
 }
 export const STATUS_LABEL: Record<DayStatus, string> = { done: 'Concluído', partial: 'Parcial', pending: 'Pendente' };
@@ -61,7 +64,7 @@ export const STATUS_LABEL: Record<DayStatus, string> = { done: 'Concluído', par
 export function lastDoneDay(state: StateV3, id: string): DayIso | null {
  const days = state.history.days;
  const hit = Object.keys(days)
-  .filter(d => dayBelongsTo(state.catalog.plan, days[d], id) && (!days[d]!.workout || statusOf(days[d]) === 'done'))
+  .filter(d => dayBelongsTo(state.catalog.plan, days[d], id) && (!getWorkout(days[d], id) || isDone(days[d], id)))
   .sort().reverse();
  return hit[0] ?? null;
 }
@@ -117,6 +120,19 @@ export function repsText(ex: { m?: string }, reps: string): string {
 export function firstIncomplete(rows: Record<string, { done: boolean }[]>, exIds: string[]): number {
  const i = exIds.findIndex(e => { const r = rows[e] ?? []; return r.length === 0 || r.some(s => !s.done); });
  return i < 0 ? 0 : i;
+}
+
+const cursorKey = (day: string, id: string) => `treino12:cursor:${day}:${id}`;
+/** Exercício em que a pessoa estava (estado leve, por aba); null quando não há valor válido. */
+export function readCursor(day: string, id: string, count: number): number | null {
+ try {
+  const raw = sessionStorage.getItem(cursorKey(day, id));
+  const n = Number(raw);
+  return raw !== null && Number.isInteger(n) && n >= 0 && n < count ? n : null;
+ } catch { return null; }
+}
+export function writeCursor(day: string, id: string, idx: number | null) {
+ try { if (idx === null) sessionStorage.removeItem(cursorKey(day, id)); else sessionStorage.setItem(cursorKey(day, id), String(idx)); } catch { /* o cursor é só conveniência */ }
 }
 
 export const plural =(n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;

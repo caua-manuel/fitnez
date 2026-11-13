@@ -6,11 +6,12 @@
 .in-week{font-size:clamp(1.5rem,7vw,1.75rem);font-weight:700;letter-spacing:-.025em;line-height:1.1;margin:0 0 6px;text-wrap:balance}
 .in-sub{font-size:.9375rem;font-weight:400;color:var(--muted-foreground);margin:0;line-height:1.35}
 .in-sub+.in-sub{margin-top:2px;font-size:.875rem}
+.in-head .pr-ring{flex:none}
 .in-head .pr-ring .ring-svg-track{stroke:var(--track)}
 .in-head .pr-value{font-size:1.125rem;font-weight:700;letter-spacing:-.02em}
 
 .in-seg{padding:4px;box-shadow:none}
-.in-seg>a{gap:8px;min-height:48px}
+.in-seg>button{gap:8px;min-height:48px}
 
 .inicio .in-hoje{margin:0;position:relative;overflow:hidden;padding:20px;border-radius:var(--radius-card);background:var(--card);box-shadow:none}
 .in-hoje-top{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:96px}
@@ -18,10 +19,10 @@
 .in-hoje .eyebrow{font-size:.8125rem;font-weight:500;color:var(--muted-foreground);margin:0 0 6px}
 .in-hoje h2{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin:0 0 14px}
 .in-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 0;margin:0;color:var(--muted-foreground);font-size:.875rem;font-weight:400}
-.in-meta span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.in-meta span{display:inline-flex;align-items:center;gap:6px}
 .in-meta{column-gap:16px}
 .in-meta svg{width:18px;height:18px}
-.in-done{display:flex;align-items:center;gap:6px;margin:12px 0 0;color:var(--success);font-weight:600;font-size:.9375rem}
+.in-hoje .eyebrow.in-done{display:flex;align-items:center;gap:6px;color:var(--success);font-weight:600;font-size:.9375rem}
 .in-hoje-art{flex:none;width:112px}
 .in-hoje-art .thumb-hero{width:112px!important;height:84px!important;border-radius:var(--radius-control)}
 .in-hoje:not(.has-art) .in-hoje-art{display:none}
@@ -30,11 +31,11 @@
 
 .in-pair{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
 .in-pair.single{grid-template-columns:minmax(0,1fr)}
-.in-ghost{min-height:48px;padding:0 8px;gap:8px;border:1px solid var(--field-border);border-radius:var(--radius-button);background:var(--card);color:var(--foreground);font-size:.9375rem;font-weight:500;letter-spacing:0;white-space:nowrap;box-shadow:none}
+.in-ghost{min-height:48px;padding:8px;gap:8px;border:1px solid var(--field-border);border-radius:var(--radius-button);background:var(--card);color:var(--foreground);font-size:.9375rem;font-weight:500;letter-spacing:0;line-height:1.2;text-align:center;text-wrap:balance;box-shadow:none}
 .in-ghost svg{flex:none}
 .in-ghost[aria-expanded=true]{border-color:var(--foreground);background:var(--surface-2);color:var(--foreground)}
 
-.in-atalhos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.in-atalhos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:4px}
 .in-atalho{display:grid;gap:10px;align-content:start;min-width:0;padding:16px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);box-shadow:none;color:var(--foreground);text-decoration:none}
 .in-atalho .icon-tile{width:44px;height:44px;background:var(--surface-2);color:var(--foreground)}
 .in-atalho-row{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:2px}
@@ -42,19 +43,47 @@
 .in-atalho-row svg{flex:none;color:var(--muted-foreground)}
 .in-atalho .muted{font-size:.875rem;line-height:1.3;margin:-4px 0 0}
 @media(hover:hover) and (pointer:fine){.in-atalho:hover,.in-ghost:hover{background:var(--surface)}}
+@media(max-width:23.75rem){.in-pair{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:23rem){.in-atalho{padding:14px}.in-hoje-art{width:96px}.in-hoje-art .thumb-hero{width:96px!important;height:72px!important}}
 .in-hoje-art .thumb-fallback{filter:grayscale(1);opacity:.8}
 
-/* Folha (bottom sheet) de Início e Evolução */
-.folha{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
-.folha-title{margin:0 0 12px;font-size:1.25rem;font-weight:700;letter-spacing:-.015em;line-height:1.2}
-.folha label{display:block;margin:0 0 6px;font-size:.875rem;font-weight:500}
-.folha input[type=date]{width:100%;min-height:48px}
-.folha-list{display:grid;gap:8px}
-.folha-opt{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:52px;padding:0 16px;border:1px solid var(--field-border);border-radius:var(--radius-button);background:var(--card);color:var(--foreground);font-size:1rem;font-weight:600;text-align:left;box-shadow:none}
-.folha-opt[aria-pressed=true]{border-color:var(--primary);background:var(--accent-soft)}
-.folha-opt .selected-tag{display:inline-flex;align-items:center;gap:4px;font-size:.8125rem;font-weight:600;color:var(--primary)}
+/* Folhas do Início (componente Sheet de src/ui) */
+.in-dia label{display:block;margin:0 0 6px;font-size:.875rem;font-weight:500}
+.in-dia input[type=date]{width:100%;min-height:48px}
+.in-list{display:grid;gap:8px}
+.in-opt{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:52px;padding:8px 16px;border:1px solid var(--field-border);border-radius:var(--radius-button);background:var(--card);color:var(--foreground);font-size:1rem;font-weight:600;text-align:left;text-decoration:none;box-shadow:none}
+.in-opt[aria-pressed=true]{border-color:var(--primary);background:var(--accent-soft)}
+.in-opt .selected-tag{display:inline-flex;align-items:center;gap:4px;font-size:.8125rem;font-weight:600;color:var(--primary)}
 .in-error{margin:8px 0 0;color:var(--destructive);font-weight:600;font-size:.9375rem}
-.in-confirm-wrap:empty{display:none}
-.in-confirm{display:flex;align-items:center;gap:8px;margin:0;padding:12px 14px;border-radius:var(--radius-control);background:var(--accent-soft);color:var(--foreground);font-weight:600;font-size:.9375rem}
-.in-confirm svg{flex:none;color:var(--success)}
+
+/* Vários treinos no dia */
+.in-others{margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+.in-others ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.in-others li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
+.in-others-name{display:grid;gap:2px;font-weight:600;min-width:0}
+.in-others-state{font-size:.8125rem;font-weight:500;color:var(--muted-foreground)}
+.in-others-state.done{color:var(--success)}
+.in-others-go{min-height:44px;padding:0 14px;font-size:.9375rem}
+
+/* Resumo da dieta no cartão principal */
+.in-macros{display:grid;gap:12px;margin:16px 0}
+.in-macro{display:grid;gap:6px}
+.in-macro-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 12px;font-size:.875rem}
+.in-macro-top span:first-child{font-weight:600}
+.in-macro-top span:last-child{color:var(--muted-foreground)}
+
+/* Indicador da 3ª aula de jiu-jitsu */
+.in-terceira{margin:0;padding:16px;box-shadow:none}
+.in-terceira h2{font-size:1.0625rem;font-weight:700;letter-spacing:-.01em;margin:0 0 10px}
+.in-crit{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px}
+.in-crit li{display:flex;gap:10px;align-items:flex-start;font-size:.9375rem;line-height:1.35}
+.in-crit .muted{display:block}
+.in-crit-mark{flex:none;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;font-size:.875rem}
+.in-crit-mark.ok{background:var(--accent-soft);color:var(--success)}
+.in-crit-mark.no{background:var(--surface-2);color:var(--destructive)}
+.in-crit-mark.na{background:var(--surface-2);color:var(--muted-foreground)}
+.in-sum{margin:0 0 4px;font-weight:600;font-size:.9375rem}
+.in-sug{margin:0 0 4px;font-size:.875rem}
+.in-sleep{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:4px 10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-weight:500}
+.in-sleep-state{font-size:.875rem;color:var(--muted-foreground)}
+.in-sleep-help{grid-column:1/-1;margin:0;font-size:.8125rem}

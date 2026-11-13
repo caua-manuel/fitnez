@@ -1,8 +1,35 @@
 import { test, expect, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 // Dados inteiramente sintéticos. O relógio do navegador é fixado em cada teste.
 const START_SEMANA_4 = '2026-10-19'; // segunda-feira; 2026-11-11 (quarta) cai na semana 04, deload
 const backup = (start: string) => ({ v: 2, start });
+const json = (f: string) => JSON.parse(readFileSync(new URL(`../../data/${f}`, import.meta.url), 'utf8'));
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const addDays = (day: string, n: number) => { const [y, m, d] = day.split('-').map(Number); return iso(new Date(y, m - 1, d + n)); };
+// Backup completo (v3) com dias sintéticos, para dados de várias semanas.
+const backupFull = (start: string, days: Record<string, any>, settings: Record<string, any> = {}) => {
+ const plan = json('plan.json');
+ return { v: 3, app: 'treino12', exportedAt: Date.now(), state: {
+  v: 3, revision: 0,
+  catalog: { plan: plan.plan, diet: json('diet.json'), recipes: json('recipes.json'), revision: 0 },
+  settings: { start, sched: plan.sched, theme: 'auto', ...settings },
+  history: { days, measurements: {} }, snapshots: {}, recovery: {},
+  meta: { initializedAt: 1, updatedAt: 1, migrationCompleted: true, migrationStatus: 'none', migrationWarnings: [], lastBackupGeneratedAt: null, lastBackupConfirmedAt: null },
+ } };
+};
+const START_SEMANA_6 = '2026-10-05'; // segunda-feira; 2026-11-11 (quarta) cai na semana 6 (índice 5)
+// Semanas de índice 2, 3 e 4: duas aulas de jiu-jitsu por semana e Upper A com carga estável ou subindo.
+function tresSemanas(): Record<string, any> {
+ const days: Record<string, any> = {};
+ [[2, 40], [3, 35], [4, 42]].forEach(([w, kg]) => {
+  const mon = addDays(START_SEMANA_6, w * 7);
+  days[mon] = { acts: { bjj: true }, feel: 3 };
+  days[addDays(mon, 3)] = { acts: { bjj: true }, feel: 3 };
+  days[addDays(mon, 2)] = { acts: { gym: true }, workouts: { UA: { sessionId: 'UA', startedAt: 1, finishedAt: 2, status: 'done', sets: 1, volume: kg * 8 } }, log: { supino: [{ kg: String(kg), reps: '8', done: true }] } };
+ });
+ return days;
+}
 
 async function state(page: Page): Promise<any> {
  return page.evaluate(async () => {
@@ -18,11 +45,11 @@ async function state(page: Page): Promise<any> {
   });
  });
 }
-async function seed(page: Page, start: string) {
+async function seed(page: Page, start: string, full?: object) {
  await page.goto('#perfil');
  await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
  await page.locator('#backup-cabeca').click(); // seção de backup do Perfil começa recolhida
- await page.locator('#backup-file').setInputFiles({ name: 'fixture-SINTETICO.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup(start))) });
+ await page.locator('#backup-file').setInputFiles({ name: 'fixture-SINTETICO.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(full ?? backup(start))) });
  await page.getByRole('button', { name: 'Confirmar importação', exact: true }).click();
  await expect(page.getByText('Backup importado.', { exact: false })).toBeVisible();
  await page.goto('#inicio'); await page.reload();
@@ -58,9 +85,9 @@ test('Início: dia de academia mostra semana, treino da rotina e Começar treino
  expect(await top('Olá!')).toBeLessThan(await top('Semana 04 de 12'));
  expect(await top('Semana 04 de 12')).toBeLessThan(200);
  await expect(page.locator('.system-status')).toHaveCount(0);
- await expect(page.getByRole('progressbar', { name: 'Semana 4 de 12, 33%' })).toBeVisible();
- const seg = page.getByRole('link', { name: 'Treino', exact: true }).first();
- await expect(seg).toHaveAttribute('aria-current', 'page');
+ await expect(page.getByRole('progressbar', { name: 'Semana 4 de 12: 33% do plano' })).toBeVisible();
+ const seg = page.getByRole('button', { name: 'Treino', exact: true });
+ await expect(seg).toHaveAttribute('aria-pressed', 'true');
  expect(await seg.evaluate(e => getComputedStyle(e).backgroundColor)).toBe('rgb(10, 88, 240)');
  expect(await noHScroll(page)).toBe(true);
  await page.screenshot({ path: info.outputPath('inicio-academia-360.png'), fullPage: true });
@@ -90,6 +117,7 @@ test('Início: trocar treino de hoje grava over e Registrar outro dia abre outra
  await expect.poll(async () => (await state(page)).history.days['2026-11-11']?.over).toBe('LW');
  await page.getByRole('button', { name: 'Registrar outro dia' }).click();
  await page.getByLabel('Dia do registro').fill('2026-11-09');
+ await page.getByRole('button', { name: 'Usar este dia' }).click();
  await expect(page.getByRole('button', { name: 'Marcar aula como feita' })).toBeVisible();
 });
 
@@ -131,7 +159,7 @@ test('Início: Trocar treino abre uma folha acessível, confirma a troca e devol
  await trigger.click();
  await dlg.getByRole('button', { name: /^Upper B\b/ }).click();
  await expect(dlg).toHaveCount(0);
- await expect(page.getByRole('status').filter({ hasText: 'Treino de hoje: Upper B' })).toBeVisible();
+ await expect(page.locator('.ui-toast')).toContainText('Treino de hoje: Upper B');
  await expect(page.getByRole('heading', { name: 'Upper B', level: 2 })).toBeVisible();
  await expect(trigger).toBeFocused();
  expect((await state(page)).history.days['2026-11-11'].over).toBe('UB');
@@ -149,4 +177,117 @@ test('Início: Registrar outro dia abre folha, recusa data futura e usa o dia es
  await dlg.getByRole('button', { name: 'Usar este dia' }).click();
  await expect(dlg).toHaveCount(0);
  await expect(page.getByText('Registrando:', { exact: false }).first()).toBeVisible();
+});
+
+test('Início: treino previsto concluído mostra Concluído hoje, Ver resultado e Fazer outro treino; lista os demais treinos do dia', async ({ page }, info) => {
+ await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
+ await page.goto('./');
+ const days = { '2026-11-11': { acts: { gym: true }, workouts: {
+  UA: { sessionId: 'UA', startedAt: 1, finishedAt: 5, status: 'done', sets: 3, volume: 900 },
+  UB: { sessionId: 'UB', startedAt: 10, status: 'partial', sets: 1, volume: 100 } } } };
+ await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, days));
+ await expect(page.getByText('Concluído hoje', { exact: true })).toBeVisible();
+ await expect(page.getByRole('heading', { name: 'Upper A', level: 2 })).toBeVisible();
+ await expect(page.getByRole('link', { name: 'Ver resultado' })).toHaveAttribute('href', /#treino\/UA\/concluido/);
+ await expect(page.getByRole('link', { name: 'Começar treino' })).toHaveCount(0);
+ await expect(page.getByText('Outros treinos de hoje')).toBeVisible();
+ await expect(page.locator('.in-others').getByText('Em andamento')).toBeVisible();
+ await expect(page.locator('.in-others').getByRole('link', { name: 'Continuar treino' })).toHaveAttribute('href', /#treino\/UB\/executar/);
+ await page.screenshot({ path: info.outputPath('inicio-varios-360.png'), fullPage: true });
+ await page.getByRole('button', { name: 'Fazer outro treino' }).click();
+ const dlg = page.getByRole('dialog', { name: 'Fazer outro treino' });
+ await expect(dlg.getByRole('link', { name: /^Lower\b/ }).first()).toHaveAttribute('href', /#treino\/LW\/executar/);
+ await expect(dlg.getByRole('link', { name: 'Upper A' })).toHaveCount(0);
+ await page.keyboard.press('Escape');
+ await expect(dlg).toHaveCount(0);
+});
+
+test('Início: treino concluído gravado só no campo legado também aparece como Concluído hoje', async ({ page }) => {
+ await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
+ await page.goto('./');
+ const days = { '2026-11-11': { acts: { gym: true }, workout: { sessionId: 'UA', startedAt: 1, finishedAt: 5, status: 'done', sets: 3, volume: 900 } } };
+ await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, days));
+ await expect(page.getByText('Concluído hoje', { exact: true })).toBeVisible();
+ await expect(page.getByRole('link', { name: 'Ver resultado' })).toBeVisible();
+});
+
+test('Início: Desmarcar aula oferece Desfazer e devolve a aula e a nota', async ({ page }) => {
+ await page.clock.setFixedTime(new Date('2026-11-12T12:00:00'));
+ await page.goto('./'); await seed(page, START_SEMANA_4);
+ await page.getByRole('button', { name: 'Marcar aula como feita' }).click();
+ await page.getByRole('button', { name: 'Nota 4 de 5' }).click();
+ await expect.poll(async () => (await state(page)).history.days['2026-11-12']?.feel).toBe(4);
+ await page.getByRole('button', { name: 'Desmarcar aula' }).click();
+ await expect(page.getByRole('button', { name: 'Marcar aula como feita' })).toBeVisible();
+ await page.locator('.ui-toast').getByRole('button', { name: 'Desfazer' }).click();
+ await expect(page.getByRole('button', { name: 'Nota 4 de 5' })).toHaveAttribute('aria-pressed', 'true');
+ await expect.poll(async () => { const d = (await state(page)).history.days['2026-11-12']; return [d?.acts?.bjj, d?.feel]; }).toEqual([true, 4]);
+});
+
+test('Início: o segmentado Dieta troca o cartão principal pelo resumo da dieta e os dois cartões Dieta e Evolução continuam', async ({ page }) => {
+ await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
+ await page.goto('./'); await seed(page, START_SEMANA_4);
+ await expect(page.locator('.in-atalho')).toHaveCount(2);
+ await expect(page.locator('.in-atalho').first()).toContainText('Seu plano alimentar');
+ await expect(page.locator('.in-atalho').nth(1)).toContainText('Acompanhe seus resultados');
+ await page.getByRole('button', { name: 'Dieta', exact: true }).click();
+ const card = page.getByRole('region', { name: 'Dieta de hoje' });
+ await expect(card.getByText(/kcal/).first()).toBeVisible();
+ await expect(card.getByRole('progressbar', { name: 'Proteínas' })).toBeVisible();
+ await expect(card.getByRole('link', { name: 'Abrir dieta' })).toHaveAttribute('href', /#dieta/);
+ await expect(page.getByRole('link', { name: 'Começar treino' })).toHaveCount(0);
+ await page.getByRole('button', { name: 'Treino', exact: true }).click();
+ await expect(page.getByRole('link', { name: 'Começar treino' })).toBeVisible();
+});
+
+test('Início: a 3ª aula só aparece a partir da semana 6', async ({ page }) => {
+ await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
+ await page.goto('./'); await seed(page, START_SEMANA_4);
+ await expect(page.getByRole('heading', { name: 'Terceira aula de jiu-jitsu' })).toHaveCount(0);
+});
+
+test('Início: 3ª aula com 3 semanas sintéticas mostra critérios, "sem dados" de sono e grava a declaração de sono', async ({ page }, info) => {
+ await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
+ await page.goto('./');
+ await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, tresSemanas()));
+ const card = page.getByRole('region', { name: 'Terceira aula de jiu-jitsu' });
+ await expect(card).toBeVisible();
+ await expect(card.getByText('Aulas: atende')).toBeVisible();
+ await expect(card.getByText('Cargas: atende')).toBeVisible();
+ await expect(card.getByText('Sono: sem dados')).toBeVisible();
+ await expect(card.getByText('Ainda não: falta sono (sem dados).')).toBeVisible();
+ await expect(card.getByText('É só uma sugestão', { exact: false })).toBeVisible();
+ const sw = card.getByRole('switch', { name: 'Dormi 7 h ou mais nesta semana' });
+ await expect(sw).toHaveAttribute('aria-checked', 'false');
+ await expect(card.getByText('Desligado', { exact: true })).toBeVisible();
+ await page.screenshot({ path: info.outputPath('inicio-3a-aula-360.png'), fullPage: true });
+ await sw.click();
+ await expect(sw).toHaveAttribute('aria-checked', 'true');
+ await expect(card.getByText('Ligado', { exact: true })).toBeVisible();
+ await expect.poll(async () => (await state(page)).settings.sleepOk?.['5']).toBe(true);
+ await page.reload();
+ await expect(page.getByRole('switch', { name: 'Dormi 7 h ou mais nesta semana' })).toHaveAttribute('aria-checked', 'true');
+ await page.getByRole('switch', { name: 'Dormi 7 h ou mais nesta semana' }).click();
+ await expect.poll(async () => (await state(page)).settings.sleepOk?.['5']).toBeUndefined();
+});
+
+test('Início: 3ª aula elegível quando o sono das 3 semanas foi declarado', async ({ page }) => {
+ await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
+ await page.goto('./');
+ await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, tresSemanas(), { sleepOk: { '2': true, '3': true, '4': true } }));
+ const card = page.getByRole('region', { name: 'Terceira aula de jiu-jitsu' });
+ await expect(card.getByText('Sono: atende')).toBeVisible();
+ await expect(card.getByText('Você pode considerar uma 3ª aula', { exact: false })).toBeVisible();
+});
+
+test.describe('320 x 640', () => {
+ test.use({ viewport: { width: 320, height: 640 } });
+ test('Início: botões quebram linha, sem rolagem horizontal nem corte', async ({ page }, info) => {
+  await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
+  await page.goto('./');
+  await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, tresSemanas()));
+  expect(await noHScroll(page)).toBe(true);
+  for (const b of await page.locator('.in-ghost').all()) expect(await b.evaluate(e => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+  await page.screenshot({ path: info.outputPath('inicio-320.png'), fullPage: true });
+ });
 });

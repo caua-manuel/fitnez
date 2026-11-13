@@ -1,13 +1,15 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
 import { Icon } from '../../ui/icons';
+import { Select } from '../../ui/Select';
+import { Sheet } from '../../ui/Sheet';
 import type { IconName } from '../../ui/icons';
 import { localDay } from '../inicio/Inicio';
 import {
  consistency, firstPlanWeek, formatNumber, formatSigned, measureDelta, measureSeries, pctOf, periodRange,
- strengthChange, strengthSeries, weeklyValues,
+ measuresOutsidePlan, strengthChange, strengthSeries, weeklyValues,
 } from '../../domain/evolution';
 import type { MeasureKey, Weeks } from '../../domain/evolution';
 import { MeasureForm } from './MeasureForm';
@@ -20,29 +22,13 @@ const PERIODS: Weeks[] = [4, 8, 12];
 const signedPct = (n: number) => { const r = Math.round(n); return r === 0 ? '0%' : `${r > 0 ? '+' : '−'}${Math.abs(r)}%`; };
 const pad = <T,>(list: T[], n: number, fill: T): T[] => Array.from({ length: n }, (_, i) => (i < list.length ? list[i] : fill));
 const fmtKg = (n: number) => `${formatNumber(n, 1)} kg`;
+const OUT_KEYS: Array<[MeasureKey, string, string]> = [['p', 'Peso', 'kg'], ['c', 'Cintura', 'cm'], ['q', 'Quadril', 'cm'], ['t', 'Coxa', 'cm'], ['b', 'Braço', 'cm']];
 const fmtCm = (n: number) => `${formatNumber(n, 1)} cm`;
 
+const PERIOD_OPTIONS = PERIODS.map(w => ({ value: w, label: `Últimas ${w} semanas` }));
 function Period({ weeks, onChange }: { weeks: Weeks; onChange: (w: Weeks) => void }) {
- const [open, setOpen] = useState(false);
- const box = useRef<HTMLDivElement>(null); const btn = useRef<HTMLButtonElement>(null);
- const listId = useId();
- useEffect(() => {
-  if (!open) return;
-  const outside = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
-  const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); btn.current?.focus(); } };
-  document.addEventListener('pointerdown', outside); document.addEventListener('keydown', key);
-  return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', key); };
- }, [open]);
- return <div className="ev-period" ref={box}>
-  <button ref={btn} type="button" className="ev-period-btn" aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listId : undefined} onClick={() => setOpen(o => !o)}>
-   <Icon name="calendario" size={24} /><span className="ev-period-text">Últimas <strong>{weeks}</strong> semanas</span><Icon name="chevron" size={22} className="ev-chev" />
-  </button>
-  {open ? <div id={listId} className="ev-menu" role="listbox" aria-label="Período">
-   {PERIODS.map(w => <button key={w} type="button" role="option" aria-selected={w === weeks} className="ev-option" onClick={() => { onChange(w); setOpen(false); btn.current?.focus(); }}>
-    <span>Últimas {w} semanas</span>{w === weeks ? <Icon name="marca" size={20} /> : null}
-   </button>)}
-  </div> : null}
- </div>;
+ return <Select<Weeks> label="Período" value={weeks} options={PERIOD_OPTIONS} onChange={onChange} className="ev-period" buttonClassName="ev-period-btn"
+  trigger={() => <><Icon name="calendario" size={24} /><span className="ev-period-text">Últimas <strong>{weeks}</strong> semanas</span><Icon name="chevron" size={22} className="ev-chev" /></>} />;
 }
 
 function Tile({ icon, value, label, selected, onSelect, description }: { icon: IconName; value: string; label: string; selected: boolean; onSelect: () => void; description: string }) {
@@ -108,7 +94,8 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
  const consWeeks = labels.map((label, i) => { const w = cons.byWeek[i]; return { label, done: w?.done ?? 0, planned: w?.planned ?? 0, future: !w }; });
  const consPoints: ChartPoint[] = consWeeks.map(w => ({ label: w.label, value: w.future ? null : pctOf(w.done, w.planned) }));
 
- const hasAny = strength.some(p => p.avgLoadKg !== null) || weight.length + waist.length + hip.length + thigh.length + arm.length > 0 || cons.done > 0;
+ const outside = measuresOutsidePlan(meas, start);
+ const hasAny = outside.length > 0 || strength.some(p => p.avgLoadKg !== null) || weight.length + waist.length + hip.length + thigh.length + arm.length > 0 || cons.done > 0;
  const form = <MeasureForm today={today} />;
  if (!hasAny) return <div className="evolucao"><EmptyState />{form}{DISCLAIMER}</div>;
 
@@ -143,6 +130,7 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
 
   <section className="card ev-card" aria-labelledby="ev-main-title">
    <div className="ev-head"><Icon name={m.icon} size={24} weight={1.9} /><h2 id="ev-main-title">{m.title}</h2>{m.pill ? <span className="ev-pill">{m.pill}</span> : null}</div>
+   <p className="visually-hidden" role="status">{mainLabel}</p>
    {filled.length === 0 ? <ChartEmpty>{m.empty}</ChartEmpty> : <>
     <LineChart key={`${metric}-${weeks}`} points={m.points} unit={m.unit} domain={m.domain} label={mainLabel} />
     {filled.length === 1 ? <p className="ev-hint ev-single">{m.fmt(filled[0].value)} em {filled[0].label}. Sem variação ainda: registre de novo para ver a evolução.</p> : null}
@@ -164,19 +152,24 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
    <section className="card ev-card" aria-labelledby="ev-med-title">
     <div className="ev-head"><Icon name="fita" size={22} weight={1.9} /><h2 id="ev-med-title">Medidas</h2></div>
     {!anyMeasure ? <p className="ev-none">Sem medidas registradas neste período.</p> : <>
-     <ul className="ev-rows" aria-label="Medidas em centímetros">{measureRows.map(r => { const d = measureDelta(r.s); const last = lastOf(r.s)!; const on = picked?.label === r.label; return <li key={r.label}>
-      <button type="button" className="ev-row ev-row-measure" aria-expanded={on} aria-controls={on ? 'ev-med-detail' : undefined} onClick={() => setOpenMeasure(on ? null : r.label)}>
+     <ul className="ev-rows" aria-label="Medidas em centímetros">{measureRows.map(r => { const d = measureDelta(r.s); const last = lastOf(r.s)!; return <li key={r.label}>
+      <button type="button" className="ev-row ev-row-measure" aria-haspopup="dialog" aria-label={`${r.label}: ${fmtCm(last)}${d ? `, ${formatSigned(d.abs, 'cm')}` : ''}. Ver gráfico`} onClick={() => setOpenMeasure(r.label)}>
        <span className="ev-row-label">{r.label}</span><span className="ev-row-value">{fmtCm(last)}</span>
        {d ? <span className="ev-chip badge done">{formatSigned(d.abs, 'cm')}</span> : <span className="ev-chip-empty" aria-hidden="true" />}
       </button></li>; })}</ul>
-     {picked ? <div id="ev-med-detail" className="ev-med-detail">
-      <MiniLine values={picked.s.map(p => p.value)} label={`${picked.label}: ${picked.s.length === 1 ? `${fmtCm(picked.s[0].value)} em ${dayLabel(picked.s[0].day)}` : `de ${fmtCm(picked.s[0].value)} a ${fmtCm(picked.s[picked.s.length - 1].value)}`}.`} />
-      {picked.s.length === 1 ? <p className="ev-none">Uma medida: registre outra para ver a variação.</p> : null}
-      <Table caption={`${picked.label}, registros`} head={['Dia', picked.label]} rows={picked.s.map(p => [dayLabel(p.day), fmtCm(p.value)])} />
-     </div> : <p className="ev-hint ev-tap">Toque em uma medida para ver a evolução.</p>}
+     <p className="ev-hint ev-tap">Toque em uma medida para ver o gráfico.</p>
     </>}
    </section>
   </div>
+
+  {outside.length ? <section className="card ev-card" aria-labelledby="ev-out-title">
+   <div className="ev-head"><Icon name="calendario" size={22} weight={1.9} /><h2 id="ev-out-title">Medidas fora do plano</h2></div>
+   <p className="ev-hint">Salvas em datas antes ou depois das 12 semanas do plano, por isso não entram nos gráficos.</p>
+   <ul className="ev-out">{outside.map(o => <li key={o.day}>
+    <span className="ev-out-day">{o.day.split('-').reverse().join('/')}<span className="ev-chip badge">{o.when === 'antes' ? 'Antes do plano' : 'Depois do plano'}</span></span>
+    <span className="ev-out-vals">{OUT_KEYS.filter(([k]) => o.values[k] !== undefined).map(([k, label, unit]) => `${label} ${formatNumber(o.values[k]!, 1)} ${unit}`).join(' · ')}</span>
+   </li>)}</ul>
+  </section> : null}
 
   <section className="card ev-card" aria-labelledby="ev-cons-title">
    <div className="ev-head"><Icon name="calendario" size={24} weight={1.9} /><h2 id="ev-cons-title">Constância de treinos</h2>{cons.pct === null ? null : <span className="ev-pill">{cons.pct}%</span>}</div>
@@ -187,5 +180,15 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
    </>}
   </section>
 
- </>{form}{DISCLAIMER}</div>;
+ </>{form}{DISCLAIMER}
+  {picked ? <Sheet title={picked.label} onClose={() => setOpenMeasure(null)}>
+   <div className="sheet-body">
+    <p className="ev-big">{fmtCm(lastOf(picked.s)!)}</p>
+    {measureDelta(picked.s) ? <p className="ev-delta">{formatSigned(measureDelta(picked.s)!.abs, 'cm')} no período</p> : <p className="ev-none">Uma medida: registre outra para ver a variação.</p>}
+    <LineChart points={picked.s.map(p => ({ label: dayLabel(p.day), value: p.value }))} unit="cm" label={`${picked.label}: ${picked.s.length === 1 ? `${fmtCm(picked.s[0].value)} em ${dayLabel(picked.s[0].day)}` : `de ${fmtCm(picked.s[0].value)} em ${dayLabel(picked.s[0].day)} a ${fmtCm(picked.s[picked.s.length - 1].value)} em ${dayLabel(picked.s[picked.s.length - 1].day)}`}.`} />
+    <Table caption={`${picked.label}, registros`} head={['Dia', picked.label]} rows={picked.s.map(p => [dayLabel(p.day), fmtCm(p.value)])} />
+   </div>
+   <div className="sheet-actions"><button type="button" className="button secondary block" onClick={() => setOpenMeasure(null)}>Fechar</button></div>
+  </Sheet> : null}
+ </div>;
 }
