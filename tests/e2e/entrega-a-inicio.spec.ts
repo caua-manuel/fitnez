@@ -126,8 +126,48 @@ test('Início: pré-semana mostra a contagem de dias', async ({ page }, info) =>
  await page.goto('./');
  await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
  await expect(page.getByText('Seu plano começa em 4 dias')).toBeVisible();
+ await expect(page.getByText('Antes do plano')).toHaveCount(0);
+ // Quinta-feira é dia de jiu-jitsu na rotina: cartão do dia e, abaixo, o primeiro treino de academia.
+ await expect(page.getByText('Treino de hoje · quinta-feira')).toBeVisible();
+ await expect(page.getByRole('heading', { name: 'Aula de jiu-jitsu', level: 2 })).toBeVisible();
+ await expect(page.getByText('Primeiro treino do plano')).toBeVisible();
+ await expect(page.getByRole('button', { name: 'Começar o plano hoje' })).toBeVisible();
+ await expect(page.getByRole('link', { name: 'Treinar agora (sem alterar o plano)' })).toHaveAttribute('href', /#treino\/\w+\/executar/);
  expect(await noHScroll(page)).toBe(true);
  await page.screenshot({ path: info.outputPath('inicio-pre-360.png'), fullPage: true });
+ // Treinar agora não mexe na data de início.
+ expect((await state(page)).settings.start).toBe('2026-11-16');
+ await page.getByRole('button', { name: 'Começar o plano hoje' }).click();
+ await page.getByRole('button', { name: 'Começar o plano', exact: true }).click();
+ await expect(page.getByText('Semana 01 de 12', { exact: true })).toBeVisible();
+ await expect.poll(async () => (await state(page)).settings.start).toBe('2026-11-09');
+ await expect(page.getByText("Plano começa em 09/11").first()).toBeVisible();
+});
+
+test('Perfil: mudar a data de início grava a segunda-feira, desfaz e vale após recarregar', async ({ page }) => {
+ await page.clock.setFixedTime(new Date('2026-11-12T12:00:00')); // quinta-feira
+ await page.goto('./');
+ await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
+ await expect(page.getByText('Seu plano começa em 4 dias')).toBeVisible();
+ await page.goto('#perfil');
+ await page.getByRole('button', { name: /Meu plano/ }).click();
+ const dlg = page.getByRole('dialog', { name: 'Data de início do plano' });
+ await expect(dlg).toBeVisible();
+ await dlg.getByLabel('Data de início').fill('3000-01-01');
+ await dlg.getByRole('button', { name: 'Salvar', exact: true }).click();
+ await expect(dlg.getByRole('alert')).toContainText('2020 e 2100');
+ await dlg.getByLabel('Data de início').fill('2026-11-25'); // quarta -> segunda 23/11
+ await expect(dlg).toContainText('(23/11)');
+ await dlg.getByRole('button', { name: 'Salvar', exact: true }).click();
+ await expect(page.getByText("Plano começa em 23/11").first()).toBeVisible();
+ await expect.poll(async () => (await state(page)).settings.start).toBe('2026-11-23');
+ await page.getByRole('button', { name: 'Desfazer' }).click();
+ await expect.poll(async () => (await state(page)).settings.start).toBe('2026-11-16');
+ await page.getByRole('button', { name: /Meu plano/ }).click();
+ await page.getByRole('button', { name: 'Começar esta semana' }).click();
+ await expect.poll(async () => (await state(page)).settings.start).toBe('2026-11-09');
+ await page.goto('#inicio'); await page.reload();
+ await expect(page.getByText('Semana 01 de 12', { exact: true })).toBeVisible();
 });
 
 test('Início: descanso mostra o checklist do condomínio e grava', async ({ page }) => {

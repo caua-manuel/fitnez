@@ -15,7 +15,8 @@ import { TerceiraAula } from './TerceiraAula';
 import './inicio.css';
 import { shouldShowBackupReminder } from '../../domain/userData';
 import { activityFor } from '../../domain/dayActivity';
-import { phaseOf, weekLabel } from '../../domain/calendar';
+import { mondayOf, phaseOf, weekLabel } from '../../domain/calendar';
+import { DataInicioSheet, useSetPlanStart } from '../perfil/DataInicioSheet';
 import type { DayIso } from '../../domain/calendar';
 import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
 import type { DayRecord, StateV3 } from '../../application/repository';
@@ -29,6 +30,7 @@ export function localDay(ms: number): DayIso {
  const d = new Date(ms);
  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+const ddmm = (day: DayIso) => `${day.slice(8, 10)}/${day.slice(5, 7)}`;
 function formatDay(day: DayIso): string {
  const [y, m, d] = day.split('-').map(Number);
  return new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(y, m - 1, d));
@@ -43,6 +45,9 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
  const [otherOpen, setOtherOpen] = useState(false);
  const [view, setView] = useState<'treino' | 'dieta'>('treino');
  const [dateError, setDateError] = useState('');
+ const [startOpen, setStartOpen] = useState(false);
+ const [startConfirm, setStartConfirm] = useState(false);
+ const setStart = useSetPlanStart();
  if (!state) return null;
  const day = picked ?? today;
  const isToday = day === today;
@@ -120,9 +125,39 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
  let action: ReactNode = null;
  let hasArt = false;
  if (phase.kind === 'pre') {
-  card = <><p className="eyebrow">Plano de 12 semanas</p><h2>Seu plano começa em {plural(phase.daysUntil, 'dia', 'dias')}</h2><p className="muted">Você ainda pode registrar um dia anterior ou ver os treinos.</p><a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'lista' })}>Ver treinos</a></>;
+  // Treino previsto: o de hoje na rotina, se for de academia; senão o primeiro treino de academia da semana.
+  const weekdayNow = (new Date(Number(day.slice(0, 4)), Number(day.slice(5, 7)) - 1, Number(day.slice(8, 10))).getDay() + 6) % 7;
+  const gymAt = (i: number) => { const a = activityFor({ sched: state.settings.sched, weekday: i, alt: plan.alt }); return a.kind === 'gym' && plan.sess[a.sessionId] ? a.sessionId : null; };
+  const todayId = gymAt(weekdayNow);
+  const firstId = todayId ?? Array.from({ length: 7 }, (_, i) => gymAt(i)).find(Boolean) ?? plan.order.find(id => plan.sess[id]) ?? null;
+  const first = firstId ? plan.sess[firstId] : null;
+  const mins = first ? minutesLabel(first.min) : '';
+  const wdName = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(new Date(Number(day.slice(0, 4)), Number(day.slice(5, 7)) - 1, Number(day.slice(8, 10))));
+  const todayAct = activityFor({ sched: state.settings.sched, weekday: weekdayNow, alt: plan.alt });
+  const otherTitle = todayAct.kind === 'bjj' ? 'Aula de jiu-jitsu' : todayAct.kind === 'volei' ? 'Vôlei' : 'Descanso';
+  card = <>
+   {!todayId ? <><p className="eyebrow">Treino de hoje · {wdName}</p><h2>{otherTitle}</h2><p className="muted">O plano ainda não começou, então este dia não é registrado como parte dele.</p></> : null}
+   {first && firstId ? <div className="in-hoje-top">
+    <div className="in-hoje-text">
+     <p className="eyebrow">{todayId ? `Treino de hoje · ${wdName}` : 'Primeiro treino do plano'}</p>
+     <h2>{first.name}</h2>
+     <p className="in-meta">{mins ? <span><Icon name="relogio" size={20} />{mins}</span> : null}<span><Glyph name="barras" size={20} />{plural(first.ex.length, 'exercício', 'exercícios')}</span></p>
+    </div>
+    <div className="in-hoje-art" aria-hidden="true"><Thumb kind="hero" id={HERO_PHOTOS.includes(firstId) ? firstId : undefined} size={128} /></div>
+   </div> : <p className="muted">Você ainda pode registrar um dia anterior ou ver os treinos.</p>}
+   <p className="muted in-pre-nota">O plano começa na segunda-feira, {ddmm(mondayOf(state.settings.start))}. Você pode começar agora ou treinar sem mexer na data.</p>
+  </>;
+  hasArt = !!firstId && HERO_PHOTOS.includes(firstId);
+  action = isToday ? <>
+   <button type="button" className="button block in-start" onClick={() => setStartConfirm(true)}><Icon name="play" size={22} />Começar o plano hoje</button>
+   {firstId ? <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'executar', id: firstId, day })}>Treinar agora (sem alterar o plano)</a> : <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'lista' })}>Ver treinos</a>}
+  </> : <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'lista' })}>Ver treinos</a>;
  } else if (phase.kind === 'done') {
-  card = <><p className="eyebrow">Plano de 12 semanas</p><h2>Plano concluído</h2><p className="muted">Você completou as 12 semanas. Veja sua evolução.</p><a className="button block" href={hrefFor({ tab: 'evolucao' })}>Ver evolução</a></>;
+  card = <><p className="eyebrow">Plano de 12 semanas</p><h2>Plano concluído</h2><p className="muted">Você completou as 12 semanas. Veja sua evolução ou comece um novo ciclo; seus registros continuam guardados.</p></>;
+  action = <>
+   <button type="button" className="button block in-start" onClick={() => setStartOpen(true)}>Reiniciar o plano</button>
+   <a className="button secondary block" href={hrefFor({ tab: 'evolucao' })}>Ver evolução</a>
+  </>;
  } else {
   const act = activityFor({ sched: state.settings.sched, weekday: phase.weekday, override: record.over, alt: plan.alt });
   if (act.kind === 'gym') { currentId = act.sessionId; card = <>{gymCard(act.sessionId)}{othersList(act.sessionId)}</>; action = gymAction(act.sessionId); hasArt = HERO_PHOTOS.includes(act.sessionId); }
@@ -175,7 +210,8 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
      ? <><h2 className="in-week">{weekLabel(phase.week)}</h2>
        <p className="in-sub">{`Bloco ${phase.block} · RIR ${phase.rir} (repetições em reserva)`}{phase.deload ? ' · Semana de deload' : ''}</p>
        {phase.note ? <p className="in-sub">{phase.note}</p> : null}</>
-     : <h2 className="in-week">{phase.kind === 'pre' ? 'Antes do plano' : 'Plano concluído'}</h2>}
+     : <><h2 className="in-week">{phase.kind === 'pre' ? `Seu plano começa em ${plural(phase.daysUntil, 'dia', 'dias')}` : 'Plano concluído'}</h2>
+       {phase.kind === 'pre' ? <p className="in-sub">Segunda-feira, {ddmm(mondayOf(state.settings.start))}</p> : null}</>}
    </div>
    {phase.kind === 'week' ? <ProgressRing percent={pct} size={88} stroke={5} label={`Semana ${phase.week + 1} de 12: ${pct}% do plano`} /> : null}
   </section>
@@ -190,10 +226,20 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
   <section className={`card in-hoje${hasArt && !dieta ? ' has-art' : ''}`} aria-label={dieta ? (isToday ? 'Dieta de hoje' : 'Dieta do dia') : isToday ? 'Treino de hoje' : 'Treino do dia'}>{dieta ? <DietaResumo day={day} isToday={isToday} /> : card}</section>
   {dieta ? null : action}
 
-  <div className={`in-pair${phase.kind === 'week' && !dieta ? '' : ' single'}`}>
+  <div className={`in-pair${dieta ? ' single' : ''}`}>
    <button type="button" className="in-ghost" aria-expanded={pickerOpen} onClick={() => setPickerOpen(o => !o)}><Icon name="editar" size={20} />Registrar outro dia</button>
    {phase.kind === 'week' && !dieta ? <button type="button" className="in-ghost" aria-expanded={swapOpen} onClick={() => setSwapOpen(o => !o)}><Glyph name="trocar" size={20} />Trocar treino</button> : null}
+   {phase.kind !== 'week' && !dieta ? <button type="button" className="in-ghost" aria-haspopup="dialog" onClick={() => setStartOpen(true)}><Icon name="calendario" size={20} />Data de início</button> : null}
   </div>
+  {startOpen ? <DataInicioSheet today={today} onClose={() => setStartOpen(false)} /> : null}
+  {startConfirm ? <Sheet title="Começar o plano nesta semana?" onClose={() => setStartConfirm(false)}>
+   <p>O plano passa a começar na segunda-feira, {ddmm(mondayOf(today))}. Hoje vira {weekLabel(0).replace(' de 12', '')}, dia {(new Date(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 1, Number(today.slice(8, 10))).getDay() + 6) % 7 + 1}, e o Início passa a mostrar o treino de hoje.</p>
+   <p className="muted">Nenhum registro é apagado. Dá para mudar a data depois, em Perfil.</p>
+   <div className="sheet-actions">
+    <button type="button" className="button block" onClick={() => void setStart(today).then(ok => { if (ok) setStartConfirm(false); })}>Começar o plano</button>
+    <button type="button" className="button secondary block" onClick={() => setStartConfirm(false)}>Cancelar</button>
+   </div>
+  </Sheet> : null}
   {swapOpen && phase.kind === 'week' ? <Sheet title="Escolha o treino do dia" onClose={() => setSwapOpen(false)}>
    <div role="group" aria-label="Treinos disponíveis" className="in-list">
     {plan.order.filter(id => plan.sess[id]).map(id => {

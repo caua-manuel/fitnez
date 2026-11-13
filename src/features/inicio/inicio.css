@@ -54,6 +54,7 @@
 .in-opt{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:52px;padding:8px 16px;border:1px solid var(--field-border);border-radius:var(--radius-button);background:var(--card);color:var(--foreground);font-size:1rem;font-weight:600;text-align:left;text-decoration:none;box-shadow:none}
 .in-opt[aria-pressed=true]{border-color:var(--primary);background:var(--accent-soft)}
 .in-opt .selected-tag{display:inline-flex;align-items:center;gap:4px;font-size:.8125rem;font-weight:600;color:var(--primary)}
+.in-pre-nota{margin:14px 0 0}
 .in-error{margin:8px 0 0;color:var(--destructive);font-weight:600;font-size:.9375rem}
 
 /* Vários treinos no dia */

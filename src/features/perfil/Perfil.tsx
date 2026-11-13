@@ -15,6 +15,7 @@ import type { NotifySupport } from '../../pwa/notifications';
 import { planConsistency } from '../../domain/evolution';
 import { validateProfile, proteinTargetG } from '../../domain/profile';
 import { diaLocal, refeicoesRegistradas, treinosConcluidos } from './metricas';
+import { DataInicioSheet } from './DataInicioSheet';
 import './perfil.css';
 
 const persistenceLabels = { granted:'Concedido', denied:'Não concedido pelo navegador', unavailable:'Não disponível neste navegador', error:'Não foi possível consultar', 'not-requested':'Ainda não concedido' };
@@ -53,6 +54,7 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
  const [heightDraft, setHeightDraft] = useState('');
  const [errors, setErrors] = useState<Record<string, string>>({});
  const [dataOpen, setDataOpen] = useState(false);
+ const [startOpen, setStartOpen] = useState(false);
  const [backupOpen, setBackupOpen] = useState(false);
  const [notify, setNotify] = useState<NotifySupport>(() => notifySupport());
  const [notifyNote, setNotifyNote] = useState('');
@@ -230,14 +232,15 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
     <Icon name="seta" size={22} />
    </button></li>
    {lastMeasure ? <li className="perfil-medida"><p>Última medida de peso: {kgFmt.format(lastMeasure.kg)} kg em {lastMeasure.date.slice(8, 10)}/{lastMeasure.date.slice(5, 7)}. O peso do perfil e o peso medido na Evolução são independentes.</p>{profile?.weightKg !== lastMeasure.kg ? <button type="button" className="button secondary" disabled={busy} onClick={() => void useMeasured()}>Usar como peso do perfil</button> : null}</li> : null}
-   <li><a className="list-row perfil-link perfil-plano" href={hrefFor({ tab: 'treino', view: 'lista' })}>
+   <li><button type="button" className="list-row perfil-link perfil-plano" aria-haspopup="dialog" onClick={() => setStartOpen(true)}>
     <span className="icon-tile soft"><Icon name="calendario" size={26} /></span>
     <span className="grow"><strong>Meu plano</strong><small>{planText}</small>
      <span className="perfil-progress"><span className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`Progresso do plano: ${pct}%`}><span style={{ width: `${pct}%` }} /></span><span className="perfil-pct">{pct}%</span></span>
     </span>
     <Icon name="seta" size={22} />
-   </a></li>
+   </button></li>
   </ul>
+  {startOpen ? <DataInicioSheet today={today} onClose={() => setStartOpen(false)} /> : null}
 
   <h2 className="perfil-h2">Preferências</h2>
   <div className="list perfil-list">
