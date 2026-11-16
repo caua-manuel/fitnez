@@ -285,3 +285,10 @@ html:has(.ex-footer){scroll-padding-bottom:calc(var(--ex-footer-h,132px) + 16px)
 .tr-ring-cap{margin:0;max-width:7.5rem;text-align:center;font-size:.8125rem;font-weight:600;line-height:1.3;color:var(--muted-foreground)}
 .tr-redo{min-height:48px}
 .ex-overlap{margin:10px 0 0;padding:10px 12px;border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:var(--radius-control);background:var(--surface-2);font-size:.9375rem;line-height:1.4}
+
+/* Fase "app mais vivo" (ADR 006): tom da seção só em ícones; marcas desenhadas; nada em loop. */
+.tr-page .tr-tile.is-quiet{color:var(--muted-foreground)}
+.ok-ico{color:var(--tone,var(--primary))}
+.ok-mark .mv-check,.ex-check-box .mv-check{margin:0;vertical-align:0;display:block}
+.ok-mark .mv-check{stroke-width:2.75}
+.ex-check.on .ex-check-box{color:var(--primary-foreground)}

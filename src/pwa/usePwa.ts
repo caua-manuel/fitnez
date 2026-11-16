@@ -10,7 +10,7 @@ export function usePwa() {
   const connectivity=()=>setOnline(navigator.onLine);
   window.addEventListener('online',connectivity);window.addEventListener('offline',connectivity);
   if(!import.meta.env.PROD || !('serviceWorker' in navigator)) {
-   setError(import.meta.env.DEV ? 'Acesso offline e instalação são verificados no build de produção em HTTPS ou localhost.' : 'Este navegador ou endereço não permite instalar o acesso offline.');
+   setError(import.meta.env.DEV ? 'Acesso offline e instalação são verificados no build de produção em HTTPS ou localhost.' : 'Este navegador ou endereço não permite o uso offline.');
    return ()=>{window.removeEventListener('online',connectivity);window.removeEventListener('offline',connectivity);};
   }
   let active=true;
@@ -33,7 +33,7 @@ export function usePwa() {
    };
    reg.addEventListener('updatefound',watchInstalling);
    if(reg.installing)watchInstalling();
-  }).catch(()=>active&&setError('Não foi possível preparar o acesso offline. Reabra com conexão e tente novamente.'));
+  }).catch(()=>active&&setError('Não foi possível preparar o uso offline. Reabra com conexão e tente novamente.'));
   return ()=>{active=false;window.removeEventListener('online',connectivity);window.removeEventListener('offline',connectivity);navigator.serviceWorker.removeEventListener('message',message);navigator.serviceWorker.removeEventListener('controllerchange',change);};
  },[]);
  return {ready,online,error,development:import.meta.env.DEV,updateAvailable,applyUpdate:()=>{const waiting=registration.current?.waiting;if(waiting){applying.current=true;waiting.postMessage({type:'APPLY_UPDATE'});}else setError('A atualização não está mais disponível. Reabra o app para verificar.');},deferUpdate:()=>setUpdateAvailable(false)};

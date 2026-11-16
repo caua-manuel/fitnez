@@ -24,7 +24,7 @@ export function TerceiraAula({ today }: { today: DayIso }) {
   s.settings.sleepOk = next; return s;
  }); };
  return <section className="card in-terceira" aria-labelledby="in-terceira-t">
-  <h2 id="in-terceira-t">Terceira aula de jiu-jitsu</h2>
+  <h2 id="in-terceira-t">3ª aula de jiu-jitsu</h2>
   <ul className="in-crit">
    {el.criteria.filter(c => c.key !== 'semana').map(c => {
     const verdict = c.ok === true ? 'atende' : c.ok === false ? 'não atende' : 'sem dados';

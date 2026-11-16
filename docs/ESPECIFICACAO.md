@@ -96,6 +96,8 @@ Referência de comportamento e visual: `legacy/index.html`.
 
 ## 4. Regras da dieta
 
+> **Metas editáveis (ADR 007).** Todos os números de meta abaixo (kcal e carboidrato por tipo de dia, proteína, gordura e água) são valores de exemplo editáveis pelo usuário, não recomendações individuais. Sem edição, o app usa exatamente estes valores e mostra "Meta de exemplo". Cada edição vale a partir do dia em que foi salva (os dias passados mantêm a meta do momento), com limites absolutos que bloqueiam valores absurdos e avisos que não bloqueiam. Formato: `settings.dietTargets` opcional (esquema 1, até 100 versões). Detalhes em `docs/handoffs/conteudo-metas-editaveis.md` e `docs/handoffs/dados-metas-editaveis.md`.
+
 **Metas**
 - Gasto estimado: 2.700 a 2.800 kcal por dia (Mifflin-St Jeor com fator de atividade de 1,55 a 1,6, para valores de exemplo configuráveis de peso, altura e idade). Média do plano: cerca de 2.450 kcal por dia.
 - Proteína: cerca de 2,4 g/kg por dia (valor de exemplo: 185 g), em 5 refeições. Gordura: cerca de 55 g. Carboidrato: o restante.

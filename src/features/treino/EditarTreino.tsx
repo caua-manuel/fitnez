@@ -34,14 +34,14 @@ function Picker({ sessionId, onClose }: { sessionId: string; onClose: () => void
  const rows = Object.keys(plan.ex).filter(id => !inSession.has(id) && (!query || normalize(plan.ex[id].n).includes(query)));
  return <Sheet title="Adicionar exercício" onClose={onClose} initialFocus="#ed-pick-q">
   <a className="button block ed-new-ex" href={hrefFor({ tab: 'treino', view: 'exercicio', id: sessionId })}><Icon name="plus" size={22} weight={2.5} />Criar exercício novo</a>
-  <p className="ed-help">Ou escolha um que já existe no seu catálogo.</p>
+  <p className="ed-help">Ou escolha um exercício que você já tem salvo.</p>
   <div className="tr-search ed-pick-search">
    <label htmlFor="ed-pick-q" className="visually-hidden">Buscar exercício</label>
    <Icon name="busca" size={22} className="tr-search-icon" />
    <input id="ed-pick-q" type="search" placeholder="Buscar exercício…" value={q} onChange={e => setQ(e.target.value)} autoComplete="off" />
   </div>
-  {rows.length === 0 ? <p className="muted">{query ? 'Nenhum exercício encontrado.' : 'Todos os exercícios do catálogo já estão neste treino.'}</p> :
-   <ul className="ed-pick-list" aria-label="Exercícios do catálogo">
+  {rows.length === 0 ? <p className="muted">{query ? 'Nenhum exercício encontrado.' : 'Todos os seus exercícios já estão neste treino.'}</p> :
+   <ul className="ed-pick-list" aria-label="Exercícios salvos">
     {rows.map(id => <li key={id}><button type="button" onClick={() => { void apply(p => addExerciseToSession(p, sessionId, id)).then(ok => { if (ok) showToast(`${plan.ex[id].n} adicionado ao treino.`); }); onClose(); }}>
      <strong>{plan.ex[id].n}</strong><span>{meta(id, plan.ex[id])}</span>
     </button></li>)}
@@ -71,7 +71,7 @@ export function EditarTreino({ id }: { id: string }) {
   setErrors(r.errors);
   if (!r.value) { focusFirstInvalid(); return; }
   const value = r.value;
-  void apply(p => updateSession(p, id, value)).then(ok => { if (ok) { setF({ name: value.name, sub: value.sub ?? '', min: value.min ?? '' }); showToast('Treino salvo.'); setSaved(true); } });
+  void apply(p => updateSession(p, id, value)).then(ok => { if (ok) { setF({ name: value.name, sub: value.sub ?? '', min: value.min ?? '' }); showToast('Treino salvo'); setSaved(true); } });
  };
  const move = (i: number, to: number) => {
   const exId = s.ex[i];
@@ -108,10 +108,10 @@ export function EditarTreino({ id }: { id: string }) {
       </div>
       <div className="ed-ex-body">
        <h4>{name}</h4>
-       <span className="ed-ex-meta">{ex ? meta(exId, ex) : 'Este exercício não existe mais no catálogo.'}</span>
+       <span className="ed-ex-meta">{ex ? meta(exId, ex) : 'Este exercício não está mais salvo.'}</span>
       </div>
       <Menu label={`Mais opções de ${name}`} trigger={<Icon name="mais" size={24} weight={2.4} />} items={[
-       ...(ex ? [{ label: 'Editar exercício', href: hrefFor({ tab: 'treino', view: 'exercicio', id, ex: exId }) }] : []),
+       ...(ex ? [{ label: 'Editar exercício', icon: 'editar' as const, href: hrefFor({ tab: 'treino', view: 'exercicio', id, ex: exId }) }] : []),
        { label: 'Remover do treino', danger: true, onClick: () => setRemoving(exId) },
       ]} />
      </li>;
@@ -121,8 +121,8 @@ export function EditarTreino({ id }: { id: string }) {
   <button type="button" ref={addBtn} className="button secondary block ed-add" onClick={() => setPicker(true)}><Icon name="plus" size={22} weight={2.5} />Adicionar exercício</button>
 
   <div className="ed-more">
-   <button type="button" className="button secondary block" onClick={() => { void duplicate(id); }}>Duplicar treino</button>
-   <button type="button" className="button destructive block" onClick={() => setConfirm(true)}>Excluir treino</button>
+   <button type="button" className="button secondary block" onClick={() => { void duplicate(id); }}><Icon name="copiar" size={20} />Duplicar treino</button>
+   <button type="button" className="button destructive block" onClick={() => setConfirm(true)}><Icon name="lixeira" size={20} />Excluir treino</button>
   </div>
 
   {picker ? <Picker sessionId={id} onClose={() => setPicker(false)} /> : null}
@@ -132,7 +132,7 @@ export function EditarTreino({ id }: { id: string }) {
   </ConfirmSheet> : null}
   {confirm ? <ConfirmSheet title={`Excluir ${s.name}?`} confirmLabel="Excluir treino" onCancel={() => setConfirm(false)}
    onConfirm={() => { setConfirm(false); void remove(id).then(ok => { if (ok) window.location.hash = hrefFor({ tab: 'treino', view: 'lista' }); }); }}>
-   <p>O treino sai do seu plano. O histórico dos treinos já feitos continua salvo, e os exercícios continuam no catálogo.</p>
+   <p>O treino sai do seu plano. O histórico dos treinos já feitos continua salvo, e os exercícios continuam salvos.</p>
    <p>Você poderá desfazer por 6 segundos.</p>
   </ConfirmSheet> : null}
  </div>;

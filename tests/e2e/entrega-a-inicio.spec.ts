@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 
 // Dados inteiramente sintéticos. O relógio do navegador é fixado em cada teste.
 const START_SEMANA_4 = '2026-10-19'; // segunda-feira; 2026-11-11 (quarta) cai na semana 04, deload
+const START_PRE = '2026-02-16'; // segunda-feira; 2026-02-12 (quinta) fica 4 dias antes do início
 const backup = (start: string) => ({ v: 2, start });
 const json = (f: string) => JSON.parse(readFileSync(new URL(`../../data/${f}`, import.meta.url), 'utf8'));
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -122,8 +123,8 @@ test('Início: trocar treino de hoje grava over e Registrar outro dia abre outra
 });
 
 test('Início: pré-semana mostra a contagem de dias', async ({ page }, info) => {
- await page.clock.setFixedTime(new Date('2026-11-12T12:00:00'));
- await page.goto('./');
+ await page.clock.setFixedTime(new Date('2026-02-12T12:00:00'));
+ await page.goto('./'); await seed(page, START_PRE);
  await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
  await expect(page.getByText('Seu plano começa em 4 dias')).toBeVisible();
  await expect(page.getByText('Antes do plano')).toHaveCount(0);
@@ -136,17 +137,17 @@ test('Início: pré-semana mostra a contagem de dias', async ({ page }, info) =>
  expect(await noHScroll(page)).toBe(true);
  await page.screenshot({ path: info.outputPath('inicio-pre-360.png'), fullPage: true });
  // Treinar agora não mexe na data de início.
- expect((await state(page)).settings.start).toBe('2026-11-16');
+ expect((await state(page)).settings.start).toBe(START_PRE);
  await page.getByRole('button', { name: 'Começar o plano hoje' }).click();
  await page.getByRole('button', { name: 'Começar o plano', exact: true }).click();
  await expect(page.getByText('Semana 01 de 12', { exact: true })).toBeVisible();
- await expect.poll(async () => (await state(page)).settings.start).toBe('2026-11-09');
- await expect(page.getByText("Plano começa em 09/11").first()).toBeVisible();
+ await expect.poll(async () => (await state(page)).settings.start).toBe('2026-02-09');
+ await expect(page.getByText("Plano começa em 09/02").first()).toBeVisible();
 });
 
 test('Perfil: mudar a data de início grava a segunda-feira, desfaz e vale após recarregar', async ({ page }) => {
- await page.clock.setFixedTime(new Date('2026-11-12T12:00:00')); // quinta-feira
- await page.goto('./');
+ await page.clock.setFixedTime(new Date('2026-02-12T12:00:00')); // quinta-feira
+ await page.goto('./'); await seed(page, START_PRE);
  await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
  await expect(page.getByText('Seu plano começa em 4 dias')).toBeVisible();
  await page.goto('#perfil');
@@ -156,16 +157,16 @@ test('Perfil: mudar a data de início grava a segunda-feira, desfaz e vale após
  await dlg.getByLabel('Data de início').fill('3000-01-01');
  await dlg.getByRole('button', { name: 'Salvar', exact: true }).click();
  await expect(dlg.getByRole('alert')).toContainText('2020 e 2100');
- await dlg.getByLabel('Data de início').fill('2026-11-25'); // quarta -> segunda 23/11
- await expect(dlg).toContainText('(23/11)');
+ await dlg.getByLabel('Data de início').fill('2026-02-25'); // quarta -> segunda 23/02
+ await expect(dlg).toContainText('(23/02)');
  await dlg.getByRole('button', { name: 'Salvar', exact: true }).click();
- await expect(page.getByText("Plano começa em 23/11").first()).toBeVisible();
- await expect.poll(async () => (await state(page)).settings.start).toBe('2026-11-23');
+ await expect(page.getByText("Plano começa em 23/02").first()).toBeVisible();
+ await expect.poll(async () => (await state(page)).settings.start).toBe('2026-02-23');
  await page.getByRole('button', { name: 'Desfazer' }).click();
- await expect.poll(async () => (await state(page)).settings.start).toBe('2026-11-16');
+ await expect.poll(async () => (await state(page)).settings.start).toBe(START_PRE);
  await page.getByRole('button', { name: /Meu plano/ }).click();
  await page.getByRole('button', { name: 'Começar esta semana' }).click();
- await expect.poll(async () => (await state(page)).settings.start).toBe('2026-11-09');
+ await expect.poll(async () => (await state(page)).settings.start).toBe('2026-02-09');
  await page.goto('#inicio'); await page.reload();
  await expect(page.getByText('Semana 01 de 12', { exact: true })).toBeVisible();
 });
@@ -252,7 +253,7 @@ test('Início: treino concluído gravado só no campo legado também aparece com
 });
 
 test('Início: Desmarcar aula oferece Desfazer e devolve a aula e a nota', async ({ page }) => {
- await page.clock.setFixedTime(new Date('2026-11-12T12:00:00'));
+ await page.clock.setFixedTime(new Date('2026-11-12T12:00:00')); // quinta-feira, dia de aula na semana 4
  await page.goto('./'); await seed(page, START_SEMANA_4);
  await page.getByRole('button', { name: 'Marcar aula como feita' }).click();
  await page.getByRole('button', { name: 'Nota 4 de 5' }).click();
@@ -283,14 +284,14 @@ test('Início: o segmentado Dieta troca o cartão principal pelo resumo da dieta
 test('Início: a 3ª aula só aparece a partir da semana 6', async ({ page }) => {
  await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
  await page.goto('./'); await seed(page, START_SEMANA_4);
- await expect(page.getByRole('heading', { name: 'Terceira aula de jiu-jitsu' })).toHaveCount(0);
+ await expect(page.getByRole('heading', { name: '3ª aula de jiu-jitsu' })).toHaveCount(0);
 });
 
 test('Início: 3ª aula com 3 semanas sintéticas mostra critérios, "sem dados" de sono e grava a declaração de sono', async ({ page }, info) => {
  await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
  await page.goto('./');
  await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, tresSemanas()));
- const card = page.getByRole('region', { name: 'Terceira aula de jiu-jitsu' });
+ const card = page.getByRole('region', { name: '3ª aula de jiu-jitsu' });
  await expect(card).toBeVisible();
  await expect(card.getByText('Aulas: atende')).toBeVisible();
  await expect(card.getByText('Cargas: atende')).toBeVisible();
@@ -315,7 +316,7 @@ test('Início: 3ª aula elegível quando o sono das 3 semanas foi declarado', as
  await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
  await page.goto('./');
  await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, tresSemanas(), { sleepOk: { '2': true, '3': true, '4': true } }));
- const card = page.getByRole('region', { name: 'Terceira aula de jiu-jitsu' });
+ const card = page.getByRole('region', { name: '3ª aula de jiu-jitsu' });
  await expect(card.getByText('Sono: atende')).toBeVisible();
  await expect(card.getByText('Você pode considerar uma 3ª aula', { exact: false })).toBeVisible();
 });

@@ -224,9 +224,9 @@ test('Dieta: textos destrutivos legíveis (contraste AA) nos dois temas', async 
 
 test('Dieta: meta de proteína acompanha o peso do perfil (80 kg → 192 g; sem perfil → 185 g)', async ({ page }) => {
  await seed(page);
- await expect(page.getByText('0 g / 185 g').first()).toBeVisible();
+ await expect(page.getByText('0 g de 185 g').first()).toBeVisible();
  await seed(page, { name: 'Perfil sintético', goal: 'recomposicao', weightKg: 80 });
- await expect(page.getByText('0 g / 192 g')).toBeVisible();
+ await expect(page.getByText('0 g de 192 g')).toBeVisible();
 });
 
 test('Dieta: dia futuro não quebra a tela', async ({ page }) => {

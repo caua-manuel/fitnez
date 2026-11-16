@@ -27,3 +27,21 @@ describe('estrutura e aria dos componentes compartilhados', () => {
   });
   // O comportamento com aviso (SSR usa o snapshot vazio) fica para o e2e quando as features adotarem o ToastHost.
 });
+
+describe('ícones Phosphor e barra de abas', () => {
+  it('todo nome de ícone renderiza um svg decorativo com a classe ic-<nome>', async () => {
+    const { Icon } = await import('../../src/ui/icons');
+    for (const name of ['inicio', 'treino', 'dieta', 'evolucao', 'perfil', 'sino', 'lixeira', 'troca', 'fogo', 'agua', 'play', 'mais'] as const) {
+      const html = renderToStaticMarkup(h(Icon, { name }));
+      expect(html, name).toContain('<svg');
+      expect(html, name).toContain(`ic-${name}`);
+      expect(html, name).toContain('aria-hidden="true"');
+    }
+  });
+  it('barra de abas: um indicador deslizante e só uma aba ativa', async () => {
+    const { TabBar } = await import('../../src/ui/TabBar');
+    const html = renderToStaticMarkup(h(TabBar, { current: 'dieta' }));
+    expect(html).toContain('translateX(200%)');
+    expect(html.match(/aria-current="page"/g)).toHaveLength(1);
+  });
+});

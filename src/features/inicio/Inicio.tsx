@@ -6,8 +6,10 @@ import { BackupReminder } from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { Sheet } from '../../ui/Sheet';
 import { showToast } from '../../ui/UndoToast';
-import { minutesLabel, plural } from '../treino/util';
-import { ProgressRing } from '../treino/ProgressRing';
+import { minutesLabel } from '../treino/util';
+import { AnimatedRing, CheckDraw, CountUp, Reveal, useTilt } from '../../ui/motion';
+import { SemanaFaixa } from './SemanaFaixa';
+import { weekStrip } from './semana';
 import { Glyph } from '../treino/glyphs';
 import { Thumb } from '../../ui/Thumb';
 import { DietaResumo } from './DietaResumo';
@@ -20,6 +22,9 @@ import { DataInicioSheet, useSetPlanStart } from '../perfil/DataInicioSheet';
 import type { DayIso } from '../../domain/calendar';
 import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
 import type { DayRecord, StateV3 } from '../../application/repository';
+
+/** Número que conta até o valor, seguido da palavra no singular ou no plural ("10 exercícios"). */
+function Count({ n, one, many }: { n: number; one: string; many: string }) { return <><CountUp value={n} /> {n === 1 ? one : many}</>; }
 
 // O "hoje" vem de um relógio injetável; o padrão usa o dia local do aparelho.
 // Ids de treino que já têm foto em public/img/hero/<id>.jpg. Só liste ids com arquivo existente: tentar um arquivo ausente gera erro de rede no console (principalmente offline).
@@ -47,6 +52,8 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
  const [dateError, setDateError] = useState('');
  const [startOpen, setStartOpen] = useState(false);
  const [startConfirm, setStartConfirm] = useState(false);
+ const [fresh, setFresh] = useState<string | null>(null);
+ const tiltRef = useTilt<HTMLElement>();
  const setStart = useSetPlanStart();
  if (!state) return null;
  const day = picked ?? today;
@@ -61,7 +68,7 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
   const r = s.history.days[day] ?? (s.history.days[day] = {});
   fn(r); return s;
  });
- const setAct = (key: 'bjj' | 'volei' | 'cond', on: boolean) => edit(r => { r.acts = { ...r.acts, [key]: on }; if (key === 'bjj' && !on) delete r.feel; });
+ const setAct = (key: 'bjj' | 'volei' | 'cond', on: boolean) => { setFresh(on ? `${day}:${key}` : null); edit(r => { r.acts = { ...r.acts, [key]: on }; if (key === 'bjj' && !on) delete r.feel; }); };
  const unmark = (key: 'bjj' | 'volei', message: string) => {
   const feel = record.feel;
   setAct(key, false);
@@ -75,7 +82,7 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
   const before = record.over;
   edit(r => { if (id) r.over = id; else delete r.over; });
   setSwapOpen(false);
-  showToast(id ? `${isToday ? 'Treino de hoje' : 'Treino do dia'}: ${plan.sess[id]?.name ?? ''}` : 'Treino de volta à rotina.', () => edit(r => { if (before) r.over = before; else delete r.over; }));
+  showToast(id ? `${isToday ? 'Treino de hoje' : 'Treino do dia'}: ${plan.sess[id]?.name ?? ''}` : 'Treino de volta à rotina', () => edit(r => { if (before) r.over = before; else delete r.over; }));
  };
  let currentId: string | null = null;
 
@@ -103,9 +110,9 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
     <div className="in-hoje-text">
      {done ? <p className="eyebrow in-done"><Icon name="marca" size={18} />{isToday ? 'Concluído hoje' : 'Concluído neste dia'}</p> : <p className="eyebrow">{isToday ? 'Treino de hoje' : 'Treino do dia'}</p>}
      <h2>{sess.name}</h2>
-     <p className="in-meta">{mins ? <span><Icon name="relogio" size={20} />{mins}</span> : null}<span><Glyph name="barras" size={20} />{plural(sess.ex.length, 'exercício', 'exercícios')}</span></p>
+     <p className="in-meta">{mins ? <span><Icon name="relogio" size={20} />{mins}</span> : null}<span><Glyph name="barras" size={20} /><Count n={sess.ex.length} one="exercício" many="exercícios" /></span></p>
     </div>
-    <div className="in-hoje-art" aria-hidden="true"><Thumb kind="hero" id={HERO_PHOTOS.includes(sessionId) ? sessionId : undefined} size={128} /></div>
+    <div className="in-hoje-art mv-par" aria-hidden="true"><Thumb kind="hero" id={HERO_PHOTOS.includes(sessionId) ? sessionId : undefined} size={128} /></div>
    </div>
   </>;
  };
@@ -141,9 +148,9 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
     <div className="in-hoje-text">
      <p className="eyebrow">{todayId ? `Treino de hoje · ${wdName}` : 'Primeiro treino do plano'}</p>
      <h2>{first.name}</h2>
-     <p className="in-meta">{mins ? <span><Icon name="relogio" size={20} />{mins}</span> : null}<span><Glyph name="barras" size={20} />{plural(first.ex.length, 'exercício', 'exercícios')}</span></p>
+     <p className="in-meta">{mins ? <span><Icon name="relogio" size={20} />{mins}</span> : null}<span><Glyph name="barras" size={20} /><Count n={first.ex.length} one="exercício" many="exercícios" /></span></p>
     </div>
-    <div className="in-hoje-art" aria-hidden="true"><Thumb kind="hero" id={HERO_PHOTOS.includes(firstId) ? firstId : undefined} size={128} /></div>
+    <div className="in-hoje-art mv-par" aria-hidden="true"><Thumb kind="hero" id={HERO_PHOTOS.includes(firstId) ? firstId : undefined} size={128} /></div>
    </div> : <p className="muted">Você ainda pode registrar um dia anterior ou ver os treinos.</p>}
    <p className="muted in-pre-nota">O plano começa na segunda-feira, {ddmm(mondayOf(state.settings.start))}. Você pode começar agora ou treinar sem mexer na data.</p>
   </>;
@@ -168,12 +175,12 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
     <h2>Aula de jiu-jitsu</h2>
     <p className="muted">{act.gi ? 'Com kimono.' : 'Sem kimono.'}</p>
     {on ? <>
-     <p className="success" role="status">Aula registrada.</p>
+     <p className="success" role="status"><CheckDraw play={fresh === `${day}:bjj`} />Aula registrada.</p>
      <div role="group" aria-label="Como terminou">
       <p><strong>Como terminou</strong> <span className="muted">(1 = exausto, 5 = ótimo)</span></p>
       <div className="segmented soft">{[1, 2, 3, 4, 5].map(n => <button key={n} type="button" aria-label={`Nota ${n} de 5`} aria-pressed={record.feel === n} onClick={() => edit(r => { r.feel = n; })}>{n}</button>)}</div>
      </div>
-     <button type="button" className="button secondary block gap-top" onClick={() => unmark('bjj', 'Aula desmarcada.')}>Desmarcar aula</button>
+     <button type="button" className="button secondary block gap-top" onClick={() => unmark('bjj', 'Aula desmarcada')}>Desmarcar aula</button>
     </> : <button type="button" className="button block" onClick={() => setAct('bjj', true)}>Marcar aula como feita</button>}
     {othersList(null)}
    </>;
@@ -183,8 +190,8 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
    card = <>
     <p className="eyebrow">{isToday ? 'Treino de hoje' : 'Treino do dia'}</p>
     <h2>Vôlei</h2>
-    {on ? <><p className="success" role="status">Jogo registrado.</p><button type="button" className="button secondary block" onClick={() => unmark('volei', 'Jogo desmarcado.')}>Desmarcar jogo</button></>
-     : <button type="button" className="button block" onClick={() => setAct('volei', true)}>Marcar jogo</button>}
+    {on ? <><p className="success" role="status"><CheckDraw play={fresh === `${day}:volei`} />Jogo registrado.</p><button type="button" className="button secondary block" onClick={() => unmark('volei', 'Jogo desmarcado')}>Desmarcar jogo</button></>
+     : <button type="button" className="button block" onClick={() => setAct('volei', true)}>Marcar jogo como feito</button>}
     {alt && act.altSessionId && !getWorkout(record, act.altSessionId) ? <a className="button secondary block gap-top" href={hrefFor({ tab: 'treino', view: 'executar', id: act.altSessionId, day })}>Sem jogo? Fazer {alt.name}</a> : null}
     {othersList(null)}
    </>;
@@ -203,37 +210,39 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
  const pct = phase.kind === 'week' ? Math.round(phase.progress * 100) : 0;
  const dieta = view === 'dieta';
  return <div className="inicio in-page">
-  <section className="in-head" aria-label="Resumo da semana">
+  <Reveal screen="inicio" i={0}><section className="in-head" aria-label="Resumo da semana">
    <div className="in-head-text">
     <p className="in-hello">{name ? `Olá, ${name}!` : 'Olá!'}</p>
     {phase.kind === 'week'
      ? <><h2 className="in-week">{weekLabel(phase.week)}</h2>
-       <p className="in-sub">{`Bloco ${phase.block} · RIR ${phase.rir} (repetições em reserva)`}{phase.deload ? ' · Semana de deload' : ''}</p>
+       <p className="in-sub">{`Bloco ${phase.block} · RIR ${phase.rir} (repetições em reserva)`}{phase.deload ? ' · Semana leve (deload)' : ''}</p>
        {phase.note ? <p className="in-sub">{phase.note}</p> : null}</>
-     : <><h2 className="in-week">{phase.kind === 'pre' ? `Seu plano começa em ${plural(phase.daysUntil, 'dia', 'dias')}` : 'Plano concluído'}</h2>
+     : <><h2 className="in-week">{phase.kind === 'pre' ? <>Seu plano começa em <Count n={phase.daysUntil} one="dia" many="dias" /></> : 'Plano concluído'}</h2>
        {phase.kind === 'pre' ? <p className="in-sub">Segunda-feira, {ddmm(mondayOf(state.settings.start))}</p> : null}</>}
    </div>
-   {phase.kind === 'week' ? <ProgressRing percent={pct} size={88} stroke={5} label={`Semana ${phase.week + 1} de 12: ${pct}% do plano`} /> : null}
-  </section>
+   {phase.kind === 'week' ? <AnimatedRing percent={pct} size={88} stroke={5} label={`Semana ${phase.week + 1} de 12: ${pct}% do plano`} /> : null}
+  </section></Reveal>
 
-  <div className="segmented in-seg" role="group" aria-label="O que mostrar no cartão principal">
+  <Reveal screen="inicio" i={1}><SemanaFaixa days={weekStrip({ sched: state.settings.sched, plan, days: state.history.days, today, preplan: phase.kind === 'pre' })} /></Reveal>
+
+  <Reveal screen="inicio" i={2}><div className="segmented in-seg" role="group" aria-label="O que mostrar no cartão principal">
    <button type="button" aria-pressed={!dieta} onClick={() => setView('treino')}><Icon name="treino" size={22} />Treino</button>
    <button type="button" aria-pressed={dieta} onClick={() => setView('dieta')}><Icon name="dieta" size={22} />Dieta</button>
-  </div>
+  </div></Reveal>
 
   {!isToday ? <p className="notice-day" role="status">Registrando: {formatDay(day)}. <button type="button" className="link-button" onClick={() => { setPicked(null); setPickerOpen(false); }}>Voltar para hoje</button></p> : null}
 
-  <section className={`card in-hoje${hasArt && !dieta ? ' has-art' : ''}`} aria-label={dieta ? (isToday ? 'Dieta de hoje' : 'Dieta do dia') : isToday ? 'Treino de hoje' : 'Treino do dia'}>{dieta ? <DietaResumo day={day} isToday={isToday} /> : card}</section>
-  {dieta ? null : action}
+  <Reveal screen="inicio" i={3}><section ref={tiltRef} className={`card in-hoje depth mv-tilt${hasArt && !dieta ? ' has-art' : ''}`} aria-label={dieta ? (isToday ? 'Dieta de hoje' : 'Dieta do dia') : isToday ? 'Treino de hoje' : 'Treino do dia'}>{dieta ? <DietaResumo day={day} isToday={isToday} /> : card}</section></Reveal>
+  {dieta || !action ? null : <Reveal screen="inicio" i={4} className="in-stack">{action}</Reveal>}
 
-  <div className={`in-pair${dieta ? ' single' : ''}`}>
+  <Reveal screen="inicio" i={5}><div className={`in-pair${dieta ? ' single' : ''}`}>
    <button type="button" className="in-ghost" aria-expanded={pickerOpen} onClick={() => setPickerOpen(o => !o)}><Icon name="editar" size={20} />Registrar outro dia</button>
    {phase.kind === 'week' && !dieta ? <button type="button" className="in-ghost" aria-expanded={swapOpen} onClick={() => setSwapOpen(o => !o)}><Glyph name="trocar" size={20} />Trocar treino</button> : null}
    {phase.kind !== 'week' && !dieta ? <button type="button" className="in-ghost" aria-haspopup="dialog" onClick={() => setStartOpen(true)}><Icon name="calendario" size={20} />Data de início</button> : null}
-  </div>
+  </div></Reveal>
   {startOpen ? <DataInicioSheet today={today} onClose={() => setStartOpen(false)} /> : null}
   {startConfirm ? <Sheet title="Começar o plano nesta semana?" onClose={() => setStartConfirm(false)}>
-   <p>O plano passa a começar na segunda-feira, {ddmm(mondayOf(today))}. Hoje vira {weekLabel(0).replace(' de 12', '')}, dia {(new Date(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 1, Number(today.slice(8, 10))).getDay() + 6) % 7 + 1}, e o Início passa a mostrar o treino de hoje.</p>
+   <p>O plano passa a começar na segunda-feira, {ddmm(mondayOf(today))}. Hoje passa a ser o dia {(new Date(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 1, Number(today.slice(8, 10))).getDay() + 6) % 7 + 1} da semana 1, e o Início passa a mostrar o treino de hoje.</p>
    <p className="muted">Nenhum registro é apagado. Dá para mudar a data depois, em Perfil.</p>
    <div className="sheet-actions">
     <button type="button" className="button block" onClick={() => void setStart(today).then(ok => { if (ok) setStartConfirm(false); })}>Começar o plano</button>
@@ -270,15 +279,15 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
    }} />
    <p id="data-registro-ajuda" className="muted">Hoje é o último dia possível.</p>
    {dateError ? <p className="in-error" role="alert">{dateError}</p> : null}
-   <button type="button" className="button block gap-top" onClick={() => { setDateError(''); setPickerOpen(false); showToast(day === today ? 'Registrando hoje.' : `Registrando: ${formatDay(day)}.`); }}>Usar este dia</button>
+   <button type="button" className="button block gap-top" onClick={() => { setDateError(''); setPickerOpen(false); showToast(day === today ? 'Registrando hoje' : `Registrando: ${formatDay(day)}.`); }}>Usar este dia</button>
   </Sheet> : null}
 
   {!dieta ? <TerceiraAula today={today} /> : null}
 
-  <div className="in-atalhos">
-   <a className="in-atalho" href={hrefFor({ tab: 'dieta' })}><span className="icon-tile soft"><Icon name="dieta" size={28} /></span><span className="in-atalho-row"><strong>Dieta</strong><Icon name="seta" size={20} /></span><span className="muted">Seu plano alimentar</span></a>
-   <a className="in-atalho" href={hrefFor({ tab: 'evolucao' })}><span className="icon-tile soft"><Icon name="evolucao" size={28} /></span><span className="in-atalho-row"><strong>Evolução</strong><Icon name="seta" size={20} /></span><span className="muted">Acompanhe seus resultados</span></a>
-  </div>
+  <Reveal screen="inicio" i={6}><div className="in-atalhos">
+   <a className="in-atalho depth" href={hrefFor({ tab: 'dieta' })}><span className="icon-tile soft"><Icon name="dieta" size={28} /></span><span className="in-atalho-row"><strong>Dieta</strong><Icon name="seta" size={20} /></span><span className="muted">Seu plano alimentar</span></a>
+   <a className="in-atalho depth" href={hrefFor({ tab: 'evolucao' })}><span className="icon-tile soft"><Icon name="evolucao" size={28} /></span><span className="in-atalho-row"><strong>Evolução</strong><Icon name="seta" size={20} /></span><span className="muted">Acompanhe seus resultados</span></a>
+  </div></Reveal>
 
   {shouldShowBackupReminder(state, protection?.backupDue) ? <BackupReminder /> : null}
  </div>;

@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
 import { createSessionWithExercise } from '../../domain/planEdit';
-import { emptyDraft, validateDraft, validateSessionFields } from '../../domain/exerciseDraft';
+import { NAME_MAX, emptyDraft, validateDraft, validateSessionFields } from '../../domain/exerciseDraft';
 import type { DraftErrors, ExerciseDraft } from '../../domain/exerciseDraft';
 import { Campo, CamposExercicio } from './Campos';
 import { Topo, focusFirstInvalid } from './Topo';
@@ -16,8 +16,8 @@ type SessionErrors = Partial<Record<'name' | 'sub' | 'min', string>>;
 
 export function CamposTreino({ f, onChange, errors, prefix = 'tr' }: { f: SessionFields; onChange: (f: SessionFields) => void; errors: SessionErrors; prefix?: string }) {
  return <>
-  <Campo id={`${prefix}-name`} label="Nome do treino" error={errors.name}>{p => <input {...p} type="text" autoComplete="off" maxLength={160} value={f.name} onChange={e => onChange({ ...f, name: e.target.value })} />}</Campo>
-  <Campo id={`${prefix}-sub`} label="Descrição (opcional)" error={errors.sub}>{p => <textarea {...p} rows={2} maxLength={200} value={f.sub} onChange={e => onChange({ ...f, sub: e.target.value })} />}</Campo>
+  <Campo id={`${prefix}-name`} label="Nome do treino" error={errors.name}>{p => <input {...p} type="text" autoComplete="off" maxLength={NAME_MAX} value={f.name} onChange={e => onChange({ ...f, name: e.target.value })} />}</Campo>
+  <Campo id={`${prefix}-sub`} label="Descrição (opcional)" error={errors.sub}>{p => <textarea {...p} rows={2} maxLength={160} value={f.sub} onChange={e => onChange({ ...f, sub: e.target.value })} />}</Campo>
   <Campo id={`${prefix}-min`} label="Duração em minutos (opcional)" error={errors.min} help="Por exemplo 55 ou 70 a 80.">{p => <input {...p} type="text" inputMode="numeric" autoComplete="off" maxLength={20} value={f.min} onChange={e => onChange({ ...f, min: e.target.value })} />}</Campo>
  </>;
 }
@@ -45,7 +45,7 @@ export function NovoTreino() {
   setSaving(true);
   const ok = await apply(p => createSessionWithExercise(p, input, ex).plan);
   setSaving(false);
-  if (ok) { try { sessionStorage.setItem('treino12:treino-novo', created.id); } catch { /* sem armazenamento: só o aviso */ } showToast('Treino criado.');window.location.hash = hrefFor({ tab: 'treino', view: 'detalhe', id: created.id }); }
+  if (ok) { try { sessionStorage.setItem('treino12:treino-novo', created.id); } catch { /* sem armazenamento: só o aviso */ } showToast('Treino criado');window.location.hash = hrefFor({ tab: 'treino', view: 'detalhe', id: created.id }); }
  };
 
  return <form className="ed-page" onSubmit={submit} noValidate>

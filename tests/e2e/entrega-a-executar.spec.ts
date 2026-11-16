@@ -207,7 +207,7 @@ test('Executar: rótulo da série é estável e o estado fica em aria-pressed', 
  await check.click();
  await expect(page.getByRole('button', { name: 'Série 1 concluída' })).toHaveAttribute('aria-pressed', 'true');
  await expect(page.getByRole('button', { name: /Reabrir/ })).toHaveCount(0);
- await expect(page.getByRole('button', { name: 'Cronômetro do treino em pausa' })).toHaveAttribute('aria-pressed', 'false');
+ await expect(page.getByRole('button', { name: 'Pausar cronômetro do treino' })).toHaveAttribute('aria-pressed', 'false');
 });
 
 test('Executar: 320x640 com descanso ativo, o rodapé é enxuto e não cobre o campo focado nem Adicionar série', async ({ page }) => {

@@ -5,7 +5,9 @@ import { Icon } from '../../ui/icons';
 import type { IconName } from '../../ui/icons';
 import { Glyph } from './glyphs';
 import { todayIso } from './util';
+import { CheckDraw } from '../../ui/motion';
 import './treino.css';
+
 
 function durationText(ms: number): string {
  const min = Math.round(ms / 60000);
@@ -24,13 +26,13 @@ export function Concluido({ id, day: dayParam }: { id: string; day?: string }) {
   return <section className="card"><p>Não há treino concluído para este dia.</p><a className="tr-back" href={hrefFor({ tab: 'treino', view: 'detalhe', id })}>← Voltar ao treino</a></section>;
  }
  const exercises = (plan.sess[id]?.ex ?? []).filter(e => (rec?.log?.[e] ?? []).some(r => r.done === true)).length;
- const stats: { label: string; value: string; icon: IconName | 'camadas' | 'barras' }[] = [
+ const stats: { label: string; value: string | number; icon: IconName | 'camadas' | 'barras' }[] = [
   { label: 'Duração', value: durationText((w.finishedAt ?? w.startedAt) - w.startedAt), icon: 'relogio' },
-  { label: 'Exercícios', value: String(exercises), icon: 'treino' },
-  { label: 'Séries', value: String(w.sets), icon: 'camadas' },
+  { label: 'Exercícios', value: exercises, icon: 'treino' },
+  { label: 'Séries', value: w.sets, icon: 'camadas' },
  ];
- return <section className="ok-wrap">
-  <div className="ok-mark" aria-hidden="true"><Glyph name="check-grande" size={52} weight={3} /></div>
+ return <section className="ok-wrap tone-treino">
+  <div className="ok-mark" aria-hidden="true"><CheckDraw play size={52} /></div>
   <h2 className="ok-title">Treino concluído!</h2>
   <p className="muted ok-sub">{plan.sess[id]?.name ?? 'Treino'} · salvo neste aparelho</p>
   <ul className="ok-stats" aria-label="Resumo do treino">

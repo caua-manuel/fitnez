@@ -13,9 +13,16 @@ import { enableNotifications, notifySupport } from '../../pwa/notifications';
 import type { NotifySupport } from '../../pwa/notifications';
 
 import { planConsistency } from '../../domain/evolution';
-import { validateProfile, proteinTargetG } from '../../domain/profile';
+import { validateProfile } from '../../domain/profile';
+import { isExampleTarget, resolveDietTargets } from '../../domain/dietTargets';
+import { MetasSheet } from '../dieta/MetasSheet';
 import { diaLocal, refeicoesRegistradas, treinosConcluidos } from './metricas';
 import { DataInicioSheet } from './DataInicioSheet';
+import { ApagarDados } from './ApagarDados';
+import { CountUp } from '../../ui/motion';
+import { catalogOf } from '../dieta/dietData';
+import { csvFilename, exportDietCsv, exportLoadsCsv, exportMeasuresCsv } from '../../domain/csv';
+import type { CsvKind } from '../../domain/csv';
 import './perfil.css';
 
 const persistenceLabels = { granted:'Concedido', denied:'Não concedido pelo navegador', unavailable:'Não disponível neste navegador', error:'Não foi possível consultar', 'not-requested':'Ainda não concedido' };
@@ -41,7 +48,10 @@ function Disclosure({ id, icon, title, subtitle, open, onToggle, children }: { i
  </section>;
 }
 
-export function Perfil({ now = Date.now }: { now?: () => number }) {
+/** Aviso curto sob as metas numéricas: os valores do plano são exemplos, não uma prescrição. */
+const META_EXEMPLO = 'Metas de exemplo, para ajustar ao seu perfil.';
+
+export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => number; offlineStatus?: string }) {
  const { repository, state, initialization, protection, busy, run, requestPersistence, commit } = useData();
  const [preview, setPreview] = useState<ImportPreview | null>(null);
  const [source, setSource] = useState('');
@@ -55,6 +65,7 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
  const [errors, setErrors] = useState<Record<string, string>>({});
  const [dataOpen, setDataOpen] = useState(false);
  const [startOpen, setStartOpen] = useState(false);
+ const [metasOpen, setMetasOpen] = useState(false);
  const [backupOpen, setBackupOpen] = useState(false);
  const [notify, setNotify] = useState<NotifySupport>(() => notifySupport());
  const [notifyNote, setNotifyNote] = useState('');
@@ -109,7 +120,11 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
    s.settings.profile = p; return s;
   }));
  };
- const proteinText = hasWeight ? `Meta de proteína: ${NUMBER.format(proteinTargetG(profile!.weightKg))} g por dia, 2,4 g por kg` : '';
+ const metas = resolveDietTargets(state.settings, today);
+ const exampleTargets = isExampleTarget(state.settings);
+ // Sem metas salvas o texto é o de sempre: só aparece com peso. Manual aparece sempre.
+ const proteinText = !metas.proteinAuto ? `Meta de proteína: ${NUMBER.format(metas.protein)} g por dia (definida por você)`
+  : hasWeight ? `Meta de proteína: ${NUMBER.format(metas.protein)} g por dia, 2,4 g por kg` : '';
  const pct = phase.kind === 'week' ? Math.round(phase.progress * 100) : phase.kind === 'done' ? 100 : 0;
  const planText = phase.kind === 'week' ? weekLabel(phase.week) : phase.kind === 'done' ? 'Plano concluído' : `Começa em ${phase.daysUntil} ${phase.daysUntil === 1 ? 'dia' : 'dias'}`;
  const enabled = state.settings.notifications?.enabled === true && notify === 'granted';
@@ -152,7 +167,7 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
   } finally { setNotifyBusy(false); }
  }
  async function exportBackup(copy: boolean) {
-  await run(async () => {
+  const ok = await run(async () => {
    if (copy && !navigator.clipboard?.writeText) throw new Error('A cópia não está disponível neste endereço. Use Baixar backup.');
    const backup = await repository.export();
    if (copy) {
@@ -161,23 +176,36 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
     const url = URL.createObjectURL(new Blob([backup.text], { type: 'application/json;charset=utf-8' }));
     const link = document.createElement('a'); link.href = url; link.download = backup.filename; document.body.append(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 30000);
    }
+   return true;
   }, copy ? 'Backup copiado. Guarde a cópia fora deste aparelho e confirme abaixo.' : 'Arquivo de backup gerado. Confira se você o guardou e confirme abaixo.');
+  return ok === true;
  }
  async function selectFile(event: ChangeEvent<HTMLInputElement>) {
   const file = event.target.files?.[0]; setPreview(null); setImportError(''); setFilename(file?.name ?? NO_FILE); if (!file) return;
   // O erro de arquivo inválido aparece junto ao campo (não no aviso global do topo da página).
   const prepared = await run(async () => {
-   if (file.size > 10 * 1024 * 1024) { setImportError('Este arquivo tem mais de 10 MiB. Escolha um backup menor. Seus dados atuais continuam intactos.'); return undefined; }
+   if (file.size > 10 * 1024 * 1024) { setImportError('Este arquivo tem mais de 10 MB. Escolha um backup menor. Seus dados atuais continuam intactos.'); return undefined; }
    try { return await repository.prepareImport(await file.text()); }
    catch { setImportError('Este arquivo não é um backup do Fitnez ou está corrompido. Seus dados atuais continuam intactos.'); return undefined; }
   });
   if (prepared) setPreview(prepared);
  }
+ /** Gera o CSV no aparelho e baixa com BOM (o Excel abre os acentos). Nada sai do aparelho além do arquivo que a pessoa guarda. */
+ function exportCsv(kind: CsvKind) {
+  const text = kind === 'cargas' ? exportLoadsCsv(state!.history.days, state!.catalog.plan)
+   : kind === 'medidas' ? exportMeasuresCsv(state!.history.measurements)
+   : exportDietCsv(state!.history.days, catalogOf(state!));
+  const name = csvFilename(kind, today);
+  const url = URL.createObjectURL(new Blob(['﻿', text], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a'); link.href = url; link.download = name; document.body.append(link); link.click(); link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+  showToast(`Planilha gerada: ${name}`);
+ }
  function clearFile(focus: boolean) { setPreview(null); setImportError(''); setFilename(NO_FILE); if (fileInput.current) { fileInput.current.value = ''; if (focus) fileInput.current.focus(); } }
 
  return <div className="perfil">
-  {shouldShowBackupReminder(state, protection?.backupDue) ? <aside className="reminder perfil-lembrete"><strong>Guarde uma cópia dos seus dados</strong><p>Seu backup semanal está pendente. Guarde o arquivo fora deste aparelho e confirme a cópia.</p><button type="button" className="link-button" onClick={() => { setBackupOpen(true); window.setTimeout(() => document.getElementById('backup-cabeca')?.scrollIntoView({ block: 'start' }), 0); }}>Fazer backup</button></aside> : null}
-  {conflict ? <Card title="Escolher origem dos dados"><p>Encontramos duas fontes diferentes do protótipo. Escolha qual histórico será usado. As duas fontes originais serão preservadas para recuperação.</p><fieldset disabled={busy}><legend>Histórico a usar</legend>{initialization.sources.map(s => <label className="source-choice" key={s.id}><input type="radio" name="migration-source" value={s.id} checked={source === s.id} onChange={() => setSource(s.id)} /><span><strong>{s.label}</strong><small>Versão {s.version} · {s.days} dias · {s.measurements} datas com medidas</small></span></label>)}</fieldset><button disabled={busy || !source} onClick={() => void run(() => repository.selectMigration({ sourceId: source, expectedRevision: state.revision }), 'Origem escolhida. Seus dados foram migrados e os originais preservados.')}>Confirmar origem escolhida</button><p className="muted">Tema, importação e confirmação de backup ficam bloqueados até essa escolha.</p></Card> : null}
+  {shouldShowBackupReminder(state, protection?.backupDue) ? <aside className="reminder perfil-lembrete"><strong>Faça um backup dos seus dados</strong><p>Seu backup semanal está pendente. Guarde o arquivo fora deste aparelho e confirme o backup.</p><button type="button" className="link-button" onClick={() => { setBackupOpen(true); window.setTimeout(() => document.getElementById('backup-cabeca')?.scrollIntoView({ block: 'start' }), 0); }}>Fazer backup</button></aside> : null}
+  {conflict ? <Card title="Escolher origem dos dados"><p>Encontramos duas fontes diferentes do protótipo. Escolha qual histórico será usado. As duas fontes originais serão preservadas para recuperação.</p><fieldset disabled={busy}><legend>Histórico a usar</legend>{initialization.sources.map(s => <label className="source-choice" key={s.id}><input type="radio" name="migration-source" value={s.id} checked={source === s.id} onChange={() => setSource(s.id)} /><span><strong>Protótipo (versão {s.version})</strong><small>{s.days} dias · {s.measurements} datas com medidas</small></span></label>)}</fieldset><button disabled={busy || !source} onClick={() => void run(() => repository.selectMigration({ sourceId: source, expectedRevision: state.revision }), 'Origem escolhida. Seus dados foram migrados e os originais preservados.')}>Confirmar origem escolhida</button><p className="muted">Tema, importação e confirmação de backup ficam bloqueados até essa escolha.</p></Card> : null}
 
   <header className="perfil-head">
    <div className="perfil-avatar-wrap">
@@ -192,7 +220,7 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
   </header>
 
   {editing ? <form className="card perfil-edit" noValidate aria-labelledby="perfil-edit-titulo" onSubmit={e => void saveProfile(e)}>
-   <h2 id="perfil-edit-titulo" className="perfil-edit-titulo">Dados físicos</h2>
+   <h2 id="perfil-edit-titulo" className="perfil-edit-titulo">Editar perfil</h2>
    <label htmlFor="perfil-nome">Seu nome</label>
    <input id="perfil-nome" ref={nameInput} type="text" maxLength={60} autoComplete="given-name" placeholder="Seu nome" value={nameDraft} aria-invalid={errors.name ? true : undefined} aria-describedby={errors.name ? 'perfil-nome-erro' : undefined} onChange={e => setNameDraft(e.target.value)} />
    {errors.name ? <p id="perfil-nome-erro" className="perfil-erro">{errors.name}</p> : null}
@@ -210,29 +238,34 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
    {errors.age ? <p id="perfil-idade-erro" className="perfil-erro">{errors.age}</p> : null}
    {errors.weightKg ? <p id="perfil-peso-erro" className="perfil-erro">{errors.weightKg}</p> : null}
    {errors.heightCm ? <p id="perfil-altura-erro" className="perfil-erro">{errors.heightCm}</p> : null}
-   {proteinText ? <p className="perfil-meta">{proteinText}</p> : null}
+   {proteinText ? <><p className="perfil-meta">{proteinText}</p>{exampleTargets ? <p className="perfil-meta-nota">{META_EXEMPLO}</p> : null}</> : null}
    <div className="actions"><button type="submit" className="button" disabled={busy}>Salvar</button><button type="button" className="button secondary" onClick={() => setEditing(null)}>Cancelar</button></div>
   </form> : null}
 
   <dl className="card perfil-stats" aria-label="Seus números">
-   <div className="perfil-stat"><Icon name="treino" size={30} /><div><dd className="stat">{feitos ? NUMBER.format(feitos) : '—'}</dd><dt>Treinos<span className="visually-hidden"> concluídos</span></dt></div></div>
-   <div className="perfil-stat"><Icon name="garfo" size={30} /><div><dd className="stat">{refeicoes ? NUMBER.format(refeicoes) : '—'}</dd><dt>Refeições<span className="visually-hidden"> registradas</span></dt></div></div>
-   <div className="perfil-stat"><Icon name="evolucao" size={30} /><div><dd className="stat">{taxa === null ? '—' : `${taxa}%`}</dd><dt>Constância</dt></div></div>
+   <div className="perfil-stat tone-treino"><Icon name="treino" size={30} /><div><dd className="stat">{feitos ? <CountUp value={feitos} duration={350} /> : '—'}</dd><dt>Treinos<span className="visually-hidden"> concluídos</span></dt></div></div>
+   <div className="perfil-stat tone-dieta"><Icon name="garfo" size={30} /><div><dd className="stat">{refeicoes ? <CountUp value={refeicoes} duration={350} /> : '—'}</dd><dt>Refeições<span className="visually-hidden"> registradas</span></dt></div></div>
+   <div className="perfil-stat tone-evolucao"><Icon name="evolucao" size={30} /><div><dd className="stat">{taxa === null ? '—' : <CountUp value={taxa} suffix="%" duration={350} />}</dd><dt>Constância</dt></div></div>
   </dl>
 
   <ul className="list perfil-list">
-   <li><button type="button" className="list-row perfil-link" onClick={() => openEditor('goal')}>
+   <li className="tone-brasa"><button type="button" className="list-row perfil-link" onClick={() => openEditor('goal')}>
     <span className="icon-tile soft"><Icon name="alvo" size={26} /></span>
     <span className="grow"><strong>Meu objetivo</strong><small className={goal ? undefined : 'perfil-vazio'}>{goal || 'Defina seu objetivo'}</small></span>
     <Icon name="seta" size={22} />
    </button></li>
    <li><button type="button" className="list-row perfil-link" onClick={() => openEditor('body')}>
     <span className="icon-tile soft"><Icon name="perfil" size={26} /></span>
-    <span className="grow"><strong>Dados físicos</strong><small className={bodyParts.length ? undefined : 'perfil-vazio'}>{bodyParts.length ? bodyParts.join(' · ') : 'Idade, peso e altura'}</small>{proteinText ? <small>{proteinText}</small> : null}</span>
+    <span className="grow"><strong>Dados físicos</strong><small className={bodyParts.length ? undefined : 'perfil-vazio'}>{bodyParts.length ? bodyParts.join(' · ') : 'Idade, peso e altura'}</small>{proteinText ? <><small>{proteinText}</small>{exampleTargets ? <small className="perfil-meta-nota">{META_EXEMPLO}</small> : null}</> : null}</span>
+    <Icon name="seta" size={22} />
+   </button></li>
+   <li className="tone-dieta"><button type="button" className="list-row perfil-link" aria-haspopup="dialog" onClick={() => setMetasOpen(true)}>
+    <span className="icon-tile soft"><Icon name="garfo" size={26} /></span>
+    <span className="grow"><strong>Metas de dieta</strong><small>{exampleTargets ? 'Meta de exemplo' : 'Metas personalizadas'}</small></span>
     <Icon name="seta" size={22} />
    </button></li>
    {lastMeasure ? <li className="perfil-medida"><p>Última medida de peso: {kgFmt.format(lastMeasure.kg)} kg em {lastMeasure.date.slice(8, 10)}/{lastMeasure.date.slice(5, 7)}. O peso do perfil e o peso medido na Evolução são independentes.</p>{profile?.weightKg !== lastMeasure.kg ? <button type="button" className="button secondary" disabled={busy} onClick={() => void useMeasured()}>Usar como peso do perfil</button> : null}</li> : null}
-   <li><button type="button" className="list-row perfil-link perfil-plano" aria-haspopup="dialog" onClick={() => setStartOpen(true)}>
+   <li className="tone-treino"><button type="button" className="list-row perfil-link perfil-plano" aria-haspopup="dialog" onClick={() => setStartOpen(true)}>
     <span className="icon-tile soft"><Icon name="calendario" size={26} /></span>
     <span className="grow"><strong>Meu plano</strong><small>{planText}</small>
      <span className="perfil-progress"><span className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`Progresso do plano: ${pct}%`}><span style={{ width: `${pct}%` }} /></span><span className="perfil-pct">{pct}%</span></span>
@@ -240,6 +273,7 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
     <Icon name="seta" size={22} />
    </button></li>
   </ul>
+  {metasOpen ? <MetasSheet onClose={() => setMetasOpen(false)} /> : null}
   {startOpen ? <DataInicioSheet today={today} onClose={() => setStartOpen(false)} /> : null}
 
   <h2 className="perfil-h2">Preferências</h2>
@@ -259,32 +293,41 @@ export function Perfil({ now = Date.now }: { now?: () => number }) {
     {notifyNote ? <p className="perfil-help perfil-aviso" role="status">{notifyNote}</p> : null}
    </div>
 
-   <Disclosure id="dados" icon="info" title="Dados neste aparelho" subtitle="Armazenamento, instalação e uso offline" open={dataOpen} onToggle={() => setDataOpen(o => !o)}>
+   <Disclosure id="dados" icon="info" title="Dados neste aparelho" subtitle={offlineStatus || 'Armazenamento, instalação e uso offline'} open={dataOpen} onToggle={() => setDataOpen(o => !o)}>
     <dl className="facts"><div><dt>Armazenamento persistente</dt><dd>{protection ? persistenceLabels[protection.persistence] : 'Consultando…'}</dd></div>{protection?.usage !== undefined ? <div><dt>Espaço estimado em uso</dt><dd>{new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(protection.usage / 1048576)} MB{protection.quota !== undefined ? ` de ${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(protection.quota / 1048576)} MB` : ''}</dd></div> : null}</dl>
     <button className="button secondary" disabled={busy} onClick={() => void requestPersistence()}>Pedir armazenamento persistente</button>
     {protection?.message ? <p className="warning">{protection.message}</p> : null}
     <p className="muted">A limpeza do navegador ou a perda do aparelho pode apagar seus dados. A persistência não substitui um backup externo.</p>
     <h3>Instalar e usar offline</h3>
-    <p>Para acesso rápido, use “Adicionar à Tela de Início” no menu do navegador. O acesso offline estará pronto quando o aviso no topo indicar “Disponível offline”.</p>
-    <p className="muted">Cada navegador e aparelho guarda seus próprios dados. Para mudar de endereço ou aparelho, exporte e importe o backup. Não há login nem sincronização.</p>
+    <p>Para acesso rápido, use “Adicionar à Tela de Início” no menu do navegador. O uso offline estará pronto quando aparecer “Disponível offline” aqui, em Dados neste aparelho.</p>
+    <p className="muted">Cada navegador e aparelho guarda seus próprios dados. Para mudar de endereço ou aparelho, baixe e importe o backup. Não há login nem sincronização.</p>
    </Disclosure>
 
    <Disclosure id="backup" icon="nuvem" title="Backup e restauração" subtitle="Salve e restaure seus dados" open={backupOpen} onToggle={() => setBackupOpen(o => !o)}>
     <h3>Backup dos seus dados</h3>
     <p>Baixe ou copie o backup completo, incluindo o histórico e os originais preservados. Ele contém dados pessoais de saúde: guarde em um local de sua confiança.</p>
     <div className="actions"><button className="button" disabled={busy} onClick={() => void exportBackup(false)}>Baixar backup</button><button className="button secondary" disabled={busy} onClick={() => void exportBackup(true)}>Copiar backup</button></div>
-    <dl className="facts backup-dates"><div><dt>Última geração</dt><dd>{formatInstant(protection?.lastBackupGeneratedAt)}</dd></div><div><dt>Cópia confirmada</dt><dd>{formatInstant(protection?.lastBackupConfirmedAt)}</dd></div></dl>
+    <dl className="facts backup-dates"><div><dt>Último backup gerado</dt><dd>{formatInstant(protection?.lastBackupGeneratedAt)}</dd></div><div><dt>Último backup confirmado</dt><dd>{formatInstant(protection?.lastBackupConfirmedAt)}</dd></div></dl>
     <p className="muted">Gerar ou copiar o arquivo não confirma que ele foi guardado. Confirme somente depois de conferir sua cópia.</p>
-    <button className="button secondary" disabled={locked || !protection?.lastBackupGeneratedAt} onClick={() => void run(() => repository.confirmBackup({ expectedRevision: state.revision }), 'Cópia confirmada. O lembrete reaparecerá em sete dias.')}>Já guardei a cópia</button>
+    <button className="button secondary" disabled={locked || !protection?.lastBackupGeneratedAt} onClick={() => void run(() => repository.confirmBackup({ expectedRevision: state.revision }), 'Backup confirmado. O lembrete volta em 7 dias.')}>Já guardei o backup</button>
+
+    <h3 className="perfil-sub">Exportar planilhas (CSV)</h3>
+    <p>Baixe suas cargas, medidas ou dieta em CSV para abrir numa planilha. O arquivo é gerado neste aparelho e só sai dele se você o enviar. Não substitui o backup, e não dá para importá-lo de volta.</p>
+    <div className="perfil-csv">
+     <button type="button" className="button secondary" disabled={busy} onClick={() => exportCsv('cargas')}><Icon name="salvar" size={20} />Exportar cargas</button>
+     <button type="button" className="button secondary" disabled={busy} onClick={() => exportCsv('medidas')}><Icon name="salvar" size={20} />Exportar medidas</button>
+     <button type="button" className="button secondary" disabled={busy} onClick={() => exportCsv('dieta')}><Icon name="salvar" size={20} />Exportar dieta</button>
+    </div>
 
     <h3 className="perfil-sub">Importar backup</h3>
     <p>Escolha um backup JSON do protótipo ou desta versão. Você verá um resumo antes de substituir qualquer dado.</p>
-    <p id="file-help">Arquivo de backup JSON (até 10 MiB)</p>
+    <p id="file-help">Arquivo de backup JSON (até 10 MB)</p>
     <div className="file-picker"><label className="button secondary" htmlFor="backup-file">Escolher arquivo JSON</label><input className="visually-hidden" ref={fileInput} id="backup-file" type="file" aria-describedby="file-help file-name" accept=".json,application/json" disabled={locked} onChange={e => void selectFile(e)} /><span id="file-name" className="muted">{filename}</span></div>
     {importError ? <div ref={importErrorRef} className="perfil-import-erro" role="alert" tabIndex={-1}><p>{importError}</p><button type="button" className="button secondary" onClick={() => { clearFile(false); fileInput.current?.click(); }}>Escolher outro arquivo</button></div> : null}
     {preview ? <section className="import-preview" aria-labelledby="preview-title"><h3 ref={previewHeading} id="preview-title" tabIndex={-1}>Prévia da importação</h3><p>Backup versão {preview.sourceVersion}</p><dl className="facts"><div><dt>Dias com dados</dt><dd>{preview.summary.days}</dd></div><div><dt>Datas com medidas</dt><dd>{preview.summary.measurements}</dd></div><div><dt>Exercícios</dt><dd>{preview.summary.exercises}</dd></div><div><dt>Treinos</dt><dd>{preview.summary.sessions}</dd></div></dl>{preview.warnings.map((w, i) => <p className="muted" key={i}>{w}</p>)}<p className="warning"><strong>Os dados atuais serão substituídos.</strong> Uma cópia de recuperação será preservada neste aparelho na mesma operação.</p><div className="actions"><button className="danger" disabled={locked} onClick={async () => { const result = await run(() => repository.confirmImport({ token: preview.token, expectedRevision: preview.expectedRevision }), 'Backup importado. Os dados anteriores estão preservados para recuperação.'); if (result) clearFile(false); }}>Confirmar importação</button><button className="button secondary" disabled={busy} onClick={() => clearFile(true)}>Cancelar</button></div></section> : null}
    </Disclosure>
   </div>
+  <ApagarDados onDownloadBackup={() => exportBackup(false)} />
   <p className="perfil-aviso-saude">Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.</p>
  </div>;
 }

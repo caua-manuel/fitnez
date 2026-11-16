@@ -1,10 +1,12 @@
 import { useRef } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Icon } from '../../ui/icons';
 import { Thumb } from '../../ui/Thumb';
 import { addDays } from '../../domain/calendar';
 import type { DayIso } from '../../domain/calendar';
 import type { MealKey } from '../../domain/diet';
+import { CheckDraw, CountUp } from '../../ui/motion';
+import { useJustTurnedOn } from '../treino/stagger';
 import { dayLabel, fmt } from './dietData';
 
 /** Seletor de dia: anterior, rótulo (abre o calendário do aparelho) e próximo. */
@@ -32,9 +34,9 @@ export function KcalRing({ kcal, target }: { kcal: number; target: number }) {
  return <div className="dt-ring" role="progressbar" aria-label="Calorias consumidas" aria-valuemin={0} aria-valuemax={target} aria-valuenow={Math.min(Math.round(kcal), target)} aria-valuetext={`${fmt(kcal)} de ${fmt(target)} quilocalorias`}>
   <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} aria-hidden="true" focusable="false">
    <circle className="ring-svg-track" cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} />
-   {ratio > 0 ? <circle className={`ring-svg-fill${over ? ' over' : ''}`} cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} strokeDasharray={`${c * ratio} ${c}`} transform={`rotate(-90 ${size / 2} ${size / 2})`} /> : null}
+   {ratio > 0 ? <circle className={`ring-svg-fill${over ? ' over' : ''}`} cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} strokeDasharray={`${c * ratio} ${c}`} style={{ '--dt-c': c } as CSSProperties} transform={`rotate(-90 ${size / 2} ${size / 2})`} /> : null}
   </svg>
-  <div className="dt-ring-text"><strong>{fmt(kcal)}</strong><span>de {fmt(target)} kcal</span></div>
+  <div className="dt-ring-text"><strong><CountUp value={Math.round(kcal)} duration={350} /></strong><span>de {fmt(target)} kcal</span></div>
  </div>;
 }
 
@@ -52,8 +54,9 @@ export function Cup({ filled }: { filled: boolean }) {
 
 /** Marca de consumido: círculo azul com ícone de marca, ou vazio. Botão de 44px. */
 export function CheckButton({ on, label, onClick, choose }: { on: boolean; label: string; onClick: () => void; choose?: boolean }) {
+ const fresh = useJustTurnedOn(on);
  return <button type="button" className={`dt-check${on ? ' on' : ''}${choose ? ' choose' : ''}`} aria-pressed={choose ? undefined : on} aria-label={label} title={label} onClick={onClick}>
-  <span className="dt-check-dot" aria-hidden="true">{on ? <Icon name="marca" size={18} weight={3} /> : choose ? <Icon name="plus" size={16} weight={2.2} /> : null}</span>
+  <span className="dt-check-dot" aria-hidden="true">{on ? <CheckDraw play={fresh} size={16} /> : choose ? <Icon name="plus" size={16} weight={2.2} /> : null}</span>
  </button>;
 }
 

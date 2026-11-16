@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Icon } from '../../ui/icons';
 import { Glyph } from './glyphs';
-import { BLOCKS, MAX_REST, MAX_SETS, REST_STEP, RECORD_TYPES, restLabel, stepText } from '../../domain/exerciseDraft';
+import { BLOCKS, MAX_REST, NAME_MAX, MAX_SETS, REST_STEP, RECORD_TYPES, restLabel, stepText } from '../../domain/exerciseDraft';
 import type { DraftErrors, DraftField, ExerciseDraft } from '../../domain/exerciseDraft';
 import { MUSCLE_GROUPS } from '../../domain/muscleGroups';
 import { GROUP_LABEL } from './util';
@@ -44,7 +44,7 @@ export function CamposExercicio({ draft, onChange, errors, prefix = 'ex' }: { dr
  const restSec = /^\d+$/.test(draft.rest.trim()) ? Number(draft.rest.trim()) : null;
  const err = (k: DraftField) => errors[k];
  return <>
-  <Campo id={`${prefix}-n`} label="Nome do exercício" error={err('n')}>{p => <input {...p} type="text" autoComplete="off" maxLength={140} value={draft.n} onChange={e => set('n', e.target.value)} />}</Campo>
+  <Campo id={`${prefix}-n`} label="Nome do exercício" error={err('n')}>{p => <input {...p} type="text" autoComplete="off" maxLength={NAME_MAX} value={draft.n} onChange={e => set('n', e.target.value)} />}</Campo>
   <Campo id={`${prefix}-g`} label="Grupo muscular">{p => <Select {...p} value={draft.g} onChange={e => set('g', e.target.value as ExerciseDraft['g'])}>
    <option value="">Sem grupo</option>
    {MUSCLE_GROUPS.map(g => <option key={g} value={g}>{GROUP_LABEL[g]}</option>)}

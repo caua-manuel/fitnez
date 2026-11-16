@@ -5,8 +5,8 @@ import type { Route } from './router';
 import { Logo } from '../ui/Logo';
 import { Icon } from '../ui/icons';
 import { TabBar } from '../ui/TabBar';
+import { PageTransition } from '../ui/motion';
 import { Inicio } from '../features/inicio/Inicio';
-import { FoundationPages } from '../features/FoundationPages';
 import { Perfil } from '../features/perfil/Perfil';
 import { Evolucao } from '../features/evolucao/Evolucao';
 import { Treino } from '../features/treino/Treino';
@@ -16,9 +16,13 @@ import { usePwa } from '../pwa/usePwa';
 import { Sheet } from '../ui/Sheet';
 import { ToastHost } from '../ui/UndoToast';
 import { shouldShowBackupReminder } from '../domain/userData';
+import { isStartConfirmed, localDayOf } from '../domain/planStart';
+import { DataInicioSheet } from '../features/perfil/DataInicioSheet';
 
 /** Tempo em que o aviso de sucesso fica na tela; ele também some ao trocar de tela ou ao ser dispensado. */
 const NOTICE_MS = 8000;
+/** Marca da sessão: a escolha da data de início é oferecida uma vez por sessão (prefixo treino12: é limpo ao apagar tudo). */
+const START_OFFER_KEY = 'treino12:inicio-oferecido';
 
 /** Cada aba declara se mostra o título (h1) grande com subtítulo; onde a referência não mostra título, o h1 fica só para leitores de tela. */
 const headings: Record<Route['tab'], { title: string; subtitle?: string }> = {
@@ -29,10 +33,6 @@ const headings: Record<Route['tab'], { title: string; subtitle?: string }> = {
  perfil: { title: 'Perfil' },
 };
 const readRoute = () => parseRoute(window.location.hash);
-
-function Placeholder({ text }: { text: string }) {
- return <section className="card"><p className="muted">{text}</p></section>;
-}
 
 export function App() {
  const data = useData(); const [route, setRoute] = useState<Route>(readRoute); const heading = useRef<HTMLHeadingElement>(null);
@@ -49,6 +49,16 @@ export function App() {
   const apply = () => { document.documentElement.dataset.theme = theme === 'auto' ? (media.matches ? 'dark' : 'light') : theme; };
   apply(); media.addEventListener('change', apply); return () => media.removeEventListener('change', apply);
  }, [theme]);
+ const [startOffer, setStartOffer] = useState(false); const offered = useRef(false);
+ // Primeira abertura: com a data de início ainda não escolhida, oferece a escolha ao abrir o app no Início.
+ useEffect(() => {
+  if (offered.current || !data.state || data.initialization?.status === 'migration-conflict') return;
+  offered.current = true;
+  if (isStartConfirmed(data.state.settings) || route.tab !== 'inicio') return;
+  try { if (sessionStorage.getItem(START_OFFER_KEY)) return; sessionStorage.setItem(START_OFFER_KEY, '1'); } catch { /* sem sessionStorage: oferece mesmo assim */ }
+  setStartOffer(true);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [data.state, data.initialization]);
  const [flash, setFlash] = useState(false); const wasSaving = useRef(false);
  useEffect(() => {
   if (data.saving) { wasSaving.current = true; setFlash(true); return; }
@@ -56,7 +66,7 @@ export function App() {
   wasSaving.current = false; setFlash(true);
   const t = window.setTimeout(() => setFlash(false), 3000); return () => window.clearTimeout(t);
  }, [data.saving]);
- const offlineText = pwa.development ? 'Prévia local · offline disponível no build' : pwa.ready ? (pwa.online ? 'Disponível offline' : 'Sem conexão · disponível offline') : pwa.error ? 'Acesso offline indisponível' : pwa.online ? 'Preparando acesso offline…' : 'Sem conexão · acesso offline não confirmado';
+ const offlineText = pwa.development ? 'Prévia local · offline disponível no build' : pwa.ready ? (pwa.online ? 'Disponível offline' : 'Sem conexão · disponível offline') : pwa.error ? 'Uso offline indisponível' : pwa.online ? 'Preparando o uso offline…' : 'Sem conexão · uso offline não confirmado';
  const mealRoute = route.tab === 'dieta' && route.meal ? route.meal : null;
  const { title: baseTitle, subtitle } = headings[route.tab];
  const title = mealRoute ? MEAL_NAME[mealRoute] : baseTitle;
@@ -82,23 +92,26 @@ export function App() {
    {data.loading ? <p className="loading" role="status">Abrindo seus dados…</p> : data.state ? <>
     {data.initialization?.status === 'ready' && data.initialization.warnings.length ? <aside className="warning"><strong>Atenção à recuperação</strong>{data.initialization.warnings.map((w, i) => <p key={i}>{w}</p>)}</aside> : null}
     {data.initialization?.status === 'migration-conflict' && route.tab !== 'perfil' ? <aside className="warning"><strong>Encontramos duas fontes diferentes</strong><p>Escolha no Perfil qual histórico será usado. As fontes originais continuam preservadas.</p><a href={hrefFor({ tab: 'perfil' })}>Escolher origem dos dados</a></aside> : null}
-    {route.tab === 'perfil' ? <Perfil />
-     : route.tab === 'dieta' ? <Dieta route={route} />
-     : route.tab === 'evolucao' ? <Evolucao />
-     : route.tab === 'treino' ? <Treino route={route} />
-     : <Inicio />}
+    <PageTransition routeKey={routeKey}>
+     {route.tab === 'perfil' ? <Perfil offlineStatus={offlineText} />
+      : route.tab === 'dieta' ? <Dieta route={route} />
+      : route.tab === 'evolucao' ? <Evolucao />
+      : route.tab === 'treino' ? <Treino route={route} />
+      : <Inicio />}
+    </PageTransition>
    </> : <p>Seus dados não foram abertos. Use a ação acima para tentar novamente.</p>}
    {pwa.error ? <p className="warning">{pwa.error}</p> : null}
    <p className={flash ? 'save-status' : 'visually-hidden'} role="status">{data.saving ? 'Salvando…' : data.state && !data.error ? 'Salvo neste aparelho' : ''}</p>
-   <p className="visually-hidden" role="status">{offlineText}</p>
+   {route.tab === 'perfil' ? null : <p className="visually-hidden" role="status">{offlineText}</p>}
   </main>
   {avisosOpen ? <Sheet title="Avisos" onClose={() => setAvisosOpen(false)}>
    {hasAvisos ? <ul className="avisos">
-    {backupPending ? <li className="aviso-item"><strong>Guarde uma cópia dos seus dados</strong><p>Seu backup semanal está pendente.</p><a className="text-link" href={hrefFor({ tab: 'perfil' })} onClick={() => setAvisosOpen(false)}>Fazer backup</a></li> : null}
+    {backupPending ? <li className="aviso-item"><strong>Faça um backup dos seus dados</strong><p>Seu backup semanal está pendente.</p><a className="text-link" href={hrefFor({ tab: 'perfil' })} onClick={() => setAvisosOpen(false)}>Fazer backup</a></li> : null}
     {pwa.updateAvailable ? <li className="aviso-item"><strong>Nova versão pronta</strong><p>Atualize para usar a versão mais recente.</p><div className="actions"><button type="button" className="button" disabled={data.busy || data.saving} onClick={pwa.applyUpdate}>Atualizar agora</button></div></li> : null}
    </ul> : <p className="muted">Nenhum aviso no momento.</p>}
    <div className="sheet-actions"><button type="button" className="button secondary" onClick={() => setAvisosOpen(false)}>Fechar</button></div>
   </Sheet> : null}
+  {startOffer ? <DataInicioSheet firstRun title="Quando o plano começa?" today={localDayOf(Date.now())} onClose={() => setStartOffer(false)} /> : null}
   <ToastHost />
   {executing ? null : <TabBar current={route.tab} />}
  </>;

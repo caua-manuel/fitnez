@@ -1,5 +1,6 @@
 ﻿import { RepositoryError } from '../application/repository';
 import type { Payload, StateV3 } from '../application/repository';
+import { isValidDietTargetsSetting } from '../domain/dietTargets';
 export const clone = <T>(value: T): T => structuredClone(value);
 const fail = (message: string): never => { throw new RepositoryError('validation', message); };
 export function object(v: unknown, name = 'objeto'): asserts v is Payload { if (v === null || typeof v !== 'object' || Array.isArray(v)) fail(`${name}: esperado objeto.`); }
@@ -47,6 +48,6 @@ export function validateLegacy(v: Payload) {
 export function validateState(v: unknown): asserts v is StateV3 {
  safeJson(v); object(v); noPhotos(v); if(v.v!==3) { if(v.v>3) throw new RepositoryError('future-version','Este backup usa uma versão futura.'); fail('Estado v3 inválido.'); }
  integer(v.revision,'Revisão'); object(v.catalog); validatePlan(v.catalog.plan); integer(v.catalog.revision,'Revisão catálogo'); catalogDiet(v.catalog.diet); recipes(v.catalog.recipes);
- object(v.settings); civil(v.settings.start); schedule(v.settings.sched); if(!['auto','light','dark'].includes(v.settings.theme)) fail('Tema inválido.');
+ object(v.settings); civil(v.settings.start); if(v.settings.startConfirmed!==undefined) bool(v.settings.startConfirmed,'Início confirmado'); if(v.settings.dietTargets!==undefined && !isValidDietTargetsSetting(v.settings.dietTargets)) fail('As metas de dieta do backup são inválidas.'); schedule(v.settings.sched); if(!['auto','light','dark'].includes(v.settings.theme)) fail('Tema inválido.');
  object(v.history); dates(v.history.days,'Dias',day); dates(v.history.measurements,'Medidas',measurement); records(v.snapshots,'Snapshots',x=>object(x)); records(v.recovery,'Recuperação',x=>object(x)); object(v.meta); for(const k of ['initializedAt','updatedAt']) number(v.meta[k],k); bool(v.meta.migrationCompleted,'Migração'); for(const k of ['lastBackupGeneratedAt','lastBackupConfirmedAt']) if(v.meta[k]!==null) number(v.meta[k],k); noPhotos(v.catalog); noPhotos(v.history);
 }

@@ -86,5 +86,5 @@ export function thirdClassEligibility(input: { start: DayIso; today: DayIso; day
  const criteria = [semana, aulas, sono, cargas];
  if (criteria.every(c => c.ok === true)) return { status: 'elegivel', criteria, summary: 'Você pode considerar uma 3ª aula. É só uma sugestão: decida pelo seu corpo.' };
  const falta = criteria.filter(c => c.ok !== true).map(c => ({ aulas: 'aulas', sono: 'sono', cargas: 'cargas', semana: 'semana' })[c.key] + (c.ok === null ? ' (sem dados)' : ''));
- return { status: 'ainda-nao', criteria, summary: `Ainda não: falta ${falta.join(', ')}.` };
+ return { status: 'ainda-nao', criteria, summary: `Ainda não: ${falta.length === 1 ? 'falta' : 'faltam'} ${falta.join(', ')}.` };
 }

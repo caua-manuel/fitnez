@@ -81,7 +81,7 @@ test('Treino: Meu plano mostra a semana com estados concluído, parcial e penden
  } });
  await expect(page.getByText(/Semana 01 de 12/)).toBeVisible();
  await expect(page.getByRole('link', { name: /Lower.*Terça-feira.*Concluído/ })).toBeVisible();
- await expect(page.getByRole('link', { name: /Upper A.*Quarta-feira.*Parcial/ })).toBeVisible();
+ await expect(page.getByRole('link', { name: /Upper A.*Quarta-feira.*Em andamento/ })).toBeVisible();
  await expect(page.getByRole('link', { name: /Upper B.*Sexta-feira.*Pendente/ })).toBeVisible();
  expect(await noHScroll(page)).toBe(true);
 });

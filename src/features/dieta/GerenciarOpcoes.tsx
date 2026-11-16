@@ -9,6 +9,7 @@ import type { DayIso } from '../../domain/calendar';
 import type { DietOption, MealKey } from '../../domain/diet';
 import { MealThumb } from './parts';
 import { MealTop } from './Refeicao';
+import { useStagger } from '../treino/stagger';
 import { MEAL_LOWER, MEAL_NAME, catalogOf, fmt, nextKey, parseDecimal, showDecimal } from './dietData';
 
 interface Fields { name: string; items: string; kcal: string; p: string; c: string; g: string }
@@ -79,6 +80,7 @@ export function GerenciarOpcoes({ meal, day, today }: { meal: MealKey; day: DayI
  const { state, commit } = useData();
  const [form, setForm] = useState<{ mode: 'new' | 'edit'; key?: string } | null>(null);
  const [confirm, setConfirm] = useState<DietOption | null>(null);
+ const rv = useStagger('dieta-gerenciar');
  if (!state) return null;
  const options = catalogOf(state)[meal];
 
@@ -105,12 +107,12 @@ export function GerenciarOpcoes({ meal, day, today }: { meal: MealKey; day: DayI
  };
  const editing = form?.mode === 'edit' ? options.find(o => o.key === form.key) : undefined;
 
- return <div className="dt dt-manage">
+ return <div className="dt dt-manage tone-dieta">
   <MealTop meal={meal} day={day} today={today} manage />
   <p className="dt-manage-intro">Cadastre e gerencie as opções de {MEAL_LOWER[meal]} do seu plano alimentar.</p>
   {options.length === 0 ? <p className="dt-note">Nenhuma opção cadastrada para {MEAL_LOWER[meal]}. Toque em Adicionar nova opção para criar a primeira.</p> : null}
   <ul className="dt-manage-list" aria-label={`Opções de ${MEAL_LOWER[meal]}`}>
-   {options.map((o, i) => <li key={o.key} className="dt-mopt">
+   {options.map((o, i) => <li key={o.key} {...rv(i, 'dt-mopt')}>
     <MealThumb meal={meal} option={o.key} size={64} />
     <div className="dt-mopt-text">
      <span className="dt-tag">Opção {i + 1}</span>
@@ -119,8 +121,8 @@ export function GerenciarOpcoes({ meal, day, today }: { meal: MealKey; day: DayI
     </div>
     <Menu label={`Mais ações da opção ${i + 1}, ${o.name}`} className="dt-menu-wrap" buttonClassName="icon-button dt-dots" trigger={<Icon name="mais" size={26} className="dots-h" />}
      items={[
-      { label: 'Editar', onClick: () => setForm({ mode: 'edit', key: o.key }) },
-      { label: 'Duplicar', onClick: () => duplicate(o) },
+      { label: 'Editar', icon: 'editar', onClick: () => setForm({ mode: 'edit', key: o.key }) },
+      { label: 'Duplicar', icon: 'copiar', onClick: () => duplicate(o) },
       ...(options.length > 1 ? [{ label: 'Excluir', danger: true, onClick: () => setConfirm(o) }] : []),
      ]} />
    </li>)}

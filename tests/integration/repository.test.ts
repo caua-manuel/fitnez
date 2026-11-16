@@ -4,7 +4,7 @@ import { createRepository } from '../../src/data/index';
 import type { Repository } from '../../src/application/repository';
 
 // Fixtures sintéticos: não são backups reais do usuário.
-const fixture = (v = 2) => ({ v, start: '2026-11-16', log: { '2026-11-17': { orfao: [{ kg: '22,5', reps: '08', done: true }, { kg: '', reps: '9', done: false }] } }, meas: { '2026-11-18': { p: '70,5' } }, diet: { '2026-11-17': { pick: { cafe: 'C' }, water: 4, crea: true } }, notes: { '2026-11-17': { orfao: 'preservar' } }, custom: { campo: 7 } });
+const fixture = (v = 2) => ({ v, start: '2026-01-05', log: { '2026-11-17': { orfao: [{ kg: '22,5', reps: '08', done: true }, { kg: '', reps: '9', done: false }] } }, meas: { '2026-11-18': { p: '70,5' } }, diet: { '2026-11-17': { pick: { cafe: 'C' }, water: 4, crea: true } }, notes: { '2026-11-17': { orfao: 'preservar' } }, custom: { campo: 7 } });
 const storage = (values: Record<string, string>) => ({ getItem: (key: string) => values[key] ?? null });
 const repos: Repository[] = [];
 function setup(options: any = {}) { const r = createRepository({ indexedDB: new IDBFactory(), storage: storage({}), storageManager: {}, basePath: '/teste/', ...options }); repos.push(r); return r; }

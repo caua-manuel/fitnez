@@ -273,3 +273,16 @@ button.dt-check,button.dt-check[aria-pressed=true],button.dt-cup-btn,button.dt-c
 .dt-meal-screen .dt-options{padding-bottom:4px}
 .dt-meal-screen .help{margin:0 0 12px}
 .dt-menu-help{margin:0 0 12px;font-size:.8125rem;color:var(--muted-foreground)}
+
+/* Fase "app mais vivo" (ADR 006): tom da seção só em ícones; anel que preenche; marca desenhada; nada em loop. */
+.dt-ring .ring-svg-fill{animation:dt-ring-in 350ms cubic-bezier(.2,.8,.2,1) backwards}
+@keyframes dt-ring-in{from{stroke-dasharray:0 var(--dt-c,1000)}}
+.dt-stat svg{color:var(--tone,var(--muted-foreground))}
+.dt-stat.warn svg{color:var(--warning)}
+.dt-water-head .icon-tile{color:var(--tone)}
+.dt-check-dot .mv-check,.dt-eaten-msg .mv-check{margin:0;vertical-align:0;display:block}
+.dt-eaten-msg .mv-check{display:inline-block;flex:none}
+.dt-mopt .thumb-fallback svg.icon,.dt-meal .thumb-fallback svg.icon{color:var(--tone,#7A7A83)}
+.dt-ring-text strong .num,.dt-stat strong .num{display:inline;font:inherit;letter-spacing:inherit;color:inherit}
+
+.dt .dt-meta-nota{margin:-4px 4px 0;font-size:.8125rem;line-height:1.4;color:var(--muted-foreground)}

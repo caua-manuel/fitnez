@@ -26,13 +26,25 @@ const TARGETS: Record<DayType, { kcal: number; carbs: number; focus: string; adj
  descanso: { kcal: 2100, carbs: 215, focus: 'Descanso: menos calorias, sem o lanche da tarde', adjustments: ['Pular o lanche da tarde'] }
 };
 
-export function dayTarget(type: DayType, opts: { protein?: number; fat?: number } = {}): DayTarget {
+/** Metas de exemplo do plano por tipo de dia (fonte única dos números padrão). */
+export const DAY_TARGET_DEFAULTS: Readonly<Record<DayType, Readonly<{ kcal: number; carbs: number }>>> = {
+ perna: { kcal: TARGETS.perna.kcal, carbs: TARGETS.perna.carbs },
+ academia: { kcal: TARGETS.academia.kcal, carbs: TARGETS.academia.carbs },
+ jiujitsu: { kcal: TARGETS.jiujitsu.kcal, carbs: TARGETS.jiujitsu.carbs },
+ volei: { kcal: TARGETS.volei.kcal, carbs: TARGETS.volei.carbs },
+ descanso: { kcal: TARGETS.descanso.kcal, carbs: TARGETS.descanso.carbs }
+};
+export const DEFAULT_WATER_L = 3;
+
+/** `kcal`, `carbs` e `waterL` opcionais: usados pelas metas editáveis (ver dietTargets.ts); ausentes = padrão do plano. */
+export function dayTarget(type: DayType, opts: { protein?: number; fat?: number; kcal?: number; carbs?: number; waterL?: number } = {}): DayTarget {
  const t = TARGETS[type] ?? TARGETS.academia;
  return {
-  kcal: t.kcal, carbs: t.carbs,
+  kcal: typeof opts.kcal === 'number' && opts.kcal > 0 ? opts.kcal : t.kcal,
+  carbs: typeof opts.carbs === 'number' && opts.carbs >= 0 ? opts.carbs : t.carbs,
   protein: typeof opts.protein === 'number' && opts.protein > 0 ? opts.protein : 185,
   fat: typeof opts.fat === 'number' && opts.fat > 0 ? opts.fat : 55,
-  waterL: 3, focus: t.focus, adjustments: [...t.adjustments]
+  waterL: typeof opts.waterL === 'number' && opts.waterL > 0 ? opts.waterL : DEFAULT_WATER_L, focus: t.focus, adjustments: [...t.adjustments]
  };
 }
 

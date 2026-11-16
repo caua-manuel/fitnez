@@ -106,3 +106,21 @@
 .perfil-medida{display:grid;gap:8px;justify-items:start;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card)}
 .perfil-medida p{font-size:.9375rem;line-height:1.4;color:var(--muted-foreground)}
 .perfil-medida .button{min-height:44px}
+
+/* Fase "app mais vivo" (ADR 006): tom só no ícone; números contam em 350 ms. */
+.perfil .perfil-stat>svg{color:var(--tone,var(--muted-foreground))}
+.perfil .list-row .icon-tile{color:var(--tone,var(--foreground))}
+.perfil-csv{display:grid;gap:8px}
+.perfil-sec-body .perfil-csv .button{width:100%}
+
+/* Metas de exemplo: aviso discreto sob números de meta */
+.perfil .perfil-meta-nota{font-size:.8125rem;line-height:1.4;color:var(--muted-foreground)}
+
+/* Zona de risco: neutra; o tom destrutivo fica só no texto e no ícone do botão */
+.perfil .perfil-risco{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:grid;gap:8px;justify-items:start}
+.perfil .perfil-risco h2{margin:0;font-size:1rem;font-weight:700;color:var(--muted-foreground)}
+.perfil .perfil-risco p{margin:0;font-size:.875rem;line-height:1.4;color:var(--muted-foreground)}
+.perfil .perfil-apagar{min-height:48px;padding:0 16px;gap:8px;border-radius:var(--radius-button);border:1px solid var(--field-border);background:var(--card);color:var(--destructive);font-size:.9375rem;font-weight:600}
+.perfil .perfil-apagar:hover:not(:disabled){background:var(--surface-2)}
+.perfil-apagar-lista{margin:0;padding-left:20px;display:grid;gap:4px}
+.sheet-body.perfil-apagar-corpo{gap:8px}.sheet-body.perfil-apagar-corpo p{margin:0}.sheet-body.perfil-apagar-corpo .perfil-apagar-lista{margin:0 0 4px}

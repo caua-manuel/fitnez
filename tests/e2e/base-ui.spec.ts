@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const synthetic = { v: 2, start: '2026-11-16', log: { '2026-11-17': { orfao: [{ kg: '22,5', reps: '08', done: true }] } }, meas: {}, custom: { qa: 'SINTÉTICO' } };
+const synthetic = { v: 2, start: '2026-01-05', log: { '2026-11-17': { orfao: [{ kg: '22,5', reps: '08', done: true }] } }, meas: {}, custom: { qa: 'SINTÉTICO' } };
 async function open(page: Page, hash = 'perfil') {
   await page.goto(`#${hash}`); await page.waitForLoadState('networkidle');
   await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
@@ -31,6 +31,8 @@ test('aviso de importação pode ser dispensado', async ({ page }) => {
 
 test('sino abre a folha Avisos (diálogo modal, fundo inerte, Escape devolve o foco)', async ({ page }) => {
   await open(page, 'inicio');
+  // Usuário novo: a escolha da data de início abre primeiro; o sino só é alcançável depois dela.
+  await page.getByRole('button', { name: 'Decidir depois' }).click();
   const bell = page.getByRole('button', { name: /^Avisos/ });
   await expect(bell).toBeVisible();
   await expect(page.locator('.bell-dot')).toHaveCount(0);

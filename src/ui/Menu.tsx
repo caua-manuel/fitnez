@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
+import { Icon } from './icons';
+import type { IconName } from './icons';
 
-export interface MenuItem { label: string; href?: string; onClick?: () => void; danger?: boolean }
+export interface MenuItem { label: string; href?: string; onClick?: () => void; danger?: boolean; icon?: IconName }
 
 /** Gestão de foco compartilhada entre Menu e Select: itens com tabindex -1 (foco por script). */
 export function useRovingList(open: boolean, onClose: (restore: boolean) => void, boxRef: React.RefObject<HTMLElement | null>, startAt: () => number) {
@@ -44,9 +46,12 @@ export function Menu({ label, trigger, items, className = '', buttonClassName = 
   <button type="button" ref={button} className={buttonClassName} aria-label={label} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined}
    onClick={() => setOpen(o => !o)} onKeyDown={e => { if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setOpen(true); } }}>{trigger}</button>
   {open ? <div id={id} role="menu" aria-label={label} ref={list} className={`ui-menu${align === 'left' ? ' ui-menu-left' : ''}`} onKeyDown={onKeyDown}>
-   {items.map(it => it.href
-    ? <a key={it.label} role="menuitem" tabIndex={-1} href={it.href} className={it.danger ? 'is-danger' : undefined} onClick={() => setOpen(false)}>{it.label}</a>
-    : <button key={it.label} type="button" role="menuitem" tabIndex={-1} className={it.danger ? 'is-danger' : undefined} onClick={() => { close(true); it.onClick?.(); }}>{it.label}</button>)}
+   {items.map(it => {
+    const body = <>{it.icon || it.danger ? <Icon name={it.icon ?? 'lixeira'} size={20} /> : null}<span className="ui-menu-label">{it.label}</span></>;
+    return it.href
+     ? <a key={it.label} role="menuitem" tabIndex={-1} href={it.href} className={it.danger ? 'is-danger' : undefined} onClick={() => setOpen(false)}>{body}</a>
+     : <button key={it.label} type="button" role="menuitem" tabIndex={-1} className={it.danger ? 'is-danger' : undefined} onClick={() => { close(true); it.onClick?.(); }}>{body}</button>;
+   })}
   </div> : null}
  </div>;
 }

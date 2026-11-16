@@ -59,7 +59,7 @@ export function statusOf(day: DayRecord | undefined, id: string): DayStatus {
  if (listWorkouts(day).length === 0 && day?.acts?.gym === true) return 'done';
  return 'pending';
 }
-export const STATUS_LABEL: Record<DayStatus, string> = { done: 'Concluído', partial: 'Parcial', pending: 'Pendente' };
+export const STATUS_LABEL: Record<DayStatus, string> = { done: 'Concluído', partial: 'Em andamento', pending: 'Pendente' };
 
 export function lastDoneDay(state: StateV3, id: string): DayIso | null {
  const days = state.history.days;

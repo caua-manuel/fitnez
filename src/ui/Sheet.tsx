@@ -1,6 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { Icon } from './icons';
+import type { IconName } from './icons';
 
 export const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 const RISKY = '.destructive,.danger,[data-destructive]';
@@ -95,12 +97,12 @@ export function Sheet({ title, onClose, children, initialFocus, className = '' }
 }
 
 /** Confirmação: foco inicial em "Cancelar", ação destrutiva marcada. */
-export function ConfirmSheet({ title, children, confirmLabel, cancelLabel = 'Cancelar', destructive = true, onConfirm, onCancel }: { title: string; children: ReactNode; confirmLabel: string; cancelLabel?: string; destructive?: boolean; onConfirm: () => void; onCancel: () => void }) {
+export function ConfirmSheet({ title, children, confirmLabel, cancelLabel = 'Cancelar', destructive = true, icon, onConfirm, onCancel }: { icon?: IconName; title: string; children: ReactNode; confirmLabel: string; cancelLabel?: string; destructive?: boolean; onConfirm: () => void; onCancel: () => void }) {
  return <Sheet title={title} onClose={onCancel} initialFocus="[data-cancel]">
   <div className="sheet-body">{children}</div>
   <div className="sheet-actions">
    <button type="button" className="button secondary" data-cancel onClick={onCancel}>{cancelLabel}</button>
-   <button type="button" className={destructive ? 'button destructive' : 'button'} data-destructive={destructive ? '' : undefined} onClick={onConfirm}>{confirmLabel}</button>
+   <button type="button" className={destructive ? 'button destructive' : 'button'} data-destructive={destructive ? '' : undefined} onClick={onConfirm}>{icon || destructive ? <Icon name={icon ?? 'lixeira'} size={20} /> : null}{confirmLabel}</button>
   </div>
  </Sheet>;
 }

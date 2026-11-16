@@ -15,8 +15,8 @@ export function usePlanEditor() {
  };
  return {
   plan, apply, withUndo,
-  duplicate: (id: string) => withUndo('Treino duplicado.', p => duplicateSession(p, id).plan),
-  remove: (id: string) => withUndo('Treino excluído.', p => deleteSession(p, id)),
-  removeExercise: (sessionId: string, exId: string) => withUndo('Exercício removido do treino.', p => removeExerciseFromSession(p, sessionId, exId)),
+  duplicate: (id: string) => withUndo('Treino duplicado', p => duplicateSession(p, id).plan),
+  remove: (id: string) => withUndo('Treino excluído', p => deleteSession(p, id)),
+  removeExercise: (sessionId: string, exId: string) => withUndo('Exercício removido do treino', p => removeExerciseFromSession(p, sessionId, exId)),
  };
 }

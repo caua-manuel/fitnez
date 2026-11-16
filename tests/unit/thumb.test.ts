@@ -25,7 +25,7 @@ describe('Thumb', () => {
     expect(fallbackIcon('exercise', 'zzz', 'xyz')).toBe('treino');
     const m = html({ kind: 'exercise', group: 'Cardio', size: 56 });
     expect(m).toContain('ic-fogo');
-    expect(m).toContain('stroke-width="1.6"');
+    expect(m).toContain('opacity="0.2"'); // Phosphor duotone (peso padrão do tile), sem traço fino
   });
   it('id no manifesto pede a foto; fora dele não há img', () => {
     PHOTOS.meal = new Set(['almoco-a']);

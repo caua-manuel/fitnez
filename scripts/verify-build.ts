@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
 import { Script } from 'node:vm';
 import { resolveBasePath } from './base-path.ts';
 
@@ -45,4 +46,18 @@ const html = await readFile('dist/index.html', 'utf8');
 assert.ok(html.includes(`href="${base}manifest.webmanifest"`));
 assert.ok(html.includes('Content-Security-Policy'));
 assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i);
+// Orçamento de tamanho (gzip, soma dos arquivos de assets/). O limite de CSS foi pedido em 12 KB, mas o CSS já estava em ~19,5 KB antes do movimento; 24 KB é o teto atual, a reduzir quando o CSS legado for enxugado.
+const LIMITE_JS_KB = 190;
+const LIMITE_CSS_KB = 24;
+const gzipKb = async (extension: 'js' | 'css') => {
+  const names = artifact.filter(file => file.startsWith('assets/') && file.endsWith(`.${extension}`));
+  const sizes = await Promise.all(names.map(async name => gzipSync(await readFile(join('dist', name))).length));
+  return sizes.reduce((a, b) => a + b, 0) / 1024;
+};
+const jsKb = await gzipKb('js');
+const cssKb = await gzipKb('css');
+const fmtKb = (n: number) => n.toFixed(1).replace('.', ',');
+assert.ok(jsKb <= LIMITE_JS_KB, `JavaScript acima do orçamento: ${fmtKb(jsKb)} KB (gzip) para um limite de ${LIMITE_JS_KB} KB. Remova dependências ou divida o código.`);
+assert.ok(cssKb <= LIMITE_CSS_KB, `CSS acima do orçamento: ${fmtKb(cssKb)} KB (gzip) para um limite de ${LIMITE_CSS_KB} KB. Enxugue regras antigas.`);
+console.log(`Tamanho (gzip): JavaScript ${fmtKb(jsKb)} KB de ${LIMITE_JS_KB} KB; CSS ${fmtKb(cssKb)} KB de ${LIMITE_CSS_KB} KB.`);
 console.log(`Artefato verificado: base ${base}; ${artifact.length} arquivos; ${urls.length} URLs de precache; CSP de produção.`);

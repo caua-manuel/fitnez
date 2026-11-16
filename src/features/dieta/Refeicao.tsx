@@ -9,6 +9,8 @@ import { showToast } from '../../ui/UndoToast';
 import { DayNav, MealThumb } from './parts';
 import { MEAL_LOWER, MEAL_NAME, fmt, optionNumber } from './dietData';
 import { useDietDay } from './useDietDay';
+import { CheckDraw } from '../../ui/motion';
+import { useJustTurnedOn } from '../treino/stagger';
 
 interface Props { meal: MealKey; day: DayIso; today: DayIso; setDay: (d: DayIso) => void }
 
@@ -62,9 +64,10 @@ export function Refeicao({ meal, day, today, setDay }: Props) {
   if (eaten) showToast(`Opção trocada: ${MEAL_NAME[meal]} opção ${optionNumber(options, o.key)}`, () => restoreMeal(meal, snap));
  };
  const unmarkWithUndo = () => { const snap = snapshotMeal(meal); unmark(meal); showToast(`${MEAL_NAME[meal]} desmarcado`, () => restoreMeal(meal, snap)); };
+ const freshEaten = useJustTurnedOn(eaten);
  const note = picked ? applyAdjustments(picked, type, meal).note : options[0] ? applyAdjustments(options[0], type, meal).note : undefined;
 
- return <div className="dt dt-meal-screen">
+ return <div className="dt dt-meal-screen tone-dieta">
   <MealTop meal={meal} day={day} today={today} manage={false} info={{ open: info, toggle: () => setInfo(v => !v) }} />
   <DayNav day={day} today={today} onChange={setDay} />
   {info ? <p className="dt-note" role="note">Escolha a opção que você consumiu e toque em Marcar como consumido. O que você marca fica guardado neste dia; mudar o cardápio depois não altera dias já registrados.</p> : null}
@@ -99,7 +102,7 @@ export function Refeicao({ meal, day, today, setDay }: Props) {
 
   <div className="dt-sticky">
    {eaten ? <>
-    <p className="dt-eaten-msg"><Icon name="marca" size={18} weight={2.2} />Consumido neste dia</p>
+    <p className="dt-eaten-msg"><CheckDraw play={freshEaten} size={18} />Consumido neste dia</p>
     <button type="button" className="button secondary dt-bar-btn" onClick={unmarkWithUndo}>Desmarcar consumo</button>
    </> : <button type="button" className="button block dt-bar-btn" disabled={!picked} aria-describedby={picked ? undefined : 'dt-pick-help'} onClick={() => picked && mark(meal, picked)}><Icon name="marca" size={20} weight={2.2} />Marcar como consumido</button>}
   </div>

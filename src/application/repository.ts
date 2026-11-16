@@ -1,4 +1,5 @@
-﻿export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+﻿import type { DietTargetsSetting } from '../domain/dietTargets';
+export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 // Campos adicionais preservam formatos legados e extensões sem normalização destrutiva.
 export type Payload = Record<string, any>;
 export interface Exercise extends Payload { n: string; s: number[]; r: string[]; m: string; t?: string; rest?: number }
@@ -12,7 +13,7 @@ export interface DayRecord extends Payload { log?: Record<string, Payload[]>; do
 export interface StateV3 extends Payload {
  v: 3; revision: number;
  catalog: { plan: Plan; diet: Payload; recipes: Payload[]; revision: number; [key: string]: any };
- settings: { start: string; sched: Payload[]; theme: 'auto'|'light'|'dark'; sleepOk?: Record<string, boolean>; profile?: { name: string; goal: string; age?: number; weightKg?: number; heightCm?: number }; notifications?: { enabled: boolean; restEnd: boolean }; [key: string]: any };
+ settings: { start: string; startConfirmed?: boolean; dietTargets?: DietTargetsSetting; sched: Payload[]; theme: 'auto'|'light'|'dark'; sleepOk?: Record<string, boolean>; profile?: { name: string; goal: string; age?: number; weightKg?: number; heightCm?: number }; notifications?: { enabled: boolean; restEnd: boolean }; [key: string]: any };
  history: { days: Record<string, DayRecord>; measurements: Record<string, Payload>; [key: string]: any };
  snapshots: Record<string, Payload>; recovery: Record<string, Payload>;
  meta: { initializedAt: number; updatedAt: number; migrationCompleted: boolean; migrationStatus?: 'none'|'completed'|'pending'|'invalid'; lastBackupGeneratedAt: number|null; lastBackupConfirmedAt: number|null; [key: string]: any };

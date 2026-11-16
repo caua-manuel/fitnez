@@ -147,3 +147,8 @@ li:first-child>.ev-row-measure{border-top:0}
 .ev-check small{font-size:.8125rem;font-weight:400;color:var(--muted-foreground)}
 .ev-period .ui-menu{left:0;right:0}
 .ev-period-btn{display:flex;align-items:center}
+
+/* Fase "app mais vivo" (ADR 006): tom da seção só em ícones; entrada em sequência; nada em loop. */
+.evolucao .ev-head>.icon,.evolucao .ev-row-btn .icon,.evolucao .ev-tile .icon{color:var(--tone)}
+.evolucao .ev-tile[aria-pressed=true] .icon{color:var(--primary)}
+.evolucao .ev-big{color:var(--foreground)}

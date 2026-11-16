@@ -43,6 +43,19 @@ Informação nunca depende só de cor: concluído = ícone + texto; erro = ícon
 
 O azul (`primary`) aparece somente em: botão principal, item ativo (aba, segmentado, chip), progresso (anel, barras, faixa de semanas), número selecionado, foco e a marca. Não colorir títulos, bordas, rótulos comuns nem trilhos. Botão secundário é neutro (borda `input`, texto `foreground`).
 
+### Acentos de seção (ADR 006)
+
+Cor de seção só em ícones, números e selos pequenos; nunca em fundos grandes, bordas ou botões. Classe `.tone-treino`, `.tone-dieta`, `.tone-evolucao` ou `.tone-brasa` num ancestral define `--tone`; `.icon-tile` e `.tone-icon` usam o tom.
+
+| Token | Claro | Escuro | Seção |
+| --- | --- | --- | --- |
+| `accent-treino` | `#0A58F0` | `#6C9BFF` | Treino |
+| `accent-dieta` | `#16A34A` | `#4ADE80` | Dieta |
+| `accent-evolucao` | `#7C3AED` | `#A78BFA` | Evolução |
+| `accent-brasa` | `#D97706` | `#FBBF24` | Objetivo, sequência, conquistas |
+
+Contraste: ícones com 3:1 ou mais nos dois temas. Como texto (4,5:1): treino e evolução nos dois temas; dieta e brasa só no escuro. No claro, verde e âmbar servem só para ícone ou número grande, nunca texto pequeno. Azul da marca continua só em ação principal, item ativo, progresso, links e foco (o tom de Treino coincide com ele de propósito). Menus levam ícone de linha (`MenuItem.icon`); destrutivo usa lixeira.
+
 ## 3. Tipografia
 
 - Família única: **Figtree** (variável, 300 a 900, distribuída em `public/fonts/` com licença OFL, pré-cacheada para uso offline), com fallback `system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif`. Fonte condensada e itálico não são mais usados, nem na marca.
@@ -93,6 +106,8 @@ Todo estado vazio, de erro ou de carregamento tem título curto, uma frase e uma
 ## 9. Movimento
 
 Movimento só explica mudança de estado: transições de cor e opacidade de 120 a 150 ms, escala 0,98 ao pressionar, folha em 200 ms. Proibido `transition: all`, pulsos e animação de layout. Com `prefers-reduced-motion: reduce` tudo vira troca imediata. Hover só com `(hover: hover) and (pointer: fine)`.
+
+Regras do ADR 006 (utilitários em `src/ui/motion`): duração de 120 a 350 ms, easing `cubic-bezier(.2,.8,.2,1)`; só `transform` e `opacity`; nada em loop; nunca bloqueia toque nem teclado; desligado com `prefers-reduced-motion` (valor final direto, sem transformações) e com a aba oculta. Usos permitidos, com parcimônia: contagem em números-chave (`CountUp`: calorias, macros, volume, peso, contadores), entrada em sequência de listas e cartões na primeira visita da sessão (`Reveal`, 60 ms por posição, máximo de 6 passos; em listas, `useStagger` aplica a classe no próprio `li`), anel de progresso que preenche (`AnimatedRing`, anel de calorias), marca de concluído desenhada só no toque (`CheckDraw`, 300 ms) e inclinação 3D leve só com mouse (`useTilt`, até 4 graus, nunca em toque).
 
 ## 10. Acessibilidade (WCAG 2.2 AA)
 

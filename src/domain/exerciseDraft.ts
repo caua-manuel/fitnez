@@ -76,7 +76,7 @@ export function validateDraft(d: ExerciseDraft, base?: Exercise): { errors: Draf
  let rest = 0;
  if (!restText) errors.rest = 'Informe o descanso em segundos. Use 0 para não ter descanso.';
  else if (!/^\d+$/.test(restText)) errors.rest = 'Use só números inteiros, em segundos, por exemplo 90.';
- else { rest = Number(restText); if (rest > MAX_REST) errors.rest = `O descanso vai até ${MAX_REST} segundos (${restLabel(MAX_REST)}).`; }
+ else { rest = Number(restText); if (rest > MAX_REST) errors.rest = `O descanso máximo é ${restLabel(MAX_REST)} (${MAX_REST.toLocaleString('pt-BR')} s).`; }
  if (!RECORD_TYPES.some(t => t.id === d.m)) return { errors };
  if (Object.keys(errors).length) return { errors };
  const value: Exercise = { ...(base ?? {}), n, s: sets, r: reps, m: d.m, rest, g: d.g };

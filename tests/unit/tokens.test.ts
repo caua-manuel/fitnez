@@ -49,3 +49,17 @@ describe('controles sem rótulo de texto: contraste de componente >= 3 (WCAG 1.4
     expect(css.toLowerCase()).toContain('[data-theme="dark"] .switch{--switch-off:' + scale.switchOff.dark.toLowerCase() + '}');
   });
 });
+
+describe('acentos por seção (só ícones, números e selos pequenos)', () => {
+  const keys = ['accentTreino', 'accentDieta', 'accentEvolucao', 'accentBrasa'] as const;
+  for (const theme of ['light', 'dark'] as const) {
+    const t = palette[theme];
+    it(`ícones de acento >= 3:1 sobre fundo e cartão (${theme})`, () => { for (const k of keys) for (const bg of [t.background, t.card]) expect(contrast(t[k], bg), `${k} sobre ${bg}`).toBeGreaterThanOrEqual(3); });
+    it(`treino e evolução servem também como texto (>= 4,5) (${theme})`, () => { for (const k of ['accentTreino', 'accentEvolucao'] as const) expect(contrast(t[k], t.card), k).toBeGreaterThanOrEqual(4.5); });
+  }
+  it('dieta e brasa no escuro servem também como texto (>= 4,5)', () => { for (const k of ['accentDieta', 'accentBrasa'] as const) expect(contrast(palette.dark[k], palette.dark.card), k).toBeGreaterThanOrEqual(4.5); });
+  it('variáveis e classes de tom existem no CSS', () => {
+    for (const v of ['--accent-treino', '--accent-dieta', '--accent-evolucao', '--accent-brasa']) expect(css).toContain(v + ':');
+    for (const c of ['.tone-treino', '.tone-dieta', '.tone-evolucao', '.tone-brasa']) expect(css).toContain(c + '{--tone:');
+  });
+});

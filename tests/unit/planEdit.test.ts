@@ -114,7 +114,7 @@ describe('exerciseDraft', () => {
   const r = validateDraft({ ...ok(), n: ' ', sets: ['0', 'x', '3'], reps: ['', '8', '8'], rest: '1,5' });
   expect(Object.keys(r.errors).sort()).toEqual(['n', 'reps0', 'rest', 'sets0', 'sets1']);
   expect(r.value).toBeUndefined();
-  expect(validateDraft({ ...ok(), rest: '99999' }).errors.rest).toMatch(/1800/);
+  expect(validateDraft({ ...ok(), rest: '99999' }).errors.rest).toMatch(/30 min.*1\.800 s/);
   expect(validateDraft({ ...ok(), rest: '' }).errors.rest).toMatch(/Informe/);
  });
  it('draftFrom usa o descanso existente e o grupo da semente', () => {

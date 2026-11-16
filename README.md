@@ -49,6 +49,16 @@ O Fitnez não substitui nutricionista, médico ou profissional de educação fí
 
 Treinos, medidas e anotações ficam somente neste aparelho. Não há conta, analytics nem envio de dados a terceiros. Faça backup em JSON periodicamente, pois limpar os dados do navegador apaga o histórico. Nenhum dado pessoal é guardado neste repositório.
 
+## Como usar (para qualquer pessoa)
+
+1. Abra o app no navegador do celular ou do computador e, se quiser, instale na tela inicial (menu do navegador, "Instalar app" ou "Adicionar à tela inicial").
+2. Em Perfil, escolha a data de início do plano e informe seus dados físicos. O plano de treino e as metas de dieta que vêm de fábrica são um exemplo e podem ser ajustados ao seu caso.
+3. Use as abas Início, Treino, Dieta e Evolução no dia a dia. Tudo funciona sem internet depois da primeira abertura.
+4. Em Perfil, baixe um backup em JSON de vez em quando. Você também pode exportar cargas, medidas e dieta em CSV para abrir em planilha.
+5. Para zerar tudo, use "Apagar todos os meus dados" no Perfil. Isso não tem volta, por isso baixe um backup antes.
+
+Seus dados ficam só no seu aparelho. Para ter o seu próprio endereço, faça um fork do repositório e publique no GitHub Pages seguindo `docs/PUBLICACAO.md`.
+
 ## Licença
 
-A definir.
+MIT. Veja o arquivo `LICENSE`.

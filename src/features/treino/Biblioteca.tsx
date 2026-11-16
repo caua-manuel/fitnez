@@ -38,7 +38,7 @@ export function Biblioteca() {
    <Icon name="busca" size={22} className="tr-search-icon" />
    <input id="treino-busca" type="search" placeholder="Buscar treino ou exercício…" value={query} onChange={e => setQuery(e.target.value)} autoComplete="off" />
   </div>
-  <div className="tr-filters" role="group" aria-label="Filtrar por grupo">
+  <div className="tr-filters" role="group" aria-label="Filtrar treinos">
    {FILTERS.map(f => <button key={f.id} type="button" className="chip" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.label}</button>)}
   </div>
   {rows.length === 0 ? <div className="tr-empty">
@@ -56,8 +56,8 @@ export function Biblioteca() {
   <div className="ed-restore">
    <button type="button" className="ed-linkbtn" onClick={() => setRestore(true)}>Restaurar treinos originais</button>
   </div>
-  {restore ? <ConfirmSheet title="Restaurar treinos originais?" confirmLabel="Restaurar treinos" onCancel={() => setRestore(false)}
-   onConfirm={() => { setRestore(false); void withUndo('Treinos originais restaurados.', p => restoreSeedPlan(p, seedPlan.plan as unknown as Plan)); }}>
+  {restore ? <ConfirmSheet title="Restaurar treinos originais?" icon="historico" confirmLabel="Restaurar treinos" onCancel={() => setRestore(false)}
+   onConfirm={() => { setRestore(false); void withUndo('Treinos originais restaurados', p => restoreSeedPlan(p, seedPlan.plan as unknown as Plan)); }}>
    <p>Os treinos e os exercícios originais do plano voltam como estavam. Treinos que você criou saem da lista, e as mudanças que fez nos exercícios originais são desfeitas.</p>
    <p><strong>O histórico dos treinos já feitos é preservado.</strong> Você poderá desfazer por 6 segundos.</p>
   </ConfirmSheet> : null}

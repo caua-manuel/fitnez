@@ -88,3 +88,26 @@
 .in-sleep{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:4px 10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-weight:500}
 .in-sleep-state{font-size:.875rem;color:var(--muted-foreground)}
 .in-sleep-help{grid-column:1/-1;margin:0;font-size:.8125rem}
+
+/* Faixa da semana: neutra; azul só no dia de hoje. */
+.in-semana{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.in-sem{display:grid;justify-items:center;gap:6px;min-width:0;color:var(--muted-foreground)}
+.in-sem-dia{font-size:.75rem;font-weight:500;line-height:1}
+.in-sem-bola{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border);background:var(--card);color:var(--foreground);font-size:.9375rem;font-weight:600;font-variant-numeric:tabular-nums}
+.in-sem-tipo{font-size:.6875rem;font-weight:500;line-height:1;white-space:nowrap}
+.in-sem .mv-check{margin:0;vertical-align:0}
+.in-sem-feito .in-sem-bola{background:var(--foreground);border-color:var(--foreground);color:var(--background)}
+.in-sem-previsto .in-sem-bola{border-style:dashed;border-color:var(--field-border);background:transparent;color:var(--muted-foreground)}
+.in-sem-pendente .in-sem-bola{background:var(--surface-2);color:var(--muted-foreground)}
+.in-sem-livre .in-sem-bola{border-color:transparent;background:transparent;color:var(--muted-foreground)}
+.in-sem.is-today .in-sem-dia{color:var(--primary);font-weight:700}
+.in-sem.is-today .in-sem-bola{border:2px solid var(--primary)}
+.in-sem.is-today.in-sem-hoje .in-sem-bola{color:var(--primary);font-weight:700}
+.in-sem.is-today.in-sem-feito .in-sem-bola{background:var(--foreground);color:var(--background)}
+
+/* Micro-resposta de toque e foto com paralaxe */
+.in-ghost,.in-atalho{transition:transform 100ms var(--mv-ease),background-color 120ms ease-out}
+.in-ghost:active,.in-atalho:active{transform:scale(.98)}
+.in-hoje-art .thumb-hero{display:block}
+@media(prefers-reduced-motion:reduce){.in-ghost:active,.in-atalho:active{transform:none}}
+.in-stack{display:grid;gap:inherit}

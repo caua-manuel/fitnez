@@ -5,6 +5,8 @@ import { hrefFor } from '../../app/router';
 import { Icon } from '../../ui/icons';
 import { Select } from '../../ui/Select';
 import { Sheet } from '../../ui/Sheet';
+import { CountUp, Reveal } from '../../ui/motion';
+import { decimals1 } from '../treino/stagger';
 import type { IconName } from '../../ui/icons';
 import { localDay } from '../inicio/Inicio';
 import {
@@ -97,7 +99,7 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
  const outside = measuresOutsidePlan(meas, start);
  const hasAny = outside.length > 0 || strength.some(p => p.avgLoadKg !== null) || weight.length + waist.length + hip.length + thigh.length + arm.length > 0 || cons.done > 0;
  const form = <MeasureForm today={today} />;
- if (!hasAny) return <div className="evolucao"><EmptyState />{form}{DISCLAIMER}</div>;
+ if (!hasAny) return <div className="evolucao tone-evolucao"><EmptyState />{form}{DISCLAIMER}</div>;
 
  const lastOf = (s: typeof weight) => (s.length ? s[s.length - 1].value : null);
  const main: Record<Metric, { title: string; icon: IconName; unit: string; points: ChartPoint[]; pill: string | null; fmt: (v: number) => string; domain?: [number, number]; empty: string }> = {
@@ -118,17 +120,17 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
  const picked = measureRows.find(r => r.label === openMeasure) ?? null;
  const dayLabel = (iso: string) => iso.split('-').reverse().slice(0, 2).join('/');
 
- return <div className="evolucao"><>
+ return <div className="evolucao tone-evolucao"><>
   <Period weeks={weeks} onChange={setWeeks} />
 
-  <div className="ev-tiles" role="group" aria-label="Indicador do gráfico principal">
+  <Reveal screen="evolucao" i={1}><div className="ev-tiles" role="group" aria-label="Indicador do gráfico principal">
    <Tile icon="treino" value={sChange !== null ? signedPct(sChange) : strengthOne !== null ? fmtKg(strengthOne) : '—'} label="Força" selected={metric === 'forca'} onSelect={() => setMetric('forca')} description={`Força: ${sChange !== null ? signedPct(sChange) : strengthOne !== null ? `${fmtKg(strengthOne)}, sem variação ainda` : 'sem variação ainda'}`} />
    <Tile icon="balanca" value={wDelta ? formatSigned(wDelta.abs, 'kg') : '—'} label="Peso" selected={metric === 'peso'} onSelect={() => setMetric('peso')} description={`Peso: ${wDelta ? formatSigned(wDelta.abs, 'kg') : 'sem variação ainda'}`} />
    <Tile icon="fita" value={cDelta ? formatSigned(cDelta.abs, 'cm') : '—'} label="Cintura" selected={metric === 'cintura'} onSelect={() => setMetric('cintura')} description={`Cintura: ${cDelta ? formatSigned(cDelta.abs, 'cm') : 'sem variação ainda'}`} />
    <Tile icon="alvo" value={cons.pct === null ? '—' : `${cons.pct}%`} label="Constância" selected={metric === 'constancia'} onSelect={() => setMetric('constancia')} description={`Constância: ${cons.pct === null ? 'sem atividades previstas ainda' : `${cons.pct}%`}`} />
-  </div>
+  </div></Reveal>
 
-  <section className="card ev-card" aria-labelledby="ev-main-title">
+  <Reveal screen="evolucao" i={2}><section className="card ev-card" aria-labelledby="ev-main-title">
    <div className="ev-head"><Icon name={m.icon} size={24} weight={1.9} /><h2 id="ev-main-title">{m.title}</h2>{m.pill ? <span className="ev-pill">{m.pill}</span> : null}</div>
    <p className="visually-hidden" role="status">{mainLabel}</p>
    {filled.length === 0 ? <ChartEmpty>{m.empty}</ChartEmpty> : <>
@@ -136,13 +138,13 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
     {filled.length === 1 ? <p className="ev-hint ev-single">{m.fmt(filled[0].value)} em {filled[0].label}. Sem variação ainda: registre de novo para ver a evolução.</p> : null}
     <Table caption={`${m.title}, valores por semana`} head={['Semana', m.unit === '%' ? 'Constância' : m.title]} rows={m.points.map(p => [p.label, p.value === null ? 'sem registro' : m.fmt(p.value)])} />
    </>}
-  </section>
+  </section></Reveal>
 
-  <div className="ev-duo">
+  <Reveal screen="evolucao" i={3}><div className="ev-duo">
    <section className="card ev-card" aria-labelledby="ev-peso-title">
     <div className="ev-head"><Icon name="balanca" size={22} weight={1.9} /><h2 id="ev-peso-title">Peso corporal</h2></div>
     {wLast === null ? <p className="ev-none">Sem peso registrado neste período.</p> : <>
-     <p className="ev-big">{fmtKg(wLast)}</p>
+     <p className="ev-big"><CountUp value={Math.round(wLast * 10) / 10} decimals={decimals1(wLast)} suffix=" kg" duration={350} /></p>
      {wDelta ? <p className="ev-delta">{formatSigned(wDelta.abs, 'kg')} ({wDelta.pct > 0 ? '+' : wDelta.pct < 0 ? '−' : ''}{formatNumber(Math.abs(wDelta.pct), 1)}%)</p> : <p className="ev-none">Uma pesagem: registre outra para ver a variação.</p>}
      <MiniLine values={weight.map(p => p.value)} label={`Peso: ${weight.length === 1 ? `${fmtKg(wLast)} em ${dayLabel(weight[0].day)}` : `de ${fmtKg(weight[0].value)} a ${fmtKg(wLast)}`}.`} />
      <Table caption="Peso corporal, registros" head={['Dia', 'Peso']} rows={weight.map(p => [dayLabel(p.day), fmtKg(p.value)])} />
@@ -160,7 +162,7 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
      <p className="ev-hint ev-tap">Toque em uma medida para ver o gráfico.</p>
     </>}
    </section>
-  </div>
+  </div></Reveal>
 
   {outside.length ? <section className="card ev-card" aria-labelledby="ev-out-title">
    <div className="ev-head"><Icon name="calendario" size={22} weight={1.9} /><h2 id="ev-out-title">Medidas fora do plano</h2></div>
@@ -171,14 +173,14 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
    </li>)}</ul>
   </section> : null}
 
-  <section className="card ev-card" aria-labelledby="ev-cons-title">
+  <Reveal screen="evolucao" i={4}><section className="card ev-card" aria-labelledby="ev-cons-title">
    <div className="ev-head"><Icon name="calendario" size={24} weight={1.9} /><h2 id="ev-cons-title">Constância de treinos</h2>{cons.pct === null ? null : <span className="ev-pill">{cons.pct}%</span>}</div>
    {cons.planned === 0 ? <ChartEmpty>Ainda não há atividades previstas no período.</ChartEmpty> : <>
     <Bars weeks={consWeeks} label={`Constância: ${cons.done} de ${cons.planned} atividades previstas feitas, ${cons.pct}%.`} />
     <p className="ev-legend"><span className="ev-key done" aria-hidden="true" />Feito <span className="ev-key" aria-hidden="true" />Previsto</p>
     <Table caption="Constância por semana" head={['Semana', 'Feitas', 'Previstas']} rows={consWeeks.map(w => [w.label, String(w.done), String(w.planned)])} />
    </>}
-  </section>
+  </section></Reveal>
 
  </>{form}{DISCLAIMER}
   {picked ? <Sheet title={picked.label} onClose={() => setOpenMeasure(null)}>

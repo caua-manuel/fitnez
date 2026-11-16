@@ -17,6 +17,8 @@ import { StatusBadge } from './Cartao';
 import { Menu } from '../../ui/Menu';
 import { ConfirmSheet } from '../../ui/Sheet';
 import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
+import { useStagger } from './stagger';
+import type { StaggerProps } from './stagger';
 import { GROUP_LABEL, dayBelongsTo, formatDay, formatKg, minutesLabel, plural, planWeek, repsText, sessionLetter, statusOf, todayIso } from './util';
 import './treino.css';
 
@@ -30,7 +32,7 @@ function performanceText(ex: Exercise, sets: SetEntry[]): string {
  return `${done.length} ${done.length === 1 ? 'série' : 'séries'}: ${parts.join(', ')}`;
 }
 
-function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first }: { state: StateV3; id: string; ex: Exercise; week: number; today: string; onHistory: () => void; treinoId: string; first: boolean }) {
+function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first, reveal }: { state: StateV3; id: string; ex: Exercise; week: number; today: string; onHistory: () => void; treinoId: string; first: boolean; reveal: StaggerProps }) {
  const [expanded, setExpanded] = useState(first);
  const [confirmRemove, setConfirmRemove] = useState(false);
  const { removeExercise } = usePlanEditor();
@@ -46,7 +48,7 @@ function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first }
   : weighted && sug.kg !== null ? `${formatKg(sug.kg)} kg · ${sug.reps}${sug.reason === 'manter' ? ' (manter a carga)' : ''}` : sug.reps;
  const todayDone = (days[today]?.log?.[id] ?? []).filter(r => r.done === true).length;
  const bodyId = `corpo-${id}`;
- return <li className={`tr-ex ${expanded ? 'is-open' : 'is-closed'}`}>
+ return <li className={`tr-ex ${expanded ? 'is-open' : 'is-closed'}${reveal.className ? ` ${reveal.className}` : ''}`} style={reveal.style}>
   <div className="tr-ex-top">
    <h3 className="tr-toggle-h"><button type="button" className="tr-toggle" aria-expanded={expanded} aria-controls={bodyId} onClick={() => setExpanded(e => !e)}>
     <span className="tr-thumb"><Thumb kind="exercise" id={id} group={group ?? undefined} size={56} label={ex.n} /></span>
@@ -57,8 +59,8 @@ function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first }
     </span>
    </button></h3>
    <Menu className="tr-more-ex" label={`Mais opções de ${ex.n}`} trigger={<Icon name="mais" size={22} weight={2} />} items={[
-    { label: "Editar exercício", href: hrefFor({ tab: "treino", view: "exercicio", id: treinoId, ex: id }) },
-    { label: "Ver histórico do treino", onClick: onHistory },
+    { label: "Editar exercício", icon: 'editar', href: hrefFor({ tab: "treino", view: "exercicio", id: treinoId, ex: id }) },
+    { label: "Ver histórico do treino", icon: 'historico', onClick: onHistory },
     { label: "Remover do treino", danger: true, onClick: () => setConfirmRemove(true) },
    ]} />
   </div>
@@ -82,6 +84,7 @@ export function Detalhe({ id }: { id: string }) {
  const { state } = useData();
  const [tab, setTab] = useState<Tab>('exercicios');
  const [fresh, setFresh] = useState(() => { try { return sessionStorage.getItem(NEW_KEY) === id; } catch { return false; } });
+ const rv = useStagger('treino-detalhe');
  if (!state) return null;
  const plan = state.catalog.plan, s = plan.sess[id];
  const back = <a className="tr-back" href={hrefFor({ tab: 'treino', view: 'lista' })}>← Voltar aos treinos</a>;
@@ -95,7 +98,7 @@ export function Detalhe({ id }: { id: string }) {
  const resuming = getWorkout(todayRec, id)?.status === 'partial';
  const planPct = phase.kind === 'week' ? Math.round(phase.progress * 100) : 0;
  const logged = Object.keys(state.history.days).filter(d => dayBelongsTo(plan, state.history.days[d], id)).sort().reverse();
- return <div className="tr-detail">
+ return <div className="tr-detail tone-treino">
   <a className="icon-button tr-backbtn" href={hrefFor({ tab: 'treino', view: 'lista' })} aria-label="Voltar aos treinos"><Icon name="voltar" size={24} /></a>
   <div className="tr-hero">
    <div className="tr-hero-text">
@@ -104,7 +107,7 @@ export function Detalhe({ id }: { id: string }) {
     <p className="in-meta tr-hero-meta"><span><Icon name="relogio" size={20} />{dur ?? 'Duração não definida'}</span><span><Glyph name="barras" size={20} />{plural(s.ex.length, 'exercício', 'exercícios')}</span></p>
    </div>
    {phase.kind === 'week' ? <div className="tr-ring-box">
-    <ProgressRing percent={phase.progress * 100} size={96} stroke={11} label={`Semana ${phase.week + 1} de 12: ${planPct}% do plano`} />
+    <ProgressRing animate percent={phase.progress * 100} size={96} stroke={11} label={`Semana ${phase.week + 1} de 12: ${planPct}% do plano`} />
     <p className="tr-ring-cap" aria-hidden="true">Semana {phase.week + 1} de 12<br />{planPct}% do plano</p>
    </div> : null}
   </div>
@@ -129,7 +132,7 @@ export function Detalhe({ id }: { id: string }) {
    {s.ex.map((exId, i) => {
     const ex = plan.ex[exId];
     if (!ex) return <li key={exId} className="tr-ex"><h3>Exercício removido</h3></li>;
-    return <ExerciseCard key={exId} state={state} id={exId} ex={ex} week={week} today={today} treinoId={id} first={i === 0} onHistory={() => setTab('historico')} />;
+    return <ExerciseCard key={exId} state={state} id={exId} ex={ex} week={week} today={today} treinoId={id} first={i === 0} reveal={rv(i)} onHistory={() => setTab('historico')} />;
    })}
   </ul>
   <a className="button secondary block tr-edit" href={hrefFor({ tab: 'treino', view: 'editar', id })}>Editar treino</a></> : tab === 'detalhes' ? <section className="card tr-panel">
@@ -137,7 +140,7 @@ export function Detalhe({ id }: { id: string }) {
    <dl className="facts">
     <div><dt>Duração</dt><dd>{dur ?? 'Não definida'}</dd></div>
     <div><dt>Exercícios</dt><dd>{s.ex.length}</dd></div>
-    <div><dt>Séries e repetições</dt><dd>Meta da Semana {week + 1} de 12{phase.kind === 'week' && phase.deload ? ' (semana leve)' : ''}</dd></div>
+    <div><dt>Séries e repetições</dt><dd>Meta da semana {week + 1} de 12{phase.kind === 'week' && phase.deload ? ' (semana leve)' : ''}</dd></div>
     {phase.kind === 'week' ? <div><dt>Repetições em reserva (RIR)</dt><dd>{phase.rir}</dd></div> : null}
    </dl>
   </section> : <div>
@@ -150,9 +153,9 @@ export function Detalhe({ id }: { id: string }) {
      const keys = Object.keys(rec.log ?? {}).filter(k => (rec.log?.[k] ?? []).some(r => r.done === true) && (!several || s.ex.includes(k)));
      return <li key={d} className="tr-ex">
       <div className="tr-hist-top"><h3>{formatDay(d)}</h3><StatusBadge status={status} /></div>
-      {wk ? <p className="muted num">{wk.sets} {wk.sets === 1 ? 'série' : 'séries'} · {formatKg(wk.volume)} kg de volume</p> : null}
+      {wk ? <p className="muted num">{wk.sets} {wk.sets === 1 ? 'série' : 'séries'} · {wk.volume.toLocaleString('pt-BR')} kg de volume</p> : null}
       <ul className="exercise-list">
-       {keys.map(k => <li key={k}><strong>{plan.ex[k]?.n ?? 'Exercício removido'}</strong><span>{(rec.log![k] ?? []).filter(r => r.done === true).length} séries feitas</span></li>)}
+       {keys.map(k => <li key={k}><strong>{plan.ex[k]?.n ?? 'Exercício removido'}</strong><span>{plural((rec.log![k] ?? []).filter(r => r.done === true).length, 'série feita', 'séries feitas')}</span></li>)}
       </ul>
      </li>;
     })}

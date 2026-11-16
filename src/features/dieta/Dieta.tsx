@@ -12,6 +12,9 @@ import { todayIso } from '../treino/util';
 import { Cup, CheckButton, DayNav, KcalRing, MealThumb } from './parts';
 import { DAY_TYPE_LABEL, MEALS, MEAL_NAME, dayLabel, fmt, nf1, optionNumber, weeklyAverages } from './dietData';
 import { useDietDay } from './useDietDay';
+import { CountUp } from '../../ui/motion';
+import { useStagger } from '../treino/stagger';
+import { MetaDieta } from './MetaDieta';
 import { Refeicao } from './Refeicao';
 import { GerenciarOpcoes } from './GerenciarOpcoes';
 import './dieta.css';
@@ -38,6 +41,7 @@ export function Dieta({ route }: { route: DietRoute }) {
 function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d: DayIso) => void }) {
  const { state, commit } = useData();
  const { dd, catalog, type, target, totals, prog, update, toggleEaten, snapshotMeal, restoreMeal } = useDietDay(day);
+ const rv = useStagger('dieta-resumo');
  const isToday = day === today;
  const link = (meal: MealKey) => hrefFor({ tab: 'dieta', meal, day: isToday ? undefined : day });
  const over = totals.kcal > target.kcal;
@@ -55,7 +59,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
   showToast('Revisão dispensada por esta semana', () => void commit(s => { delete s.settings.dietReviewDismissed; return s; }));
  };
 
- return <div className="dt">
+ return <div className="dt tone-dieta">
   <DayNav day={day} today={today} onChange={setDay} />
 
   <section className="card dt-summary" aria-label="Resumo do dia">
@@ -64,7 +68,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
     {MACROS.map(({ key, label, t }) => {
      const value = totals[key], goal = target[t], pct = goal > 0 ? value / goal : 0;
      return <div className="dt-macro" key={key}>
-      <div className="dt-macro-top"><span className="dt-macro-name">{label}</span><span className="dt-macro-val">{fmt(value)} g / {fmt(goal)} g</span></div>
+      <div className="dt-macro-top"><span className="dt-macro-name">{label}</span><span className="dt-macro-val">{fmt(value)} g de {fmt(goal)} g</span></div>
       <div className="dt-macro-bar"><div className="bar" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.round(pct * 100))}><span style={{ width: `${Math.min(100, pct * 100)}%` }} /></div><span className="dt-pct">{Math.round(pct * 100)}%</span></div>
      </div>;
     })}
@@ -72,10 +76,12 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
   </section>
 
   <div className="dt-stats">
-   <div className="dt-stat"><Icon name="fogo" size={22} weight={1.6} /><div><strong>{fmt(target.kcal)} kcal</strong><span>Meta diária</span></div></div>
-   <div className="dt-stat"><Icon name="garfo" size={22} weight={1.6} /><div><strong>{fmt(totals.kcal)} kcal</strong><span>Consumidas</span></div></div>
-   <div className={`dt-stat${over ? ' warn' : ''}`}><Icon name="alvo" size={22} weight={1.6} /><div><strong>{over ? '+' : ''}{fmt(over ? totals.kcal - target.kcal : prog.remaining)} kcal</strong><span>{over ? 'Acima da meta' : 'Restantes'}</span></div></div>
+   <div className="dt-stat"><Icon name="fogo" size={22} weight={1.6} /><div><strong><CountUp value={Math.round(target.kcal)} suffix=" kcal" duration={350} /></strong><span>Meta diária</span></div></div>
+   <div className="dt-stat"><Icon name="garfo" size={22} weight={1.6} /><div><strong><CountUp value={Math.round(totals.kcal)} suffix=" kcal" duration={350} /></strong><span>Consumidas</span></div></div>
+   <div className={`dt-stat${over ? ' warn' : ''}`}><Icon name="alvo" size={22} weight={1.6} /><div><strong><CountUp value={Math.round(over ? totals.kcal - target.kcal : prog.remaining)} prefix={over ? '+' : ''} suffix=" kcal" duration={350} /></strong><span>{over ? 'Acima da meta' : 'Restantes'}</span></div></div>
   </div>
+
+  <MetaDieta />
 
   <div className="section-title"><h2>{isToday ? 'Refeições de hoje' : `Refeições de ${dayLabel(day, today).toLowerCase()}`}</h2><span className="dt-count">{totals.eatenCount} de 5</span></div>
   <ul className="list dt-meals" aria-label="Refeições">
@@ -84,7 +90,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
     const opt = eaten ? (dd.consumed?.[m] ?? catalog[m].find(o => o.key === dd.pick[m])) : catalog[m].find(o => o.key === dd.pick[m]);
     const picked = Boolean(dd.pick[m]);
     const kcal = opt ? opt.kcal : null;
-    return <li key={m} className={`dt-meal${eaten ? ' done' : ''}`}>
+    return <li key={m} {...rv(MEALS.indexOf(m), `dt-meal${eaten ? ' done' : ''}`)}>
      <a className="dt-meal-link" href={link(m)}>
       <MealThumb meal={m} size={56} />
       <span className="dt-meal-text">
@@ -109,7 +115,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
   {nextMeal ? <a className="button block dt-cta" href={link(nextMeal)}><Icon name="plus" size={20} weight={2} />Registrar {nextMeal === 'cafe' ? 'o café da manhã' : nextMeal === 'almoco' ? 'o almoço' : nextMeal === 'jantar' ? 'o jantar' : nextMeal === 'lanche' ? 'o lanche' : 'o pós-treino'}</a> : null}
 
   <section className="card dt-adjust" aria-labelledby="dt-adjust-h">
-   <div className="dt-adjust-head"><h2 id="dt-adjust-h">Ajustes de hoje</h2><span className="badge done">{DAY_TYPE_LABEL[type]}</span></div>
+   <div className="dt-adjust-head"><h2 id="dt-adjust-h">{isToday ? 'Ajustes de hoje' : 'Ajustes do dia'}</h2><span className="badge done">{DAY_TYPE_LABEL[type]}</span></div>
    <p className="dt-focus">{target.focus}</p>
    {target.adjustments.length ? <ul className="dt-adj-list">{target.adjustments.map(a => <li key={a}>{a}</li>)}</ul> : <p className="muted dt-adj-none">Nenhum ajuste: siga o cardápio base.</p>}
    {notes.length ? <ul className="dt-adj-list dt-adj-notes">{notes.map(n => <li key={n.m}><strong>{MEAL_NAME[n.m]}:</strong> {n.note}</li>)}</ul> : null}
@@ -127,7 +133,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
   </section>
 
   <div className="list-row dt-crea">
-   <div className="grow"><strong>Creatina</strong><small>{dd.crea ? 'Tomada hoje' : 'Ainda não tomada'}</small></div>
+   <div className="grow"><strong>Creatina</strong><small>{dd.crea ? (isToday ? 'Tomada hoje' : 'Tomada neste dia') : 'Ainda não tomada'}</small></div>
    <CheckButton on={dd.crea} label="Creatina tomada" onClick={() => { const was = dd.crea; update(d => ({ ...d, crea: !was })); showToast(was ? 'Creatina desmarcada' : 'Creatina marcada como tomada', () => update(d => ({ ...d, crea: was }))); }} />
   </div>
 

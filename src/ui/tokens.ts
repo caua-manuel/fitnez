@@ -1,7 +1,8 @@
 export type TokenName =
   | 'background' | 'foreground' | 'card' | 'secondary' | 'mutedForeground' | 'border' | 'input'
   | 'primary' | 'primaryForeground' | 'accentSoft' | 'ring' | 'success' | 'successSoft'
-  | 'warning' | 'warningSoft' | 'destructive' | 'destructiveSoft';
+  | 'warning' | 'warningSoft' | 'destructive' | 'destructiveSoft'
+  | 'accentTreino' | 'accentDieta' | 'accentEvolucao' | 'accentBrasa';
 
 export const palette: Record<'light' | 'dark', Record<TokenName, string>> = {
   light: {
@@ -9,14 +10,14 @@ export const palette: Record<'light' | 'dark', Record<TokenName, string>> = {
     mutedForeground: '#5E5E66', border: '#E6E6E8', input: '#767680', primary: '#0A58F0',
     primaryForeground: '#FFFFFF', accentSoft: '#EFEFF1', ring: '#0A58F0', success: '#0F6B45',
     successSoft: '#DDF3E8', warning: '#8A5100', warningSoft: '#FFEECB', destructive: '#B3202F',
-    destructiveSoft: '#FDE4E7',
+    destructiveSoft: '#FDE4E7', accentTreino: '#0A58F0', accentDieta: '#16A34A', accentEvolucao: '#7C3AED', accentBrasa: '#D97706',
   },
   dark: {
     background: '#121214', foreground: '#F2F2F3', card: '#19191C', secondary: '#202024',
     mutedForeground: '#A1A1AA', border: '#2C2C31', input: '#7A7A83', primary: '#6C9BFF',
     primaryForeground: '#0B0B0C', accentSoft: '#26262B', ring: '#8DB0FF', success: '#4CC38A',
     successSoft: '#12352A', warning: '#F2B94B', warningSoft: '#3A2D0E', destructive: '#FF7C8B',
-    destructiveSoft: '#3D1B24',
+    destructiveSoft: '#3D1B24', accentTreino: '#6C9BFF', accentDieta: '#4ADE80', accentEvolucao: '#A78BFA', accentBrasa: '#FBBF24',
   },
 };
 

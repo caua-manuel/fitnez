@@ -14,6 +14,7 @@ import { EditarExercicio } from './EditarExercicio';
 import { NovoTreino } from './NovoTreino';
 import { Icon } from '../../ui/icons';
 import { WEEKDAYS, minutesLabel, plural, shortDay, statusOf, todayIso, weekDays } from './util';
+import { useStagger } from './stagger';
 import './treino.css';
 
 const AVISO_SAUDE = 'Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.';
@@ -22,6 +23,7 @@ let lastTab: Tab = 'plano';
 
 function MeuPlano() {
  const { state } = useData();
+ const rv = useStagger('treino-plano');
  if (!state) return null;
  const today = todayIso(), plan = state.catalog.plan;
  const phase = phaseOf(state.settings.start, today);
@@ -29,7 +31,7 @@ function MeuPlano() {
  const days = weekDays(state, week);
  return <div>
   <div className="section-title tr-section">
-   <h3>Plano (12 semanas)</h3>
+   <h3>Plano de 12 semanas</h3>
    <p className="muted tr-section-sub">{phase.kind === 'pre' ? `Seu plano começa em ${plural(phase.daysUntil, 'dia', 'dias')}` : phase.kind === 'done' ? 'Plano concluído' : weekLabel(week)}</p>
   </div>
   <ul className="tr-stack" aria-label="Rotina da semana">
@@ -41,12 +43,12 @@ function MeuPlano() {
     if (act.kind === 'gym') {
      const s = plan.sess[act.sessionId];
      const status = phase.kind === 'week' ? statusOf(rec, act.sessionId) : 'pending';
-     if (!s) return <li key={day}><CartaoTreino name="Treino removido" date={date} /></li>;
-     return <li key={day}><CartaoTreino id={act.sessionId} name={s.name} href={hrefFor({ tab: 'treino', view: 'detalhe', id: act.sessionId })} date={date} exercises={plural(s.ex.length, 'exercício', 'exercícios')} minutes={minutesLabel(s.min)} status={phase.kind === 'week' ? status : null} /></li>;
+     if (!s) return <li key={day} {...rv(i)}><CartaoTreino name="Treino removido" date={date} /></li>;
+     return <li key={day} {...rv(i)}><CartaoTreino id={act.sessionId} name={s.name} href={hrefFor({ tab: 'treino', view: 'detalhe', id: act.sessionId })} date={date} exercises={plural(s.ex.length, 'exercício', 'exercícios')} minutes={minutesLabel(s.min)} status={phase.kind === 'week' ? status : null} /></li>;
     }
     const label = act.kind === 'bjj' ? 'Jiu-jitsu' : act.kind === 'volei' ? 'Vôlei' : 'Descanso';
     const icon = act.kind === 'bjj' ? 'alvo' : act.kind === 'volei' ? 'fogo' : 'lua';
-    return <li key={day}><CartaoTreino name={label} icon={icon} date={date} menu={false} /></li>;
+    return <li key={day} {...rv(i)}><CartaoTreino name={label} icon={icon} date={date} menu={false} quiet /></li>;
    })}
   </ul>
  </div>;
@@ -62,7 +64,7 @@ export function Treino({ route }: { route: Extract<Route, { tab: 'treino' }> }) 
   : route.view === 'editar' && id ? <EditarTreino key={id} id={id} />
   : route.view === 'exercicio' && id ? <EditarExercicio key={`${id}|${route.ex ?? ''}`} id={id} ex={route.ex} />
   : route.view === 'novo' ? <NovoTreino />
-  : <div className="tr-page">
+  : <div className="tr-page tone-treino">
    <div className="tr-title tr-title-row">
     <div className="tr-title-text">
      <h2>Meus treinos</h2>

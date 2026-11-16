@@ -14,6 +14,8 @@ import { Icon } from '../../ui/icons';
 import { Thumb } from '../../ui/Thumb';
 import { Glyph } from './glyphs';
 import { ConfirmSheet } from '../../ui/Sheet';
+import { CheckDraw } from '../../ui/motion';
+import { useJustTurnedOn } from './stagger';
 import { GROUP_LABEL, firstIncomplete, formatDay, formatKg, planWeek, readCursor, todayIso, writeCursor } from './util';
 import './treino.css';
 
@@ -63,6 +65,12 @@ function initialRows(state: StateV3, id: string, day: string, week: number): Rec
   else out[exId] = Array.from({ length: setsForWeek(ex, week).sets }, () => ({ kg: '', reps: '', done: false }));
  }
  return out;
+}
+
+/** Caixa de marcar da série: a marca se desenha só quando a série é concluída agora (não ao abrir a tela nem ao trocar de exercício). */
+function SetCheck({ done }: { done: boolean }) {
+ const fresh = useJustTurnedOn(done);
+ return <span className="ex-check-box" aria-hidden="true">{done ? <CheckDraw play={fresh} size={18} /> : null}</span>;
 }
 
 function RestPanel({ rest, name, now, ended, onAdjust, onClose }: { rest: Rest; name: string; now: number; ended: boolean; onAdjust: (d: number) => void; onClose: () => void }) {
@@ -274,11 +282,11 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
  const plannedNow = setsForWeek(ex, week);
  const restName = rest ? plan.ex[rest.exId]?.n ?? '' : '';
 
- return <div className="ex-wrap">
+ return <div className="ex-wrap tone-treino">
   <div className="ex-top">
    {backIcon}
    <span className="ex-elapsed num"><span className="visually-hidden">Tempo de treino </span>{elapsed((pausedAt ?? now) - startedRef.current - pausedMs)}</span>
-   <button type="button" className="ex-pause" aria-label="Cronômetro do treino em pausa" aria-pressed={pausedAt !== null} onClick={togglePause}>
+   <button type="button" className="ex-pause" aria-label="Pausar cronômetro do treino" aria-pressed={pausedAt !== null} onClick={togglePause}>
     {pausedAt === null ? <Glyph name="pausa" size={22} /> : <Icon name="play" size={20} />}
    </button>
   </div>
@@ -308,7 +316,7 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
     <input className="ex-input num" inputMode="decimal" enterKeyHint="next" autoComplete="off" aria-label={`${repsLabel(ex)}, série ${i + 1}`} value={s.reps} aria-invalid={problem !== '' && !s.done && s.reps === ''} data-suggested={copied?.exId === exId && copied.i === i && s.reps !== '' ? 'true' : undefined} onChange={e => setField(i, 'reps', e.target.value)} />
     {hasKgField(ex) ? <input className="ex-input num" inputMode="decimal" enterKeyHint="done" autoComplete="off" aria-label={`${kgLabel(ex)}, série ${i + 1}`} value={s.kg} data-suggested={copied?.exId === exId && copied.i === i && s.kg !== '' ? 'true' : undefined} onChange={e => setField(i, 'kg', e.target.value)} /> : null}
     <button type="button" className={`ex-check${s.done ? ' on' : ''}`} aria-label={`Série ${i + 1} concluída`} aria-pressed={s.done} onClick={() => toggle(i)}>
-     <span className="ex-check-box" aria-hidden="true"><Icon name="marca" size={20} weight={3} /></span>
+     <SetCheck key={exId} done={s.done} />
     </button>
    </div>)}
    {problem ? <p className="ex-problem" role="alert">{problem}</p> : null}
@@ -329,9 +337,9 @@ export function Executar({ id, day: dayParam }: { id: string; day?: string }) {
     </div>
    </section> : null}
    <button type="button" className="button block ex-finish" disabled={doneSets === 0 || busy} aria-describedby={doneSets === 0 ? 'ex-hint' : undefined} onClick={tryFinish}>Concluir treino</button>
-   {doneSets === 0 ? <p id="ex-hint" className="visually-hidden">Conclua ao menos uma série para finalizar.</p> : null}
+   {doneSets === 0 ? <p id="ex-hint" className="visually-hidden">Conclua ao menos uma série para concluir o treino.</p> : null}
   </div>
-  {askFinish ? <ConfirmSheet title="Concluir o treino?" destructive={false} confirmLabel="Concluir" cancelLabel="Continuar treinando" onCancel={() => setAskFinish(false)} onConfirm={() => { void finish(); }}>
+  {askFinish ? <ConfirmSheet title="Concluir o treino?" destructive={false} icon="marca" confirmLabel="Concluir" cancelLabel="Continuar treinando" onCancel={() => setAskFinish(false)} onConfirm={() => { void finish(); }}>
    <p>Você registrou {touched} de {exIds.length} exercícios. Concluir mesmo assim?</p>
   </ConfirmSheet> : null}
  </div>;

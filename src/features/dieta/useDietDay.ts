@@ -1,7 +1,8 @@
 import { useData } from '../../app/DataProvider';
 import type { StateV3 } from '../../application/repository';
 import type { DayIso } from '../../domain/calendar';
-import { dayTotals, dayTargetForProfile, progress, markEaten, unmarkEaten } from '../../domain/diet';
+import { dayTotals, progress, markEaten, unmarkEaten } from '../../domain/diet';
+import { dayTargetFor } from '../../domain/dietTargets';
 import type { DietDay, DietOption, MealKey } from '../../domain/diet';
 import { catalogOf, dayTypeFor, readDay } from './dietData';
 
@@ -14,7 +15,7 @@ export function useDietDay(day: DayIso) {
  const catalog = catalogOf(s);
  const dd = readDay(s.history.days[day]?.diet);
  const type = dayTypeFor(s, day);
- const target = dayTargetForProfile(type, (s.settings as { profile?: { weightKg?: number } }).profile);
+ const target = dayTargetFor(type, day, s.settings);
  const totals = dayTotals(dd, catalog);
  const prog = progress(totals, target);
 

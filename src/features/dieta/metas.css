@@ -1,0 +1,55 @@
+/* Metas de dieta: selo discreto na Dieta e folha "Metas de dieta". Só tokens do sistema; sem fundos coloridos. */
+
+/* Selo e ações na Dieta */
+.dt-meta{margin:12px 0 0;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-control,12px);background:var(--card);display:grid;gap:4px}
+.dt-meta-head{display:flex;align-items:center;gap:8px;min-width:0}
+.dt-meta-selo{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 10px;border:1px solid var(--field-border);border-radius:999px;font-size:.8125rem;font-weight:600;color:var(--foreground);white-space:nowrap}
+.dt-meta-selo svg{color:var(--muted-foreground);flex:none}
+.dt-meta .dt-meta-nota{margin:0;font-size:.8125rem;line-height:1.4;color:var(--muted-foreground)}
+.dt-meta-acoes{display:flex;flex-wrap:wrap;gap:4px 8px;margin:2px -8px -6px}
+.dt-meta-link{display:inline-flex;align-items:center;min-height:44px;padding:0 8px;border:0;background:transparent;color:var(--primary);font-size:.9375rem;font-weight:600;text-decoration:underline;text-underline-offset:3px;border-radius:10px}
+.dt-meta-link:disabled{color:var(--muted-foreground);text-decoration:none}
+.dt-meta-solo{display:flex;justify-content:flex-end;margin:4px 0 -4px}
+.dt-meta-solo .dt-meta-link{margin-right:-8px}
+
+/* Folha */
+.sheet.mt-sheet{max-height:min(92dvh,48rem);padding-bottom:0}
+.mt-form{display:grid;gap:20px;min-width:0}
+.mt-form p{margin:0}
+.mt-intro{color:var(--muted-foreground);font-size:.9375rem;line-height:1.45}
+.mt-saude{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border);border-radius:12px;font-size:.8125rem;line-height:1.5;color:var(--muted-foreground)}
+.mt-saude svg{flex:none;margin-top:1px;color:var(--muted-foreground)}
+.mt-resumo{display:flex;align-items:center;gap:8px;color:var(--destructive);font-weight:600;font-size:.9375rem}
+.mt-sec{display:grid;gap:12px;min-width:0}
+.mt-sec h3{margin:0;font-size:1.0625rem;font-weight:700}
+.mt-head{display:grid;gap:2px}
+.mt-sub{font-size:.875rem;font-weight:500;color:var(--muted-foreground)}
+.mt-help{font-size:.8125rem;line-height:1.4;color:var(--muted-foreground)}
+.mt-day{padding:12px 0 0;border-top:1px solid var(--border);display:grid;gap:8px;min-width:0}
+.mt-day .mt-day-titulo{font-size:1rem;font-weight:700}
+.mt-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.mt-field{min-width:0}
+.mt-field label{display:block;margin:0 0 6px;font-size:.875rem;font-weight:500}
+.mt-field input{text-align:left;font-size:1rem;font-weight:500;background:var(--secondary)}
+.mt-field.bad input{border:2px solid var(--destructive)}
+.mt-error{display:flex;align-items:flex-start;gap:6px;margin:6px 0 0;font-size:.875rem;font-weight:600;line-height:1.35;color:var(--destructive)}
+.mt-error svg{flex:none;margin-top:1px}
+.mt-field .mt-help{margin-top:6px}
+.mt-soma{font-size:.8125rem;line-height:1.4;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.mt-calc{justify-self:start;min-height:44px;padding:0 8px;margin-left:-8px;border:0;background:transparent;color:var(--primary);font-size:.9375rem;font-weight:600;text-decoration:underline;text-underline-offset:3px;border-radius:10px}
+.mt-note{font-size:.8125rem;color:var(--muted-foreground);min-height:0}
+.mt-note:empty{display:none}
+.mt-msgs{display:grid;gap:6px}
+.mt-warn{display:flex;align-items:flex-start;gap:8px;font-size:.875rem;line-height:1.4;color:var(--foreground)}
+.mt-warn svg{flex:none;margin-top:1px;color:var(--warning)}
+.mt-switch-row{display:flex;align-items:center;gap:12px;min-height:48px}
+.mt-switch-row .grow{min-width:0}
+.mt-switch-row strong{font-size:1rem}
+.mt-restore{justify-self:start;min-height:44px;padding:0 8px;margin-left:-8px;border:0;background:transparent;color:var(--foreground);font-size:.9375rem;font-weight:600;text-decoration:underline;text-underline-offset:3px;border-radius:10px}
+.mt-restore:disabled{color:var(--muted-foreground);text-decoration:none}
+
+/* Barra de ações fixa no fim da folha */
+.mt-actions{position:sticky;bottom:0;margin:0 -16px;padding:12px 16px calc(16px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--border);display:grid;gap:8px;z-index:1}
+.mt-actions-row{display:grid;grid-template-columns:1fr 1.4fr;gap:12px}
+.mt-actions .button{width:100%}
+.mt-falha{margin:0}

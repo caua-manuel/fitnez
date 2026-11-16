@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRovingList } from './Menu';
+import { Icon } from './icons';
 
 export interface SelectOption<T extends string | number> { value: T; label: string }
 
@@ -29,7 +30,7 @@ export function Select<T extends string | number>({ label, value, options, onCha
    {options.map(o => <div key={o.value} role="option" tabIndex={-1} aria-selected={o.value === value}
     onClick={() => { onChange(o.value); close(true); }}
     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChange(o.value); close(true); } }}>
-    <span>{o.label}</span>{o.value === value ? <span aria-hidden="true">✓</span> : null}
+    <span>{o.label}</span>{o.value === value ? <Icon name="marca" size={18} look="bold" /> : null}
    </div>)}
   </div> : null}
  </div>;

@@ -3,4 +3,6 @@
 .pr-ring .ring-svg-track{stroke:var(--secondary)}
 .pr-ring .ring-svg-fill{stroke:var(--primary);stroke-linecap:round;transition:stroke-dashoffset 300ms ease-out}
 .pr-value{position:relative;font-size:1.75rem;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--foreground)}
-@media(prefers-reduced-motion:reduce){.pr-ring .ring-svg-fill{transition:none}}
+.pr-anim .ring-svg-fill{animation:pr-fill-in 350ms cubic-bezier(.2,.8,.2,1) backwards}
+@keyframes pr-fill-in{from{stroke-dashoffset:var(--pr-c)}}
+@media(prefers-reduced-motion:reduce){.pr-ring .ring-svg-fill{transition:none;animation:none}}

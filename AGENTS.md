@@ -2,7 +2,7 @@
 
 ## Como a IA deve trabalhar
 
-- Stack aprovada: React + TypeScript + Vite, com CSS próprio. Execute somente a Fase 1; fases seguintes exigem aval do usuário.
+- Stack aprovada: React + TypeScript + Vite, com CSS próprio. A Fase 1 e a reconstrução do app (Início, Treino, Dieta, Evolução e Perfil) estão concluídas; novas fases exigem aval do usuário.
 - Arquitetura, front-end, dados, testes, segurança e deploy são feitos pelos subagentes personalizados em .codex/agents/. O agente principal orquestra, revisa e integra; não escreve diretamente código desses domínios.
 - Acione explicitamente o agente certo e aguarde sua entrega: arquiteto, frontend, backend_dados, ux_acessibilidade, qa_testes, seguranca_privacidade, devops_github e conteudo_treino_nutricao.
 - Paralelismo somente para leitura, análise, revisão e testes. Para escrita, um agente por pasta ou arquivo por vez. Cada agente deixa resumo curto em docs/handoffs/.

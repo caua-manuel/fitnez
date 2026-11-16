@@ -39,7 +39,8 @@ describe('thirdClassEligibility', () => {
   const r = run(dayOf(5, 2), build([2, 3, 4], w => ({ feel: w === 3 ? 5 : 3 })), { 2: true, 3: true, 4: true });
   expect(key(r, 'aulas').ok).toBe(false);
   expect(r.status).toBe('ainda-nao');
-  expect(r.summary).toMatch(/^Ainda não: falta/);
+  expect(r.summary).toMatch(/^Ainda não: faltam? /);
+  expect(r.summary).toMatch(r.summary.includes(',') ? /^Ainda não: faltam / : /^Ainda não: falta /);
  });
  it('semana com só 1 aula reprova', () => {
   const r = run(dayOf(5, 2), build([2, 3, 4], w => ({ bjj: w === 2 ? 1 : 2 })), { 2: true, 3: true, 4: true });

@@ -72,7 +72,7 @@ test('Editor: editar o descanso de um exercício existente e a execução usa o 
  await page.getByLabel('Descanso entre séries (segundos)').fill('45');
  await page.getByRole('button', { name: 'Salvar', exact: true }).click();
  await expect(page).toHaveURL(/#treino\/UA\/editar$/);
- await expect(page.getByRole('status').filter({ hasText: 'Exercício salvo.' })).toBeVisible();
+ await expect(page.getByRole('status').filter({ hasText: 'Exercício salvo' })).toBeVisible();
  await page.goto('#treino/UA/executar?dia=' + today());
  await page.getByLabel('Carga (kg), série 1').fill('30'); await page.getByLabel('Repetições, série 1').fill('8');
  await page.getByRole('button', { name: 'Série 1 concluída' }).click();
@@ -103,7 +103,7 @@ test('Editor: excluir treino com confirmação e Desfazer devolve o treino', asy
  await expect(page).toHaveURL(/#treino$/);
  await page.getByRole('button', { name: 'Biblioteca' }).click();
  await expect(page.getByRole('heading', { name: 'Treino de teste' })).toHaveCount(0);
- await expect(page.getByRole('status').filter({ hasText: 'Treino excluído.' })).toBeVisible();
+ await expect(page.getByRole('status').filter({ hasText: 'Treino excluído' })).toBeVisible();
  await page.getByRole('button', { name: 'Desfazer' }).click();
  await expect(page.getByRole('heading', { name: 'Treino de teste' })).toBeVisible();
  expect(Object.values((await stored(page)).catalog.plan.sess).map((s: any) => s.name)).toContain('Treino de teste');
@@ -205,5 +205,5 @@ test('Editor: salvar dados do treino confirma "Treino salvo."', async ({ page })
  await page.getByLabel('Nome do treino').fill('Upper A renomeado');
  await page.getByRole('button', { name: 'Salvar dados do treino' }).click();
  await expect(page.getByText('✓ Treino salvo.')).toBeVisible();
- await expect(page.getByRole('status').filter({ hasText: /^Treino salvo.$/ })).toBeVisible();
+ await expect(page.getByRole('status').filter({ hasText: /^Treino salvo$/ })).toBeVisible();
 });

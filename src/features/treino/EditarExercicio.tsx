@@ -39,11 +39,11 @@ export function EditarExercicio({ id, ex }: { id: string; ex?: string }) {
    return addExerciseToSession(saved.plan, id, saved.id);
   });
   setSaving(false);
-  if (ok) { showToast(ex ? 'Exercício salvo.' : 'Exercício adicionado ao treino.'); window.location.hash = back; }
+  if (ok) { showToast(ex ? 'Exercício salvo' : 'Exercício adicionado ao treino'); window.location.hash = back; }
  };
 
  return <form className="ed-page" onSubmit={submit} noValidate>
-  <Topo title={ex ? 'Editar exercício' : 'Novo exercício'} back={back} backLabel="Voltar a Editar treino" />
+  <Topo title={ex ? 'Editar exercício' : 'Novo exercício'} back={back} backLabel="Voltar para Editar treino" />
   <p className="ed-note">{ex ? VALE_DEPOIS : 'O exercício entra no fim do treino. Treinos que você já fez não mudam.'}</p>
   {others.length ? <p className="ed-note">Este exercício também está em {others.length === 1 ? 'outro treino' : `outros ${others.length} treinos`}: {others.map(o => plan.sess[o]?.name).filter(Boolean).join(', ')}. A mudança vale para todos.</p> : null}
   <CamposExercicio draft={draft} onChange={setDraft} errors={errors} />

@@ -13,6 +13,7 @@ export interface ThumbProps { kind: ThumbKind; id?: string; group?: string; size
 
 const MEAL_ICON: Record<string, IconName> = { cafe: 'dieta', almoco: 'garfo', lanche: 'dieta', pos: 'shake', jantar: 'garfo' };
 const EXERCISE_ICON: Record<string, IconName> = { cardio: 'fogo', core: 'alvo', abdomen: 'alvo', abdominais: 'alvo' };
+/** Acento por seção só no ícone (nunca no fundo): refeição = dieta; exercício = treino; */
 const EXTENSIONS = ['jpg', 'webp'] as const;
 
 /** Ids de refeição têm o formato '<refeição>-<opção>' (ex.: almoco-a). */
@@ -43,7 +44,7 @@ export function Thumb({ kind, id, group, size, className, label }: ThumbProps) {
   const hero = kind === 'hero';
   const box = size ? { width: size, height: hero ? size * 0.75 : size } : undefined;
   const option = kind === 'meal' ? splitMealId(id).option : '';
-  const tone = /^[a-c]$/.test(option) ? ` thumb-opt-${option}` : '';
+  const tone = (/^[a-c]$/.test(option) ? ` thumb-opt-${option}` : '') + (kind === 'meal' ? ' tone-dieta' : kind === 'exercise' ? ' tone-treino' : '');
   const cls = `thumb thumb-${kind}${className ? ` ${className}` : ''}`;
   if (id && attempt < EXTENSIONS.length) {
     return <span className={cls} style={box}><img src={`${base}img/${kind}/${id}.${EXTENSIONS[attempt]}`} alt={label ?? ''} loading="lazy" decoding="async" onError={() => setAttempt(attempt + 1)} /></span>;
