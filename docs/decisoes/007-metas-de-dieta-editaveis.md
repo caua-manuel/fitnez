@@ -30,6 +30,7 @@ O app será publicado para qualquer pessoa usar. Hoje as metas diárias são fix
 - Quem já usa o app também vê "Meta de exemplo" até confirmar; é inofensivo.
 - A proteína automática dos dias passados continua usando o peso atual (comportamento de hoje).
 - A revisão semanal continua só sugerindo; aplicar a sugestão à meta fica para depois.
+- Decisão de interface: a folha mostra um aviso de saúde compacto ("estimativas e valores de exemplo; o app não substitui nutricionista ou médico; converse com um profissional") e deixa o texto completo da seção 3.1 atrás de "Saiba mais".
 - `docs/ESPECIFICACAO.md` (seção 4) deve ganhar uma nota de que as metas são valores de exemplo editáveis.
 
 ## Decisões que o dono ainda precisa tomar

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { Script } from 'node:vm';
 import { resolveBasePath } from './base-path.ts';
+import { verificarRecursoRemoto, verificarSegurancaHtml } from './csp-check.ts';
 
 const base = resolveBasePath(process.env);
 const worker = await readFile('dist/sw.js', 'utf8');
@@ -44,7 +45,11 @@ for (const field of ['id', 'start_url', 'scope']) assert.equal(manifest[field], 
 for (const icon of manifest.icons) assert.ok(urls.includes(icon.src), `Ícone sem precache: ${icon.src}`);
 const html = await readFile('dist/index.html', 'utf8');
 assert.ok(html.includes(`href="${base}manifest.webmanifest"`));
-assert.ok(html.includes('Content-Security-Policy'));
+const falhas = verificarSegurancaHtml(html);
+for (const file of artifact.filter(file => /\.(?:css|webmanifest)$/.test(file))) {
+  falhas.push(...verificarRecursoRemoto(file, await readFile(join('dist', file), 'utf8')));
+}
+assert.equal(falhas.length, 0, `Verificação de segurança do build falhou:\n- ${falhas.join('\n- ')}`);
 assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i);
 // Orçamento de tamanho (gzip, soma dos arquivos de assets/). O limite de CSS foi pedido em 12 KB, mas o CSS já estava em ~19,5 KB antes do movimento; 24 KB é o teto atual, a reduzir quando o CSS legado for enxugado.
 const LIMITE_JS_KB = 190;

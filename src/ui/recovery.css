@@ -1,0 +1,23 @@
+/* Tela de recuperação de erro: independente de styles.css (tokens próprios, claro e escuro). */
+.rec{--rb:#fff;--rf:#111113;--rm:#5E5E66;--rl:#767680;--rh:#E6E6E8;--ra:#111113;--rt:#fff;--rd:#B3261E;--rr:#8B1A12;
+ position:fixed;inset:0;overflow:auto;background:var(--rb);color:var(--rf);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;justify-content:center;align-items:flex-start;padding:max(32px,env(safe-area-inset-top)) 20px max(32px,env(safe-area-inset-bottom))}
+@media(prefers-color-scheme:dark){.rec{--rb:#0B0B0C;--rf:#F2F2F3;--rm:#A1A1AA;--rl:#7A7A83;--rh:#2C2C31;--ra:#F2F2F3;--rt:#0B0B0C;--rd:#FF7C8B;--rr:#FF7C8B}}
+html[data-theme="light"] .rec{--rb:#fff;--rf:#111113;--rm:#5E5E66;--rl:#767680;--rh:#E6E6E8;--ra:#111113;--rt:#fff;--rd:#B3261E;--rr:#8B1A12}
+html[data-theme="dark"] .rec{--rb:#0B0B0C;--rf:#F2F2F3;--rm:#A1A1AA;--rl:#7A7A83;--rh:#2C2C31;--ra:#F2F2F3;--rt:#0B0B0C;--rd:#FF7C8B;--rr:#FF7C8B}
+.rec-in{width:100%;max-width:440px;margin-top:8vh}
+.rec h1{font-size:1.5rem;line-height:1.25;font-weight:650;margin:0 0 12px;letter-spacing:-.01em}
+.rec h1:focus{outline:none}
+.rec p{margin:0 0 12px;color:var(--rm)}
+.rec p.rec-lead{color:var(--rf)}
+.rec-acts{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.rec button{min-height:48px;padding:0 18px;border-radius:12px;font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--rl);background:transparent;color:var(--rf)}
+.rec button.rec-main{background:var(--ra);color:var(--rt);border-color:var(--ra)}
+.rec button.rec-danger{color:var(--rd);border-color:var(--rd)}
+.rec button:focus-visible{outline:3px solid var(--rf);outline-offset:2px}
+.rec button:disabled{opacity:.6;cursor:default}
+.rec-sep{border:0;border-top:1px solid var(--rh);margin:20px 0 0}
+.rec-conf{margin-top:20px;padding-top:20px;border-top:1px solid var(--rh)}
+.rec-conf strong{color:var(--rr)}
+.rec [role=status],.rec [role=alert]{color:var(--rf)}
+.rec [role=alert]{color:var(--rr)}
+@media(prefers-reduced-motion:no-preference){.rec button{transition:opacity .15s}}

@@ -52,4 +52,21 @@ describe('commit com atualização otimista', () => {
   const { r } = setup(); const { c, seen } = await committerFor(r); const count = seen.length;
   expect(await c.commit(() => { throw new Error('x'); })).toBe(false); expect(seen.length).toBe(count);
  });
+ it('releituras concorrentes (foco, outra aba) em qualquer instante nunca desfazem a troca de tema', async () => {
+  // Regressão da investigação do CI (tema Escuro): o commit otimista deve sobreviver a refresh() antes, durante e depois da gravação.
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  for (let i = 0; i < 60; i++) {
+   const { r } = setup(); const first = await r.initialize(); let shown = first.state;
+   const c = createCommitter({ repository: r, onState: s => { shown = s; }, onError: () => undefined }); c.adopt(first.state);
+   const refresh = async () => { const init = await r.initialize(); c.adopt(init.state); await r.protection(); };
+   const jobs: Promise<unknown>[] = [];
+   for (let k = Math.floor(rnd() * 4); k > 0; k--) jobs.push(sleep(rnd() * 6).then(refresh));
+   await sleep(rnd() * 6);
+   jobs.push(c.commit(s => { s.settings.theme = 'dark'; return s; }));
+   if (rnd() < 0.7) jobs.push(sleep(rnd() * 6).then(refresh));
+   await Promise.all(jobs); await sleep(10);
+   expect(shown.settings.theme, 'tela na iteração ' + i).toBe('dark'); expect((await r.read()).settings.theme, 'banco na iteração ' + i).toBe('dark');
+  }
+ }, 60000);
 });

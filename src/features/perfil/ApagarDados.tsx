@@ -50,7 +50,7 @@ export function ApagarDados({ onDownloadBackup }: { onDownloadBackup: () => Prom
       <li>configurações</li>
      </ul>
      <p>O cache do app não é afetado, então ele continua abrindo offline.</p>
-     <p><strong>Não há como desfazer.</strong> Se quiser guardar seus dados, baixe um backup antes.</p>
+     <p><strong>Não há como desfazer.</strong> Se quiser guardar seus dados, baixe um backup antes. O arquivo é texto puro: guarde em lugar seguro.</p>
      {backupDone ? <p className="muted" role="status">Backup baixado. Guarde o arquivo fora deste aparelho.</p> : null}
     </> : null}
     {step === 'confirmar' ? <>

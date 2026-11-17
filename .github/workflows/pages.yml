@@ -43,6 +43,17 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Testar fluxos e modo offline no navegador
         run: npm run test:e2e
+      - name: Guardar relatório e traces do Playwright
+        # Também roda quando o teste passou só na repetição (instável); só dados sintéticos de teste.
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-evidencia
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Preparar GitHub Pages
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.PUBLICAR_PAGES == 'true'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

@@ -4,6 +4,7 @@ import { asError, completed, open, request } from './idb';
 import { decode, foundation, migrate, summary } from './migration';
 import { clone, parse, validateState } from './validation';
 import { backupText, restoredState, transferableText } from './capacity';
+import { repairStoredState } from './repair';
 
 export function createRepository(options: RepositoryOptions = {}): Repository {
  const now=options.now??Date.now;
@@ -24,7 +25,9 @@ export function createRepository(options: RepositoryOptions = {}): Repository {
  const focus=()=>emit({status:'external-change'});
  if(typeof window!=='undefined') window.addEventListener('focus',focus);
  async function db() { if(closed) throw new RepositoryError('unavailable','Reabra o app para acessar o armazenamento.'); if(!dbPromise) dbPromise=open(factory,name).then(connection=>{connection.onversionchange=()=>{connection.close(); dbPromise=undefined; emit({status:'error',error:new RepositoryError('blocked','O banco foi atualizado em outra aba. Reabra este app.')});};return connection;}).catch(e=>{dbPromise=undefined;throw e;}); return dbPromise; }
- async function readOptional():Promise<StateV3|undefined> { const connection=await db(); const tx=connection.transaction(['state','recovery'],'readonly'); const done=completed(tx); const states=request(tx.objectStore('state').get('active')); const keys=request(tx.objectStore('recovery').getAllKeys()); const values=request(tx.objectStore('recovery').getAll()); const [state,ids,records]=await Promise.all([states,keys,values]); await done; if(!state)return undefined; state.recovery={...state.recovery}; ids.forEach((id,i)=>{state.recovery[String(id)]=records[i];}); return clone(state); }
+ const repairedRevisions=new Set<number>();
+ async function readOptional():Promise<StateV3|undefined> { const stored=await readStored(); if(!stored)return undefined; const fixed=repairStoredState(stored,now()); if(fixed.repaired)repairedRevisions.add(fixed.state.revision); return fixed.state; }
+ async function readStored():Promise<StateV3|undefined> { const connection=await db(); const tx=connection.transaction(['state','recovery'],'readonly'); const done=completed(tx); const states=request(tx.objectStore('state').get('active')); const keys=request(tx.objectStore('recovery').getAllKeys()); const values=request(tx.objectStore('recovery').getAll()); const [state,ids,records]=await Promise.all([states,keys,values]); await done; if(!state)return undefined; state.recovery={...state.recovery}; ids.forEach((id,i)=>{state.recovery[String(id)]=records[i];}); return clone(state); }
  async function read():Promise<StateV3> { const state=await readOptional(); if(!state) throw new RepositoryError('unavailable','Inicialize o armazenamento antes de continuar.'); return state; }
  function enqueue<T>(action:()=>Promise<T>):Promise<T> { const next=queue.then(action,action); queue=next.then(()=>undefined,()=>undefined); return next; }
  async function commit(expected:number|undefined,change:(current:StateV3|undefined)=>StateV3):Promise<StateV3> {
@@ -48,7 +51,12 @@ export function createRepository(options: RepositoryOptions = {}): Repository {
  const bumped=(s:StateV3)=>{s.revision++;s.meta.updatedAt=now();return s;};
  function migrationResult(s:StateV3):Initialization { if(!s.meta.migrationCompleted&&Array.isArray(s.meta.migrationSources)&&s.meta.migrationSources.length) return {status:'migration-conflict',state:s,sources:clone(s.meta.migrationSources)}; return {status:'ready',state:s,warnings:clone(s.meta.migrationWarnings??[])}; }
  async function initialize():Promise<Initialization> { return enqueue(async()=>{
-  const current=await readOptional(); if(current) return migrationResult(current);
+  const current=await readOptional();
+  if(current) {
+   // Estado salvo com perfil inválido (gravado antes da validação): grava o reparo uma vez, preservando o original em recovery.
+   if(repairedRevisions.has(current.revision)) { try { return migrationResult(await commit(current.revision,previous=>{if(!previous)throw new RepositoryError('unavailable','Banco vazio.');return bumped(previous);})); } catch { /* Mantém a versão reparada só em memória; tenta de novo na próxima abertura. */ } }
+   return migrationResult(current);
+  }
   let s=foundation(now()); const warnings:string[]=[]; const candidates:{id:string;state:StateV3;version:1|2}[]=[];
   if(legacyAccessError) warnings.push('Não foi possível ler o armazenamento do protótipo. Importe um backup JSON para recuperar seus dados.');
   for(const key of ['treino12-v1','treino12-v2','treino-theme']) {

@@ -307,7 +307,7 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
 
    <Disclosure id="backup" icon="nuvem" title="Backup e restauração" subtitle="Salve e restaure seus dados" open={backupOpen} onToggle={() => setBackupOpen(o => !o)}>
     <h3>Backup dos seus dados</h3>
-    <p>Baixe ou copie o backup completo, incluindo o histórico e os originais preservados. Ele contém dados pessoais de saúde: guarde em um local de sua confiança.</p>
+    <p>Baixe ou copie o backup completo, incluindo o histórico e os originais preservados. O backup é um arquivo de texto com todos os seus dados de saúde. Guarde em lugar seguro.</p>
     <div className="actions"><button className="button" disabled={busy} onClick={() => void exportBackup(false)}>Baixar backup</button><button className="button secondary" disabled={busy} onClick={() => void exportBackup(true)}>Copiar backup</button></div>
     <dl className="facts backup-dates"><div><dt>Último backup gerado</dt><dd>{formatInstant(protection?.lastBackupGeneratedAt)}</dd></div><div><dt>Último backup confirmado</dt><dd>{formatInstant(protection?.lastBackupConfirmedAt)}</dd></div></dl>
     <p className="muted">Gerar ou copiar o arquivo não confirma que ele foi guardado. Confirme somente depois de conferir sua cópia.</p>
