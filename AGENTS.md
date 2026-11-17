@@ -66,6 +66,11 @@ Leia o `SKILL.md` correspondente antes de iniciar a auditoria solicitada:
 | `/roast-idea` | Testar ideias, propostas e premissas de PRDs antes da implementação; questionar público, alternativas, viabilidade e evidências | `./agents/auditoria-roast/roast-idea/SKILL.md` | `./.claude/skills/roast-idea/` |
 | `/roast` | Auditar falhas de código e do repositório com evidências, incluindo segurança, arquitetura e fluxos aplicáveis ao produto | `./agents/auditoria-roast/roast-repo/SKILL.md` | `./.claude/skills/roast-repo/` (nome upstream: `roast`) |
 
+Atenção: `/roast-me` e `/roast-idea` não são distribuídas por este repositório
+porque não têm licença confirmada na origem; ficam apenas na máquina do dono
+(pastas listadas no `.gitignore`). Quem clonar o repositório não as terá; só
+`/roast` (auditoria de código) acompanha o projeto.
+
 Fontes utilizadas:
 
 - Prompts: `https://github.com/ericrisco/rsc-harness`, skill `roast-me`,

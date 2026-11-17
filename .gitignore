@@ -38,3 +38,9 @@ capturas/
 
 # Arquivos temporários de edição de agentes
 *.tmp.*
+
+# Skills de terceiros sem licença confirmada: ficam só na máquina local, não são distribuídas pelo repositório
+.claude/skills/roast-idea/
+.claude/skills/roast-me/
+agents/auditoria-roast/roast-idea/
+agents/auditoria-roast/roast-prompts/
