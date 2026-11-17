@@ -36,12 +36,15 @@ import { Circle } from '@phosphor-icons/react/dist/csr/Circle';
 import { Trash } from '@phosphor-icons/react/dist/csr/Trash';
 import { ArrowsLeftRight } from '@phosphor-icons/react/dist/csr/ArrowsLeftRight';
 import { CopySimple } from '@phosphor-icons/react/dist/csr/CopySimple';
+import { Export } from '@phosphor-icons/react/dist/csr/Export';
+import { PlusSquare } from '@phosphor-icons/react/dist/csr/PlusSquare';
+import { DownloadSimple } from '@phosphor-icons/react/dist/csr/DownloadSimple';
 
 export type IconName =
  | 'inicio' | 'treino' | 'dieta' | 'evolucao' | 'perfil' | 'sino' | 'editar' | 'relogio' | 'seta' | 'marca'
  | 'calendario' | 'play' | 'plus' | 'alvo' | 'chevron' | 'voltar' | 'busca' | 'fogo' | 'garfo' | 'agua'
  | 'shake' | 'nuvem' | 'engrenagem' | 'lua' | 'sol' | 'info' | 'historico' | 'filtro' | 'mais' | 'salvar' | 'balanca' | 'fita' | 'circulo'
- | 'lixeira' | 'troca' | 'copiar';
+ | 'lixeira' | 'troca' | 'copiar' | 'compartilhar' | 'adicionar' | 'baixar';
 
 /** Aparência Phosphor: duotone (decorativo, padrão), regular/bold (legibilidade em tamanhos pequenos) e fill (item ativo). */
 export type IconLook = 'duotone' | 'regular' | 'bold' | 'fill';
@@ -52,7 +55,7 @@ const glyphs: Record<IconName, ComponentType<PhosphorProps>> = {
  chevron: CaretDown, voltar: ArrowLeft, busca: MagnifyingGlass, fogo: Flame, garfo: ForkKnife, agua: Drop, shake: BeerStein,
  nuvem: CloudArrowUp, engrenagem: GearSix, lua: Moon, sol: Sun, info: Info, historico: ClockCounterClockwise,
  filtro: SlidersHorizontal, mais: DotsThreeVertical, salvar: FloppyDisk, balanca: Scales, fita: Ruler, circulo: Circle,
- lixeira: Trash, troca: ArrowsLeftRight, copiar: CopySimple,
+ lixeira: Trash, troca: ArrowsLeftRight, copiar: CopySimple, compartilhar: Export, adicionar: PlusSquare, baixar: DownloadSimple,
 };
 
 /** Setas, marcas e símbolos de uma só linha não ganham nada com duotone: usam regular/bold. */

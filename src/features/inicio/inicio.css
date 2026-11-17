@@ -111,3 +111,9 @@
 .in-hoje-art .thumb-hero{display:block}
 @media(prefers-reduced-motion:reduce){.in-ghost:active,.in-atalho:active{transform:none}}
 .in-stack{display:grid;gap:inherit}
+
+/* Observações da aula */
+.in-obs{display:grid;gap:6px;margin-top:14px}
+.in-obs label{font-size:.9375rem}
+.in-obs textarea{min-height:68px;resize:vertical;font-size:1rem;line-height:1.4}
+.in-obs textarea::placeholder{color:var(--muted-foreground);opacity:.7}

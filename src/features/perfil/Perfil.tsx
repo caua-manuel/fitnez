@@ -19,6 +19,7 @@ import { MetasSheet } from '../dieta/MetasSheet';
 import { diaLocal, refeicoesRegistradas, treinosConcluidos } from './metricas';
 import { DataInicioSheet } from './DataInicioSheet';
 import { ApagarDados } from './ApagarDados';
+import { InstalarApp } from './InstalarApp';
 import { CountUp } from '../../ui/motion';
 import { catalogOf } from '../dieta/dietData';
 import { csvFilename, exportDietCsv, exportLoadsCsv, exportMeasuresCsv } from '../../domain/csv';
@@ -299,7 +300,8 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
     {protection?.message ? <p className="warning">{protection.message}</p> : null}
     <p className="muted">A limpeza do navegador ou a perda do aparelho pode apagar seus dados. A persistência não substitui um backup externo.</p>
     <h3>Instalar e usar offline</h3>
-    <p>Para acesso rápido, use “Adicionar à Tela de Início” no menu do navegador. O uso offline estará pronto quando aparecer “Disponível offline” aqui, em Dados neste aparelho.</p>
+    <p>Instale o app para abri-lo pelo ícone, como qualquer outro. O uso offline estará pronto quando aparecer “Disponível offline” aqui, em Dados neste aparelho.</p>
+    <InstalarApp />
     <p className="muted">Cada navegador e aparelho guarda seus próprios dados. Para mudar de endereço ou aparelho, baixe e importe o backup. Não há login nem sincronização.</p>
    </Disclosure>
 

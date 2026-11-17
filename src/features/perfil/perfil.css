@@ -124,3 +124,16 @@
 .perfil .perfil-apagar:hover:not(:disabled){background:var(--surface-2)}
 .perfil-apagar-lista{margin:0;padding-left:20px;display:grid;gap:4px}
 .sheet-body.perfil-apagar-corpo{gap:8px}.sheet-body.perfil-apagar-corpo p{margin:0}.sheet-body.perfil-apagar-corpo .perfil-apagar-lista{margin:0 0 4px}
+
+/* Instalar na tela inicial */
+.ia-ok{display:flex;align-items:center;gap:8px;margin:0;font-size:.9375rem;color:var(--muted-foreground)}
+.ia-ok svg{color:var(--success,currentColor)}
+.perfil-sec-body .ia-btn{gap:10px}
+.ia-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin:0 auto;padding:0 12px;border:0;background:transparent;box-shadow:none;color:var(--muted-foreground);font-size:.9375rem;font-weight:500;border-radius:var(--radius-button)}
+.ia-link svg{flex:none}
+@media(hover:hover) and (pointer:fine){.ia-link:hover{color:var(--foreground)}}
+.ia-sheet .ia-steps{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:14px}
+.ia-sheet .ia-steps li{display:flex;align-items:center;gap:14px;line-height:1.4}
+.ia-ico{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface-2,var(--card));color:var(--foreground)}
+.ia-aviso{margin:0 0 12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-button);color:var(--foreground);font-size:.9375rem}
+.ia-sheet .muted{margin-top:14px}

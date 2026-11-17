@@ -14,6 +14,8 @@ import { Glyph } from '../treino/glyphs';
 import { Thumb } from '../../ui/Thumb';
 import { DietaResumo } from './DietaResumo';
 import { TerceiraAula } from './TerceiraAula';
+import { ObservacaoAula } from './ObservacaoAula';
+import { InstalarApp } from '../perfil/InstalarApp';
 import './inicio.css';
 import { shouldShowBackupReminder } from '../../domain/userData';
 import { activityFor } from '../../domain/dayActivity';
@@ -35,6 +37,8 @@ export function localDay(ms: number): DayIso {
  const d = new Date(ms);
  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+// A observação da aula de jiu-jitsu fica em notes (campo opcional já previsto no esquema v3), com esta chave.
+const BJJ_NOTE = 'aula-bjj';
 const ddmm = (day: DayIso) => `${day.slice(8, 10)}/${day.slice(5, 7)}`;
 function formatDay(day: DayIso): string {
  const [y, m, d] = day.split('-').map(Number);
@@ -68,11 +72,15 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
   const r = s.history.days[day] ?? (s.history.days[day] = {});
   fn(r); return s;
  });
- const setAct = (key: 'bjj' | 'volei' | 'cond', on: boolean) => { setFresh(on ? `${day}:${key}` : null); edit(r => { r.acts = { ...r.acts, [key]: on }; if (key === 'bjj' && !on) delete r.feel; }); };
+ const setAct = (key: 'bjj' | 'volei' | 'cond', on: boolean) => { setFresh(on ? `${day}:${key}` : null); edit(r => { r.acts = { ...r.acts, [key]: on }; if (key === 'bjj' && !on) { delete r.feel; if (r.notes) { const { [BJJ_NOTE]: _drop, ...rest } = r.notes; if (Object.keys(rest).length) r.notes = rest; else delete r.notes; } } }); };
+ const setBjjNote = (text: string) => edit(r => {
+  const rest = { ...(r.notes ?? {}) }; if (text) rest[BJJ_NOTE] = text; else delete rest[BJJ_NOTE];
+  if (Object.keys(rest).length) r.notes = rest; else delete r.notes;
+ });
  const unmark = (key: 'bjj' | 'volei', message: string) => {
-  const feel = record.feel;
+  const feel = record.feel; const note = record.notes?.[BJJ_NOTE];
   setAct(key, false);
-  showToast(message, () => edit(r => { r.acts = { ...r.acts, [key]: true }; if (key === 'bjj' && feel !== undefined) r.feel = feel; }));
+  showToast(message, () => edit(r => { r.acts = { ...r.acts, [key]: true }; if (key === 'bjj') { if (feel !== undefined) r.feel = feel; if (note) r.notes = { ...(r.notes ?? {}), [BJJ_NOTE]: note }; } }));
  };
  const toggleCond = (i: number) => edit(r => {
   const cond = { ...(r.cond ?? {}) }; if (cond[String(i)]) delete cond[String(i)]; else cond[String(i)] = true;
@@ -177,9 +185,10 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
     {on ? <>
      <p className="success" role="status"><CheckDraw play={fresh === `${day}:bjj`} />Aula registrada.</p>
      <div role="group" aria-label="Como terminou">
-      <p><strong>Como terminou</strong> <span className="muted">(1 = exausto, 5 = ótimo)</span></p>
-      <div className="segmented soft">{[1, 2, 3, 4, 5].map(n => <button key={n} type="button" aria-label={`Nota ${n} de 5`} aria-pressed={record.feel === n} onClick={() => edit(r => { r.feel = n; })}>{n}</button>)}</div>
+      <p><strong>Como terminou</strong> <span className="muted">(1 = leve, 5 = destruído)</span></p>
+      <div className="segmented soft">{[1, 2, 3, 4, 5].map(n => <button key={n} type="button" aria-label={`Nota ${n} de 5${n === 1 ? ", leve" : n === 5 ? ", destruído" : ""}`} aria-pressed={record.feel === n} onClick={() => edit(r => { r.feel = n; })}>{n}</button>)}</div>
      </div>
+     <ObservacaoAula key={day} value={record.notes?.[BJJ_NOTE] ?? ''} onSave={setBjjNote} />
      <button type="button" className="button secondary block gap-top" onClick={() => unmark('bjj', 'Aula desmarcada')}>Desmarcar aula</button>
     </> : <button type="button" className="button block" onClick={() => setAct('bjj', true)}>Marcar aula como feita</button>}
     {othersList(null)}
@@ -288,6 +297,8 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
    <a className="in-atalho depth" href={hrefFor({ tab: 'dieta' })}><span className="icon-tile soft"><Icon name="dieta" size={28} /></span><span className="in-atalho-row"><strong>Dieta</strong><Icon name="seta" size={20} /></span><span className="muted">Seu plano alimentar</span></a>
    <a className="in-atalho depth" href={hrefFor({ tab: 'evolucao' })}><span className="icon-tile soft"><Icon name="evolucao" size={28} /></span><span className="in-atalho-row"><strong>Evolução</strong><Icon name="seta" size={20} /></span><span className="muted">Acompanhe seus resultados</span></a>
   </div></Reveal>
+
+  <InstalarApp compact />
 
   {shouldShowBackupReminder(state, protection?.backupDue) ? <BackupReminder /> : null}
  </div>;
