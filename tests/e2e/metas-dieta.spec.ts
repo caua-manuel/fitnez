@@ -71,6 +71,11 @@ test('Metas: quem já usa o app vê "Meta de exemplo" e "Usar esta meta" remove 
  await expect(page.getByText('Meta confirmada').first()).toBeVisible();
  await expect(selo(page)).toHaveCount(0);
  await expect(page.getByRole('button', { name: 'Ajustar metas' })).toBeVisible();
+ // Só recarrega depois de a meta estar gravada no IndexedDB: recarregar logo após o clique perde a gravação assíncrona (causa da falha intermitente do CI).
+ await expect.poll(() => page.evaluate(async () => {
+  const dbs = await indexedDB.databases(); const name = dbs.find(d => d.name?.startsWith('treino12:'))?.name; if (!name) return false;
+  return new Promise<boolean>(resolve => { const req = indexedDB.open(name); req.onerror = () => resolve(false); req.onsuccess = () => { const db = req.result; const get = db.transaction('state').objectStore('state').get('active'); get.onsuccess = () => { db.close(); resolve(Boolean((get.result as any)?.settings?.dietTargets)); }; get.onerror = () => { db.close(); resolve(false); }; }; });
+ }), { message: 'meta gravada no IndexedDB antes do reload' }).toBe(true);
  await page.reload();
  await expect(page.getByRole('heading', { name: 'Dieta', level: 1 })).toBeVisible();
  await expect(selo(page)).toHaveCount(0);

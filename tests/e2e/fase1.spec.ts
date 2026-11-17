@@ -25,9 +25,17 @@ test.beforeEach(async({page,context})=>{const errors:string[]=[];(page as any)._
 test.afterEach(async({page})=>{expect((page as any).__errors,'Sem exceções nem erros console, incluindo violações CSP').toEqual([]);});
 
 for(const width of [360,1280]) for(const theme of ['Claro','Escuro']) test(`rotas, layout ${width}px e tema ${theme}`,async({page},info)=>{
- await page.setViewportSize({width,height:900});await probe(page);await open(page);await page.getByRole('button',{name:theme,exact:true}).click();await expectTheme(page,theme==='Claro'?'light':'dark',info);await page.reload();await expect(page.locator('html')).toHaveAttribute('data-theme',theme==='Claro'?'light':'dark');
+ await page.setViewportSize({width,height:900});await probe(page);await open(page);await page.getByRole('button',{name:theme,exact:true}).click();const expected=theme==='Claro'?'light':'dark';await expectTheme(page,expected,info);await expect.poll(async()=>(await state(page)).settings.theme,{message:'tema gravado no IndexedDB antes de recarregar'}).toBe(expected);await page.reload();await expectTheme(page,expected,info);
  for(const [hash,label] of routes){await page.getByRole('navigation',{name:'Navegação principal'}).getByRole('link',{name:label,exact:true}).click();await expect(page).toHaveURL(new RegExp(`#${hash}$`));await expect(page.getByRole('heading',{name:label,exact:true,level:1})).toBeFocused();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
  await page.screenshot({path:info.outputPath(`perfil-${width}-${theme}.png`),fullPage:true});await page.goto('#inexistente');await expect(page.getByRole('heading',{name:'Início',exact:true,level:1})).toBeAttached();
+});
+// Regressão do CI (run 43997105235): o reload do próprio teste caiu 4 ms depois do clique, antes de a gravação assíncrona terminar, e o tema voltou a 'auto'.
+// Aqui a gravação é atrasada de forma determinística; o contrato é: a escolha só sobrevive ao reload depois de gravada, e o app a mantém depois disso.
+test('tema escolhido sobrevive ao reload quando a gravação é lenta, desde que concluída',async({page},info)=>{
+ await page.addInitScript(ms=>{const orig=IDBObjectStore.prototype.put;(IDBObjectStore.prototype as any).put=function(this:IDBObjectStore,...a:any[]){if(this.name!=='state')return (orig as any).apply(this,a);const store=this;const end=performance.now()+ms;const spin=()=>{if(performance.now()>=end){(orig as any).apply(store,a);return;}store.get('active').onsuccess=spin;};spin();return {} as any;};},800);
+ await open(page);await page.getByRole('button',{name:'Escuro',exact:true}).click();await expectTheme(page,'dark',info);
+ await expect.poll(async()=>(await state(page)).settings.theme,{timeout:8000}).toBe('dark');
+ await page.reload();await expectTheme(page,'dark',info);
 });
 test('automático acompanha sistema, teclado e movimento reduzido',async({page})=>{await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await open(page);await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme','light');await page.reload();await expect(page.getByRole('heading',{name:'Perfil',exact:true,level:1})).toBeFocused();for(let i=0;i<6&&!(await page.getByRole('link',{name:'Pular para o conteúdo'}).evaluate(e=>e===document.activeElement));i++)await page.keyboard.press('Shift+Tab');await expect(page.getByRole('link',{name:'Pular para o conteúdo'})).toBeFocused();await page.keyboard.press('Enter');await expect(page.locator('main')).toBeFocused();expect(await page.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);});
 

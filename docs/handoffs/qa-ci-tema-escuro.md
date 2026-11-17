@@ -1,5 +1,27 @@
 # QA: falha intermitente do tema Escuro no CI
 
+## ATUALIZAÇÃO: causa raiz comprovada (run 43997105235)
+**Causa: bug do teste, não do app.** O `page.reload()` do próprio teste acontece logo depois do clique, antes de a gravação assíncrona no IndexedDB terminar. O tema não é persistido e, depois do reload, volta a `auto`, que no runner claro vira `light`.
+
+Prova, no `trace.zip` da tentativa que falhou (artefato `playwright-evidencia`), na ordem das ações:
+1. `click` em "Escuro" (t = 154006 ms);
+2. 1º `expect` de `data-theme` passa (t = 154044);
+3. `reload` (t = 154048, 4 ms depois do 1º expect, antes de a gravação concluir);
+4. 2º `expect` de `data-theme` (o de depois do reload) é o que falha: `Expect failed`.
+
+O screenshot da falha mostra o seletor em "Auto". Isso corrige a leitura anterior deste relatório: o marcador do erro apontava para a segunda verificação, e a hipótese "reload perdendo a gravação" não era descartável, porque quem recarrega é o teste. Só Escuro falha porque Claro e Auto resultam em `light` de qualquer forma.
+
+Reprodução determinística: com um `addInitScript` que atrasa o `put` do estado em 800 ms (mantendo a transação viva com leituras encadeadas), clicar em Escuro e recarregar logo em seguida deixa `data-theme="light"` (reproduzido localmente: Expected `dark`, Received `light`).
+
+Decisão sobre o app: nenhuma mudança. A transação de gravação é atômica (um reload no meio a aborta e o estado anterior fica íntegro, sem corrupção). Só perderia a escolha quem recarrega ou fecha a aba dentro dos poucos milissegundos da gravação, o que não acontece no uso real. Um cache em `localStorage` criaria uma segunda fonte de verdade para o tema e exigiria reconciliação com o IndexedDB, risco maior que o ganho (ADR 002 preservado).
+
+Correções nos testes:
+- `tests/e2e/fase1.spec.ts`: antes do `reload`, `expect.poll` espera o tema gravado no IndexedDB (sem sleep); as duas verificações de tema agora usam `expectTheme` (diagnóstico em qualquer falha). Novo teste "tema escolhido sobrevive ao reload quando a gravação é lenta, desde que concluída" (gravação atrasada em 800 ms).
+- `tests/e2e/entrega-b-dieta.spec.ts`: o `waitForTimeout(600)` antes do reload virou `expect.poll` do IndexedDB (`"crea":true`).
+- Revisados os demais reloads: os que seguem mudança de dado já esperam por `expect.poll` ou por leitura do banco. Resta `tests/e2e/metas-dieta.spec.ts` linha 74 (reload depois de verificações só da interface); não editei porque o arquivo está em edição por outro agente. Recomendo acrescentar ali um `expect.poll` do IndexedDB antes do reload.
+
+(O restante abaixo é o relatório anterior, escrito antes da evidência do trace.)
+
 ## Sintoma (evidência do CI)
 - `tests/e2e/fase1.spec.ts`, teste `rotas, layout <largura>px e tema Escuro`: após clicar em "Escuro", `html[data-theme]` fica `"light"` até o timeout de 10 s (24 leituras, sempre `light`).
 - Runs: 43449386227 (commit c28254c) falhou 360 px e 1280 px; 43986355742 (da2b3dd) falhou só 360 px; 43443521367 e 43367264196 passaram.

@@ -93,7 +93,8 @@ test('Dieta: água em copos e creatina persistem após recarregar', async ({ pag
  await expect(page.getByText('1,0 L de 3,0 L')).toBeVisible();
  await page.getByRole('button', { name: 'Creatina tomada' }).click();
  await expect(page.getByRole('button', { name: 'Creatina tomada', pressed: true })).toBeVisible();
- await page.waitForTimeout(600);
+ // Espera a gravação concluir no IndexedDB (sem sleep) antes de recarregar.
+ await expect.poll(() => page.evaluate(async () => { const name = (await indexedDB.databases()).find(d => d.name?.startsWith('treino12:'))!.name!; return new Promise<string>(resolve => { const req = indexedDB.open(name); req.onsuccess = () => { const db = req.result; const get = db.transaction('state').objectStore('state').get('active'); get.onsuccess = () => { db.close(); resolve(JSON.stringify(get.result?.history ?? {})); }; }; }); })).toContain('"crea":true');
  await page.reload();
  await expect(page.getByRole('button', { name: 'Creatina tomada', pressed: true })).toBeVisible();
 });
