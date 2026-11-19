@@ -46,7 +46,11 @@ for (const icon of manifest.icons) assert.ok(urls.includes(icon.src), `Ícone se
 // Atalhos do ícone: dentro da base do Pages, apontando para uma rota com hash, ícones no precache.
 assert.ok(Array.isArray(manifest.shortcuts) && manifest.shortcuts.length >= 3, 'Manifesto sem atalhos.');
 for (const s of manifest.shortcuts) {
-  assert.match(String(s.url), new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}#[a-z]+$`), `Atalho fora da base: ${s.url}`);
+  assert.match(String(s.url), new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}#[a-z]+(?:/[a-z_]+)*$`), `Atalho fora da base: ${s.url}`);
+}
+// O atalho "Treino de hoje" abre a execução do dia (rota que resolve o treino), não só o Início.
+assert.ok(manifest.shortcuts.some((s: { name?: string; url?: unknown }) => s.name === 'Treino de hoje' && String(s.url) === `${base}#treino/_/hoje`), 'Atalho "Treino de hoje" sem a rota da execução.');
+for (const s of manifest.shortcuts) {
   for (const icon of s.icons ?? []) assert.ok(urls.includes(icon.src), `Ícone de atalho sem precache: ${icon.src}`);
 }
 const html = await readFile('dist/index.html', 'utf8');

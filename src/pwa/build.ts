@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 
 /** Atalhos do ícone (toque longo): rotas existentes do app, relativas à base do Pages. */
 export const SHORTCUTS: ReadonlyArray<readonly [string, string, string]> = [
- ['Treino de hoje', '#inicio', 'Abre o treino do dia com a carga sugerida'],
+ ['Treino de hoje', '#treino/_/hoje', 'Abre o treino do dia com a carga sugerida'],
  ['Registrar peso', '#evolucao', 'Abre a Evolução para registrar peso e medidas'],
  ['Dieta', '#dieta', 'Abre a dieta do dia'],
 ];

@@ -28,7 +28,7 @@ import { ConfirmSheet } from '../../ui/Sheet';
 import { CheckDraw } from '../../ui/motion';
 import { useJustTurnedOn } from './stagger';
 import { FREE_SESSION_ID } from '../../domain/weekStreak';
-import { GROUP_LABEL, freeExercises, firstIncomplete, formatDay, formatKg, planWeek, readCursor, todayIso, writeCursor } from './util';
+import { GROUP_LABEL, freeExercises, firstIncomplete, formatDay, formatKg, normalize, planWeek, readCursor, todayIso, writeCursor } from './util';
 import './treino.css';
 
 const REST_KEY = 'treino12:descanso';
@@ -144,7 +144,10 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
  const [saveError, setSaveError] = useState(false);
  const [busy, setBusy] = useState(false);
  const [notice, setNotice] = useState<{ exId: string; text: string } | null>(null);
- const [open, setOpen] = useState<"ex" | "plates" | "swap" | null>(null);
+ const [open, setOpen] = useState<"ex" | "plates" | "swap" | "add" | null>(null);
+ const [addQ, setAddQ] = useState('');
+ // Exercícios cuja lista de séries mudou de forma (aquecimento dispensado ou marcado): grava mesmo sem valores.
+ const reshaped = useRef<Set<string>>(new Set());
  const [askFinish, setAskFinish] = useState(false);
  const [overlap, setOverlap] = useState<string[]>([]);
  // Pausa do cronômetro do treino (só visual e da sessão aberta; o tempo parado não entra na duração final).
@@ -225,7 +228,7 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
    for (const e of exIds) {
     const r = next[e] ?? [];
     const planned = plannedSets(state, day, e, week);
-    if (r.some(s => s.done || s.kg !== '' || s.reps !== '') || r.length !== planned || log[e]) log[e] = r.map(s => ({ ...s }));
+    if (r.some(s => s.done || s.kg !== '' || s.reps !== '') || r.length !== planned || log[e] || reshaped.current.has(e)) log[e] = r.map(s => ({ ...s }));
    }
    const prev = getWorkout(rec, id);
    const meta: WorkoutMeta = {
@@ -296,6 +299,30 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
   }
  };
 
+ // Aquecimento manual: marcar, desmarcar (vira série de trabalho) e dispensar a linha "A" ainda não feita.
+ const reshape = (next: SetEntry[]) => {
+  reshaped.current.add(exId);
+  const all2 = { ...rows, [exId]: next };
+  setRows(all2); setProblem(''); setNotice(null); void persist(all2, false);
+ };
+ const setWarm = (i: number, on: boolean) => reshape(list.map((s, k) => {
+  if (k !== i) return s;
+  const { kind: _k, ...rest } = s;
+  return on ? { ...rest, kind: 'warm' as const } : rest;
+ }));
+ const dismissWarm = (i: number) => reshape(list.filter((_, k) => k !== i));
+
+ // Treino livre: a lista vai na URL (?ex=); grava o que já foi digitado antes de trocar a lista e mantém o exercício em foco.
+ const started = (e: string) => (rows[e] ?? []).some(s => s.done || s.kg !== '' || s.reps !== '');
+ const relist = async (ids: string[], focus: string) => {
+  setOpen(null);
+  if (exIds.some(started) && !(await persist(rows, false))) return;
+  writeCursor(day, id, Math.max(0, ids.indexOf(focus)));
+  window.location.replace(hrefFor({ tab: 'treino', view: 'executar', id, ...(dayParam ? { day: dayParam } : {}), ex: ids.join(',') }));
+ };
+ const move = (d: -1 | 1) => { const ids = [...exIds], j = idx + d; [ids[idx], ids[j]] = [ids[j]!, ids[idx]!]; void relist(ids, exId); };
+ const removeEx = () => { const ids = exIds.filter(e => e !== exId); void relist(ids, ids[Math.min(idx, ids.length - 1)]!); };
+
  const addSet = () => {
   const next = { ...rows, [exId]: [...list, { kg: '', reps: '', done: false }] };
   setRows(next); void persist(next, false);
@@ -354,7 +381,14 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
   { label: 'Ver exercício', onClick: () => setOpen('ex') },
   ...(list.some(s => s.done) ? [] : [{ label: 'Trocar exercício só hoje', icon: 'troca' as const, onClick: () => setOpen('swap') }]),
   ...(BARBELL_EXERCISES.includes(exId) ? [{ label: 'Calcular anilhas', onClick: () => setOpen('plates') }] : []),
+  ...(free && !started(exId) ? [
+   ...(idx > 0 ? [{ label: 'Mover para cima', onClick: () => move(-1) }] : []),
+   ...(idx < exIds.length - 1 ? [{ label: 'Mover para baixo', onClick: () => move(1) }] : []),
+   ...(exIds.length > 1 ? [{ label: 'Remover do treino', danger: true, onClick: removeEx }] : []),
+  ] : []),
  ];
+ const addQuery = normalize(addQ);
+ const addRows = open === 'add' ? Object.keys(plan.ex).filter(e => !exIds.includes(e) && (!addQuery || normalize(plan.ex[e]!.n).includes(addQuery))).sort((a, b) => plan.ex[a]!.n.localeCompare(plan.ex[b]!.n, 'pt-BR')) : [];
 
  return <div className="ex-wrap tone-treino">
   <div className="ex-top">
@@ -395,7 +429,9 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
     const pr = recOf(i, s);
     return <div key={i} className="ex-set">
      <div className={`ex-row has-antes${kgCol ? '' : ' no-kg'}${s.done ? ' is-done' : ''}`}>
-      <span className="ex-n num" aria-label={warm ? `Aquecimento ${n}` : undefined}>{warm ? 'A' : n}</span>
+      <Menu className="ex-n" buttonClassName="ex-n-btn num" align="left" label={`Opções ${warm ? 'do aquecimento' : 'da série'} ${n}`} trigger={warm ? 'A' : n} items={warm
+       ? [{ label: 'Marcar como série de trabalho', onClick: () => setWarm(i, false) }, ...(s.done ? [] : [{ label: 'Dispensar aquecimento', danger: true, onClick: () => dismissWarm(i) }])]
+       : [{ label: 'Marcar como aquecimento', onClick: () => setWarm(i, true) }]} />
       <span className="ex-antes num" aria-label={prev ? `Antes: ${kgCol && prev.kg !== '' ? `${prev.kg.replace('.', ',')} kg, ` : ''}${prev.reps} ${ex.m === 's' ? 'segundos' : 'repetições'}` : 'Antes: sem registro'}>{antesText(prev)}</span>
       <input className="ex-input num" inputMode="decimal" enterKeyHint="next" autoComplete="off" aria-label={`${repsLabel(ex)}, ${name}`} value={s.reps} placeholder={ph ? ph.reps ?? ph.dica.reps : undefined} aria-invalid={problem !== '' && !s.done && s.reps === '' && !ph?.reps} onChange={e => setField(i, 'reps', e.target.value)} />
       {kgCol ? <input className="ex-input num" inputMode="decimal" enterKeyHint="done" autoComplete="off" aria-label={`${kgLabel(ex)}, ${name}`} value={s.kg} placeholder={ph ? (ph.kg ?? ph.dica.kg).replace('.', ',') : undefined} onChange={e => setField(i, 'kg', e.target.value)} /> : null}
@@ -411,6 +447,7 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
    <p className="ex-copied" role="status">{notice?.exId === exId ? notice.text : ''}</p>
   </section>
   <button type="button" className="ex-add" onClick={addSet}><Icon name="plus" size={20} />Adicionar série</button>
+  {free ? <button type="button" className="ex-add ex-add-ex" onClick={() => { setAddQ(''); setOpen('add'); }}><Icon name="plus" size={20} />Adicionar exercício</button> : null}
   {saveError ? <p className="ex-problem" role="alert">Não foi possível salvar agora. O que você digitou continua na tela; conclua uma série ou o treino para tentar de novo.</p> : null}
 
   <div className="ex-spacer" aria-hidden="true" />
@@ -432,6 +469,20 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
   </ConfirmSheet> : null}
   {open === 'ex' ? <ExercicioSheet exId={exId} onClose={() => setOpen(null)} /> : null}
   {open === 'plates' ? <AnilhasSheet initial={list.find(s => !s.done && s.kind !== 'warm')?.kg || ''} onClose={() => setOpen(null)} /> : null}
+  {open === 'add' ? <Sheet title="Adicionar exercício" initialFocus="#ex-add-q" onClose={() => setOpen(null)}>
+   <div className="sheet-body">
+    <div className="tr-search ed-pick-search">
+     <label htmlFor="ex-add-q" className="visually-hidden">Buscar exercício</label>
+     <Icon name="busca" size={22} className="tr-search-icon" />
+     <input id="ex-add-q" type="search" placeholder="Buscar exercício…" value={addQ} onChange={e => setAddQ(e.target.value)} autoComplete="off" />
+    </div>
+    {addRows.length === 0 ? <p className="muted">Nenhum exercício encontrado.</p> : <ul className="ed-pick-list ex-pick" aria-label="Exercícios da biblioteca">
+     {addRows.map(e => { const g = muscleGroupOf(e, plan.ex[e]!); return <li key={e}><button type="button" onClick={() => void relist([...exIds, e], e)}><strong>{plan.ex[e]!.n}</strong><span>{g ? GROUP_LABEL[g] : 'Exercício'}</span></button></li>; })}
+    </ul>}
+    <p className="muted ev-hint">Entra no fim do treino; as séries já registradas continuam salvas.</p>
+   </div>
+   <div className="sheet-actions"><button type="button" className="button secondary" onClick={() => setOpen(null)}>Fechar</button></div>
+  </Sheet> : null}
   {open === 'swap' ? <Sheet title={`Trocar ${plan.ex[original]?.n ?? ''} só hoje`} onClose={() => setOpen(null)}>
    <div className="sheet-body">{options.length === 0 ? <p>{NO_SWAP_TEXT}</p> : <ul className="sw-list">{options.filter(o => plan.ex[o]).map(o => <li key={o}><button type="button" className="button secondary block" onClick={() => void doSwap(o)}>{plan.ex[o]!.n}</button></li>)}</ul>}
     <p className="muted ev-hint">A troca vale só para hoje; o plano não muda.</p></div>

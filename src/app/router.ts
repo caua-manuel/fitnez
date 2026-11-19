@@ -1,5 +1,5 @@
 export type DayIso = string;
-export type TreinoView = 'lista' | 'detalhe' | 'executar' | 'concluido' | 'editar' | 'novo' | 'exercicio';
+export type TreinoView = 'lista' | 'detalhe' | 'executar' | 'concluido' | 'editar' | 'novo' | 'exercicio' | 'hoje';
 export type DietMeal = 'cafe' | 'almoco' | 'lanche' | 'pos' | 'jantar';
 export const DIET_MEALS: readonly DietMeal[] = ['cafe', 'almoco', 'lanche', 'pos', 'jantar'];
 export type Route =
@@ -30,6 +30,8 @@ export function parseRoute(hash: string): Route {
   const id = parts[1];
   if (!id) return { tab: 'treino', view: 'lista' };
   if (id === NEW && parts[2] === 'novo') return { tab: 'treino', view: 'novo' };
+  // Atalho do manifesto: o treino de hoje é resolvido ao abrir (Treino.tsx).
+  if (id === NEW && parts[2] === 'hoje') return { tab: 'treino', view: 'hoje' };
   const view = VIEWS.find(v => v === parts[2]) ?? 'detalhe';
   const route: Extract<Route, { tab: 'treino' }> = { tab: 'treino', view, id };
   if (view === 'exercicio' && parts[3] && parts[3] !== NEW) route.ex = parts[3];
@@ -49,7 +51,7 @@ export function hrefFor(route: Route): string {
   return `#dieta/${route.meal}${route.manage ? '/gerenciar' : ''}${q}`;
  }
  if (route.tab !== 'treino') return `#${route.tab}`;
- if (route.view === 'novo') return `#treino/${NEW}/novo`;
+ if (route.view === 'novo' || route.view === 'hoje') return `#treino/${NEW}/${route.view}`;
  if (!route.id || route.view === 'lista') return '#treino';
  const base = `#treino/${encodeURIComponent(route.id)}`;
  if (route.view === 'detalhe') return base;

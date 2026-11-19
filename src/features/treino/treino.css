@@ -307,3 +307,11 @@ body:has(.ex-footer) .ui-toast-wrap{bottom:calc(var(--ex-footer-h,140px) + 8px)}
 .tr-livre .muted{font-size:.875rem}
 .tr-livre>svg:first-child{color:var(--primary)}
 .tr-livre>svg:last-child{color:var(--muted-foreground)}
+/* Número da série: abre as opções (aquecimento). Alvo de 44 px sem alargar a coluna. */
+.ex-n.ui-menu-wrap{display:block}
+.ex-n-btn{position:relative;display:block;width:100%;min-height:44px;padding:0;border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.ex-n-btn::before{content:'';position:absolute;inset:0 -10px}
+.ex-n-btn[aria-expanded=true]{color:var(--primary)}
+.ex-n .ui-menu{min-width:15.5rem;font-size:1rem;color:var(--foreground)}
+.ex-add-ex{margin-top:8px}
+.sheet-body .ex-pick button{justify-content:stretch;justify-items:start;text-align:left}.ex-pick strong{font-weight:600}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
 import type { Route } from '../../app/router';
@@ -14,6 +14,7 @@ import { EditarExercicio } from './EditarExercicio';
 import { NovoTreino } from './NovoTreino';
 import { Livre } from './Livre';
 import { FREE_SESSION_ID } from '../../domain/weekStreak';
+import { getWorkout } from '../../domain/workoutRecord';
 import { Icon } from '../../ui/icons';
 import { WEEKDAYS, minutesLabel, plural, shortDay, statusOf, todayIso, weekDays } from './util';
 import { useStagger } from './stagger';
@@ -56,11 +57,28 @@ function MeuPlano() {
  </div>;
 }
 
+/** Atalho "Treino de hoje": abre a execução do treino do dia; sem treino de academia hoje, o Início explica o dia. */
+function TreinoHoje() {
+ const { state } = useData();
+ useEffect(() => {
+  if (!state) return;
+  const day = todayIso(), plan = state.catalog.plan, rec = state.history.days[day];
+  const phase = phaseOf(state.settings.start, day, rirSequence(plan));
+  const act = phase.kind === 'week' ? activityFor({ sched: state.settings.sched, weekday: phase.weekday, override: rec?.over, alt: plan.alt }) : null;
+  const id = act?.kind === 'gym' && plan.sess[act.sessionId] ? act.sessionId : null;
+  const view = id && getWorkout(rec, id)?.status === 'done' ? 'concluido' : 'executar';
+  // replace: o voltar do celular não cai de novo neste redirecionamento.
+  window.location.replace(id ? hrefFor({ tab: 'treino', view, id, day }) : hrefFor({ tab: 'inicio' }));
+ }, [state]);
+ return <p className="loading" role="status">Abrindo o treino de hoje…</p>;
+}
+
 export function Treino({ route }: { route: Extract<Route, { tab: 'treino' }> }) {
  const [tab, setTab] = useState<Tab>(lastTab);
  const choose = (t: Tab) => { lastTab = t; setTab(t); };
  const id = route.id;
- const content = route.view === 'executar' && id ? <Executar key={`${id}|${route.day ?? ''}|${route.ex ?? ''}`} id={id} day={route.day} picked={id === FREE_SESSION_ID ? route.ex : undefined} />
+ const content = route.view === 'hoje' ? <TreinoHoje />
+  : route.view === 'executar' && id ? <Executar key={`${id}|${route.day ?? ''}|${route.ex ?? ''}`} id={id} day={route.day} picked={id === FREE_SESSION_ID ? route.ex : undefined} />
   : route.view === 'detalhe' && id === FREE_SESSION_ID ? <Livre />
   : route.view === 'detalhe' && id ? <Detalhe id={id} />
   : route.view === 'concluido' && id ? <Concluido id={id} day={route.day} />

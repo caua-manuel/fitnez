@@ -145,6 +145,8 @@ test('Treino livre: série concluída sobrevive ao reload quando a gravação é
 });
 
 test('PWA: o manifesto tem os atalhos Treino de hoje, Registrar peso e Dieta, apontando para rotas que abrem', async ({ page, baseURL }) => {
+ // Quinta sem academia: "Treino de hoje" cai no Início (o dia de academia está em pendencias-hoje.spec.ts).
+ await page.clock.setFixedTime(new Date('2026-11-12T12:00:00'));
  await page.goto('./'); await seed(page, backupFull({}));
  const manifest = await (await page.request.get(`${baseURL}manifest.webmanifest`)).json();
  const base = new URL(baseURL!).pathname;

@@ -23,6 +23,8 @@ describe('rotas por hash', () => {
  });
  it('treino: novo treino e editor de exercício (\"_\" marca novo)', () => {
   expect(parseRoute('#treino/_/novo')).toEqual({ tab: 'treino', view: 'novo' });
+  expect(parseRoute('#treino/_/hoje')).toEqual({ tab: 'treino', view: 'hoje' });
+  expect(hrefFor({ tab: 'treino', view: 'hoje' })).toBe('#treino/_/hoje');
   expect(parseRoute('#treino/novo')).toEqual({ tab: 'treino', view: 'detalhe', id: 'novo' });
   expect(parseRoute('#treino/UA/exercicio/supino')).toEqual({ tab: 'treino', view: 'exercicio', id: 'UA', ex: 'supino' });
   expect(parseRoute('#treino/UA/exercicio/_')).toEqual({ tab: 'treino', view: 'exercicio', id: 'UA' });
