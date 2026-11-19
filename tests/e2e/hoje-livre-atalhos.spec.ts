@@ -33,6 +33,18 @@ async function seed(page: Page, full: object) {
  await expect(page.getByRole('heading', { name: 'Início', level: 1 })).toBeVisible();
 }
 const wiz = (page: Page) => page.locator('.as[role=dialog]');
+// Atrasa de forma determinística a gravação do estado no IndexedDB (a transação segue viva com leituras encadeadas).
+const slowWrites = (page: Page, ms: number) => page.addInitScript(delay => {
+ const orig = IDBObjectStore.prototype.put;
+ (IDBObjectStore.prototype as any).put = function (this: IDBObjectStore, ...a: any[]) {
+  if (this.name !== 'state') return (orig as any).apply(this, a);
+  const store = this; const end = performance.now() + delay;
+  const spin = () => { if (performance.now() >= end) { (orig as any).apply(store, a); return; } store.get('active').onsuccess = spin; };
+  spin(); return {} as any;
+ };
+}, ms);
+// A série 1 do supino de 2026-11-11 já está gravada como concluída?
+const serieGravada = async (page: Page) => (await state(page)).history?.days?.['2026-11-11']?.log?.supino?.[0]?.done === true;
 
 test.use({ viewport: { width: 360, height: 800 } });
 test.beforeEach(async ({ page }) => {
@@ -96,7 +108,10 @@ test('Treino livre: escolher da biblioteca, registrar, concluir; não marca o di
  await page.getByLabel('Repetições, série 1').fill('8');
  await page.getByLabel('Carga (kg), série 1').fill('20');
  await page.getByRole('button', { name: 'Série 1 concluída' }).click();
- // Recarregar não perde a escolha (fica na URL) nem a série.
+ await expect(page.getByRole('button', { name: 'Série 1 concluída' })).toHaveAttribute('aria-pressed', 'true');
+ // Recarregar não perde a escolha (fica na URL) nem a série, depois de a gravação no IndexedDB concluir
+ // (regressão do CI, run 44598078875: o reload caiu 3,4 ms depois do clique, antes da gravação assíncrona).
+ await expect.poll(() => serieGravada(page), { message: 'série gravada no IndexedDB antes do reload' }).toBe(true);
  await page.reload();
  await expect(page.getByRole('button', { name: 'Série 1 concluída' })).toHaveAttribute('aria-pressed', 'true');
  await page.getByRole('button', { name: 'Concluir treino' }).click();
@@ -112,6 +127,21 @@ test('Treino livre: escolher da biblioteca, registrar, concluir; não marca o di
  await page.goto('#inicio');
  await expect(page.getByRole('link', { name: 'Começar treino' })).toBeVisible();
  await expect(page.locator('.in-others')).toContainText('Treino livre');
+});
+
+// Regressão do CI (run 44598078875): com a gravação lenta, a série só sobrevive ao reload depois de gravada, e o app a mantém depois disso.
+test('Treino livre: série concluída sobrevive ao reload quando a gravação é lenta, desde que concluída', async ({ page }) => {
+ await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
+ await page.goto('./'); await seed(page, backupFull({}));
+ await slowWrites(page, 800);
+ await page.goto('#treino/livre/executar?ex=supino'); await page.reload();
+ await page.getByLabel('Repetições, série 1').fill('8');
+ await page.getByLabel('Carga (kg), série 1').fill('20');
+ await page.getByRole('button', { name: 'Série 1 concluída' }).click();
+ await expect(page.getByRole('button', { name: 'Série 1 concluída' })).toHaveAttribute('aria-pressed', 'true');
+ await expect.poll(() => serieGravada(page), { timeout: 8000 }).toBe(true);
+ await page.reload();
+ await expect(page.getByRole('button', { name: 'Série 1 concluída' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('PWA: o manifesto tem os atalhos Treino de hoje, Registrar peso e Dieta, apontando para rotas que abrem', async ({ page, baseURL }) => {
