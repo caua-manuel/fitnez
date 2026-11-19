@@ -1,6 +1,6 @@
 import type { Payload, StateV3 } from '../../application/repository';
-import { activityFor, dayTypeOf } from '../../domain/dayActivity';
-import type { DayType } from '../../domain/dayActivity';
+import { activityFor, anyDayTypeOf } from '../../domain/dayActivity';
+import type { AnyDayType } from '../../domain/dayActivity';
 import { addDays, mondayOf } from '../../domain/calendar';
 import type { DayIso } from '../../domain/calendar';
 import type { DietDay, DietOption, MealKey } from '../../domain/diet';
@@ -9,7 +9,7 @@ import type { DietDay, DietOption, MealKey } from '../../domain/diet';
 export const MEALS: readonly MealKey[] = ['cafe', 'almoco', 'lanche', 'pos', 'jantar'];
 export const MEAL_NAME: Record<MealKey, string> = { cafe: 'Café da manhã', almoco: 'Almoço', lanche: 'Pré-treino ou lanche', pos: 'Pós-treino', jantar: 'Jantar' };
 export const MEAL_LOWER: Record<MealKey, string> = { cafe: 'café da manhã', almoco: 'almoço', lanche: 'pré-treino ou lanche', pos: 'pós-treino', jantar: 'jantar' };
-export const DAY_TYPE_LABEL: Record<DayType, string> = { perna: 'Dia de perna', academia: 'Dia de academia', jiujitsu: 'Dia de jiu-jitsu', volei: 'Dia de vôlei', descanso: 'Dia de descanso' };
+export const DAY_TYPE_LABEL: Record<AnyDayType, string> = { perna: 'Dia de perna', academia: 'Dia de academia', jiujitsu: 'Dia de jiu-jitsu', volei: 'Dia de vôlei', esporte: 'Dia de esporte', descanso: 'Dia de descanso' };
 
 export const nf = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
 export const nf1 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -25,14 +25,14 @@ export function catalogOf(state: StateV3): Record<MealKey, DietOption[]> {
  return { cafe: diet.cafe ?? [], almoco: diet.almoco ?? [], lanche: diet.lanche ?? [], pos: diet.pos ?? [], jantar: diet.jantar ?? [] };
 }
 
-export function dayTypeFor(state: StateV3, day: DayIso): DayType {
+export function dayTypeFor(state: StateV3, day: DayIso): AnyDayType {
  const [y, m, d] = day.split('-').map(Number);
  const weekday = (new Date(y, m - 1, d).getDay() + 6) % 7;
  const rec = state.history.days[day];
  const plan = state.catalog.plan;
  const act = activityFor({ sched: state.settings.sched, weekday, override: rec?.over, alt: plan.alt });
  const sessionId = act.kind === 'gym' ? act.sessionId : act.kind === 'volei' ? act.altSessionId : undefined;
- return dayTypeOf(act, sessionId ? plan.sess[sessionId]?.name : undefined);
+ return anyDayTypeOf(act, sessionId ? plan.sess[sessionId]?.name : undefined);
 }
 
 const SHORT_WEEK = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];

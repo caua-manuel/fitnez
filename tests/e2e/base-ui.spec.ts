@@ -30,7 +30,7 @@ test('aviso de importação pode ser dispensado', async ({ page }) => {
 });
 
 test('sino abre a folha Avisos (diálogo modal, fundo inerte, Escape devolve o foco)', async ({ page }) => {
-  await open(page, 'inicio');
+  await page.goto('#inicio');
   // Usuário novo: a escolha da data de início abre primeiro; o sino só é alcançável depois dela.
   await page.getByRole('button', { name: 'Decidir depois' }).click();
   const bell = page.getByRole('button', { name: /^Avisos/ });

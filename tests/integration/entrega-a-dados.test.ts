@@ -50,7 +50,7 @@ describe('Entrega A: campos opcionais no v3', () => {
  });
  it('só 6 ids sem grupo e as somas por grupo em UA, UB e LW batem a tabela-alvo', () => {
   const plan = (seedPlan as any).plan; const ex = plan.ex as Record<string, any>;
-  expect(Object.keys(ex)).toHaveLength(38);
+  expect(Object.keys(ex)).toHaveLength(55); // 38 do plano de exemplo + 17 do assistente de início (ADR 008)
   const missing = Object.entries(ex).filter(([id, e]) => muscleGroupOf(id, e) === null).map(([id]) => id).sort();
   expect(missing).toEqual(['copen_b', 'copen_l', 'farmer', 'pescoco', 'salto_b', 'salto_l']);
   const sum: Record<string, number[]> = {};
@@ -61,9 +61,9 @@ describe('Entrega A: campos opcionais no v3', () => {
   expect(sum.core).toEqual([9, 10, 9]);
   expect(sum.quadriceps).toEqual([7, 8, 7]);
  });
- it('estado inicial não ganha g nas sementes e o grupo vem do mapa', async () => {
+ it('estado inicial: g das sementes (ADR 008) é o mesmo grupo do mapa', async () => {
   const r = setup(); const { state } = await r.initialize();
-  expect(state.catalog.plan.ex.supino.g).toBeUndefined();
+  expect(state.catalog.plan.ex.supino.g).toBe('peito'); // antes do ADR 008 a semente não tinha g
   expect(muscleGroupOf('supino', state.catalog.plan.ex.supino)).toBe('peito');
  });
 });

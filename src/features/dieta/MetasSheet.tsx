@@ -3,9 +3,9 @@ import type { FormEvent, ReactNode } from 'react';
 import { useData } from '../../app/DataProvider';
 import { Icon } from '../../ui/icons';
 import { ConfirmSheet, Sheet } from '../../ui/Sheet';
-import { DAY_TYPES, DAY_TYPE_LABEL, carbsFromRest, isExampleTarget, kcalFromMacros, macroTolerance, resolveDietTargets, effectiveDietTargets, targetsToInput, validateDietTargets } from '../../domain/dietTargets';
+import { ANY_DAY_TYPE_LABEL as DAY_TYPE_LABEL, DAY_TYPES, carbsFromRest, dayRowFor, isExampleTarget, kcalFromMacros, macroTolerance, resolveDietTargets, effectiveDietTargets, targetsToInput, validateDietTargets } from '../../domain/dietTargets';
 import type { DietWarning, WarningCode } from '../../domain/dietTargets';
-import type { DayType } from '../../domain/dayActivity';
+import type { AnyDayType as DayType } from '../../domain/dayActivity';
 import { proteinTargetG } from '../../domain/profile';
 import { localDayOf } from '../../domain/planStart';
 import { DAY_TYPE_LABEL as DAY_TYPE_TODAY, dayTypeFor } from './dietData';
@@ -13,6 +13,7 @@ import { useMetasActions } from './metasActions';
 import './metas.css';
 
 type Form = ReturnType<typeof targetsToInput>;
+type FormDays = Record<DayType, { kcal: string; carbs: string }>;
 const nf = new Intl.NumberFormat('pt-BR');
 const intOf = (s: string): number | null => (/^\s*\d+\s*$/.test(s) ? Number(s) : null);
 const PROTEIN_CODES: WarningCode[] = ['proteina-baixa', 'proteina-alta'];
@@ -26,6 +27,7 @@ const DAY_CONTEXT: Record<DayType, string> = {
  academia: 'Dias de outros treinos de academia',
  jiujitsu: 'Dias de aula de jiu-jitsu',
  volei: 'Dias de vôlei',
+ esporte: 'Dias de esporte ou corrida',
  descanso: 'Dias sem treino',
 };
 
@@ -60,13 +62,19 @@ export function MetasSheet({ onClose }: { onClose: () => void }) {
  const weightKg = settings.profile?.weightKg;
  const hasWeight = typeof weightKg === 'number';
  const autoProtein = proteinTargetG(weightKg);
- const [form, setForm] = useState<Form>(() => targetsToInput(effectiveDietTargets(settings, today)));
+ // Esporte (ADR 008) só aparece quando a rotina tem esse tipo de dia; sem meta própria, parte da do vôlei.
+ const hasSport = settings.sched.some(s => s?.k === 'esporte');
+ const types: readonly DayType[] = hasSport ? [...DAY_TYPES.slice(0, 4), 'esporte', 'descanso'] : DAY_TYPES;
+ const [form, setForm] = useState<Form>(() => {
+  const f = targetsToInput(effectiveDietTargets(settings, today));
+  return hasSport && !f.days.esporte ? { ...f, days: { ...f.days, esporte: { ...f.days.volei } } } : f;
+ });
  const [attempted, setAttempted] = useState(false);
  const [saving, setSaving] = useState(false);
  const [failed, setFailed] = useState(false);
  const [confirmRestore, setConfirmRestore] = useState(false);
  const [saudeOpen, setSaudeOpen] = useState(false);
- const [open, setOpen] = useState<Record<DayType, boolean>>(() => ({ perna: false, academia: false, jiujitsu: false, volei: false, descanso: false, [todayType]: true }));
+ const [open, setOpen] = useState<Record<DayType, boolean>>(() => ({ perna: false, academia: false, jiujitsu: false, volei: false, esporte: false, descanso: false, [todayType]: true }));
  const [calcNote, setCalcNote] = useState<{ day: DayType; text: string; undo?: string } | null>(null);
 
  const result = validateDietTargets({ days: form.days, proteinG: form.proteinAuto ? 'auto' : form.proteinG, fatG: form.fatG, waterL: form.waterL }, { weightKg });
@@ -80,13 +88,13 @@ export function MetasSheet({ onClose }: { onClose: () => void }) {
  const fatNum = intOf(form.fatG);
  const id = (k: string) => `mt-${uid}-${k}`;
 
- const setDay = (d: DayType, k: 'kcal' | 'carbs', v: string) => { setForm(f => ({ ...f, days: { ...f.days, [d]: { ...f.days[d], [k]: v } } })); setFailed(false); setCalcNote(n => (n?.day === d ? null : n)); };
+ const setDay = (d: DayType, k: 'kcal' | 'carbs', v: string) => { setForm(f => ({ ...f, days: { ...f.days, [d]: { ...(f.days as FormDays)[d], [k]: v } } })); setFailed(false); setCalcNote(n => (n?.day === d ? null : n)); };
  const set = (k: 'proteinG' | 'fatG' | 'waterL', v: string) => { setForm(f => ({ ...f, [k]: v })); setFailed(false); };
 
  const calc = (d: DayType) => {
-  const kcal = intOf(form.days[d].kcal);
+  const kcal = intOf((form.days as FormDays)[d].kcal);
   if (kcal === null || fatNum === null || effProtein === null) { setCalcNote({ day: d, text: 'Preencha as calorias do dia, a proteína e a gordura com números inteiros para completar o carboidrato.' }); return; }
-  const before = form.days[d].carbs;
+  const before = (form.days as FormDays)[d].carbs;
   const carbs = carbsFromRest(kcal, effProtein, fatNum);
   setDay(d, 'carbs', String(carbs));
   setCalcNote({ day: d, text: before.trim() === String(carbs) ? `O carboidrato já era ${nf.format(carbs)} g.` : `Carboidrato: de ${before.trim() === '' ? 'vazio' : `${before.trim()} g`} para ${nf.format(carbs)} g.`, undo: before });
@@ -100,7 +108,7 @@ export function MetasSheet({ onClose }: { onClose: () => void }) {
   setAttempted(true);
   if (!result.ok) {
    // Abre os tipos de dia com erro antes de mover o foco (campo recolhido não recebe foco).
-   const bad = DAY_TYPES.filter(d => Object.keys(result.errors).some(k => k.startsWith(`days.${d}.`)));
+   const bad = types.filter(d => Object.keys(result.errors).some(k => k.startsWith(`days.${d}.`)));
    if (bad.length) setOpen(o => ({ ...o, ...Object.fromEntries(bad.map(d => [d, true])) }));
    requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector<HTMLElement>('.mt-form [aria-invalid="true"]')?.focus()));
    return;
@@ -121,8 +129,9 @@ export function MetasSheet({ onClose }: { onClose: () => void }) {
  const globalWarnings = (codes: WarningCode[]) => warnings.filter(w => codes.includes(w.code));
  const protWarn = globalWarnings(PROTEIN_CODES), fatWarn = globalWarnings(['gordura-baixa']), waterWarn = globalWarnings(['agua-alta']);
 
-  const todayKcal = current.days[todayType].kcal;
- const todayCarbs = current.days[todayType].carbs;
+ const todayRow = dayRowFor(current.days, todayType);
+ const todayKcal = todayRow.kcal;
+ const todayCarbs = todayRow.carbs;
 
  return <Sheet title="Suas metas diárias" onClose={onClose} initialFocus="[data-mt-start]" className="mt-sheet">
   <form className="mt-form" noValidate onSubmit={e => void submit(e)} aria-busy={saving || busy}>
@@ -173,10 +182,10 @@ export function MetasSheet({ onClose }: { onClose: () => void }) {
     <div className="mt-head"><h3 id={id('h-dias')}>Calorias e carboidratos por tipo de dia</h3>
      <p className="mt-sub">No plano de exemplo, dias de treino mais pesado têm mais carboidrato, uma das fontes de energia do treino. Toque em um tipo de dia para ajustar.</p></div>
     <div className="mt-days">
-     {DAY_TYPES.map(d => {
+     {types.map(d => {
       const kErr = shown[`days.${d}.kcal`], cErr = shown[`days.${d}.carbs`];
-      const kcal = intOf(form.days[d].kcal);
-      const carbs = intOf(form.days[d].carbs);
+      const kcal = intOf((form.days as FormDays)[d].kcal);
+      const carbs = intOf((form.days as FormDays)[d].carbs);
       const sum = carbs !== null && fatNum !== null && effProtein !== null ? kcalFromMacros(effProtein, carbs, fatNum) : null;
       const diff = sum !== null && kcal !== null ? sum - kcal : null;
       const matches = diff !== null && kcal !== null && Math.abs(diff) <= macroTolerance(kcal);
@@ -200,10 +209,10 @@ export function MetasSheet({ onClose }: { onClose: () => void }) {
        <div className="mt-day-body" id={bodyId} role="group" aria-labelledby={titleId} hidden={!isOpen}>
         <div className="mt-pair">
          <Field id={id(`${d}-kcal`)} label="Calorias do dia" error={kErr} errorBelow help="Quanto você quer comer nesse tipo de dia, em kcal." describedBy={describedBy}>
-          {p => <input {...p} type="text" inputMode="numeric" autoComplete="off" value={form.days[d].kcal} onChange={e => setDay(d, 'kcal', e.target.value)} />}
+          {p => <input {...p} type="text" inputMode="numeric" autoComplete="off" value={(form.days as FormDays)[d].kcal} onChange={e => setDay(d, 'kcal', e.target.value)} />}
          </Field>
          <Field id={id(`${d}-carbs`)} label="Carboidratos do dia" error={cErr} errorBelow help="Em gramas, nesse tipo de dia." describedBy={describedBy}>
-          {p => <input {...p} type="text" inputMode="numeric" autoComplete="off" value={form.days[d].carbs} onChange={e => setDay(d, 'carbs', e.target.value)} />}
+          {p => <input {...p} type="text" inputMode="numeric" autoComplete="off" value={(form.days as FormDays)[d].carbs} onChange={e => setDay(d, 'carbs', e.target.value)} />}
          </Field>
         </div>
         {kErr ? <p className="mt-error" id={`${id(`${d}-kcal`)}-erro`}><Icon name="info" size={18} />{kErr}</p> : null}

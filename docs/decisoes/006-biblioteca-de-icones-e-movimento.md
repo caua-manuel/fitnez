@@ -35,7 +35,7 @@ O app já tem sistema de tokens e CSS próprio (`DESIGN.md`). Migrar não traria
 
 ### 5. Orçamento de peso (verificado no build)
 - JavaScript gzip total do app: no máximo 190 KB (hoje cerca de 133 KB).
-- CSS gzip: no máximo 12 KB.
+- CSS gzip: no máximo 12 KB (valor original; o build já usava 24 KB, ver revisão abaixo).
 - `devops-github` e `qa-testes` incluem a checagem no build/CI; estourar o orçamento falha o build.
 
 ### 6. Regras de movimento
@@ -61,3 +61,11 @@ Acentos de seção (verde para Dieta, âmbar para sequência/conquistas) aparece
 ## Decisões que o dono ainda precisa tomar
 1. 3D de verdade (three.js) sob demanda em um elemento: recomendo não fazer agora; reavaliar só se houver uma ideia concreta e se o orçamento permitir.
 2. Conquistas e gamificação (selos, sequências): recomendo começar pequeno, com selos discretos em âmbar e sem pressão por streak, após a Entrega A ser aprovada.
+
+## Revisão de 19/11/2026 (orçamento de peso)
+- Antes: JavaScript gzip ≤ 190 KB; CSS gzip ≤ 24 KB no build. O texto acima dizia 12 KB de CSS, mas o `scripts/verify-build.ts` já usava 24 KB desde que o CSS legado (~19,5 KB) passou de 12; esta revisão corrige a divergência.
+- Medido antes da revisão: JS 196,1 KB e CSS 23,5 KB (gzip), acima ou no limite.
+- Novo: JavaScript gzip ≤ 215 KB; CSS gzip ≤ 28 KB (aplicado em `scripts/verify-build.ts`).
+- Motivo: funcionalidades pedidas pelo dono, o assistente de início (ADR 008) e o registro de treino inspirado no Hevy (ADR 009).
+- Regra: estourar de novo exige outra revisão registrada neste ADR; não se sobe o limite só no script.
+- Próximo passo recomendado: carregar sob demanda o assistente (ver `docs/handoffs/devops-orcamento-peso.md`).

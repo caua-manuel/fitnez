@@ -1,4 +1,4 @@
-import type { DayType } from './dayActivity';
+import type { AnyDayType, DayType } from './dayActivity';
 import { dietTargetsFromProfile } from './profile';
 
 export type MealKey = 'cafe' | 'almoco' | 'lanche' | 'pos' | 'jantar';
@@ -18,11 +18,12 @@ export interface Totals { kcal: number; p: number; c: number; g: number }
 const MEALS: MealKey[] = ['cafe', 'almoco', 'lanche', 'pos', 'jantar'];
 const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 
-const TARGETS: Record<DayType, { kcal: number; carbs: number; focus: string; adjustments: string[] }> = {
+const TARGETS: Record<AnyDayType, { kcal: number; carbs: number; focus: string; adjustments: string[] }> = {
  perna: { kcal: 2600, carbs: 340, focus: 'Perna pesada: mais carboidrato para o treino', adjustments: ['+50 g de arroz no almoço', '+1 banana no pré-treino'] },
  academia: { kcal: 2450, carbs: 305, focus: 'Academia: cardápio base', adjustments: [] },
  jiujitsu: { kcal: 2500, carbs: 315, focus: 'Jiu-jitsu: banana opcional antes da aula, sódio e água', adjustments: ['Banana opcional antes da aula', 'Sódio e água'] },
  volei: { kcal: 2500, carbs: 315, focus: 'Vôlei: água de coco e banana antes', adjustments: ['Água de coco 300 ml', '1 banana antes'] },
+ esporte: { kcal: 2500, carbs: 315, focus: 'Esporte: água e 1 banana antes', adjustments: ['Água antes e depois', '1 banana antes'] },
  descanso: { kcal: 2100, carbs: 215, focus: 'Descanso: menos calorias, sem o lanche da tarde', adjustments: ['Pular o lanche da tarde'] }
 };
 
@@ -34,10 +35,12 @@ export const DAY_TARGET_DEFAULTS: Readonly<Record<DayType, Readonly<{ kcal: numb
  volei: { kcal: TARGETS.volei.kcal, carbs: TARGETS.volei.carbs },
  descanso: { kcal: TARGETS.descanso.kcal, carbs: TARGETS.descanso.carbs }
 };
+/** Meta de exemplo do dia de esporte (ADR 008): igual à do vôlei, que já representava esporte coletivo. */
+export const SPORT_DAY_DEFAULT: Readonly<{ kcal: number; carbs: number }> = { kcal: TARGETS.esporte.kcal, carbs: TARGETS.esporte.carbs };
 export const DEFAULT_WATER_L = 3;
 
 /** `kcal`, `carbs` e `waterL` opcionais: usados pelas metas editáveis (ver dietTargets.ts); ausentes = padrão do plano. */
-export function dayTarget(type: DayType, opts: { protein?: number; fat?: number; kcal?: number; carbs?: number; waterL?: number } = {}): DayTarget {
+export function dayTarget(type: AnyDayType, opts: { protein?: number; fat?: number; kcal?: number; carbs?: number; waterL?: number } = {}): DayTarget {
  const t = TARGETS[type] ?? TARGETS.academia;
  return {
   kcal: typeof opts.kcal === 'number' && opts.kcal > 0 ? opts.kcal : t.kcal,
@@ -82,7 +85,7 @@ export function progress(totals: Totals, target: DayTarget): { kcal: number; pro
  };
 }
 
-export function applyAdjustments(option: DietOption, type: DayType, meal: MealKey): { option: DietOption; note?: string } {
+export function applyAdjustments(option: DietOption, type: AnyDayType, meal: MealKey): { option: DietOption; note?: string } {
  if (type === 'perna' && meal === 'almoco') return { option, note: 'Dia de perna: some +50 g de arroz neste almoço.' };
  if (type === 'perna' && meal === 'lanche') return { option, note: 'Dia de perna: some +1 banana no pré-treino.' };
  if (type === 'descanso' && meal === 'lanche') return { option, note: 'Dia de descanso: sugerimos pular o lanche da tarde.' };
@@ -108,6 +111,6 @@ export function weeklyReview(input: { weights: number[]; waists: number[]; stren
 }
 
 /** Meta do dia com proteína vinda do peso do perfil (185 g sem peso). Kcal e carboidrato seguem o tipo de dia. */
-export function dayTargetForProfile(type: DayType, profile?: { weightKg?: number } | null): DayTarget {
+export function dayTargetForProfile(type: AnyDayType, profile?: { weightKg?: number } | null): DayTarget {
  return dayTarget(type, dietTargetsFromProfile(profile));
 }

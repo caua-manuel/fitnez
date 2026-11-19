@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
 import type { Route } from '../../app/router';
-import { activityFor } from '../../domain/dayActivity';
-import { phaseOf, weekLabel } from '../../domain/calendar';
+import { activityFor, activityLabel } from '../../domain/dayActivity';
+import { phaseOf, rirSequence, weekLabel } from '../../domain/calendar';
 import { Biblioteca } from './Biblioteca';
 import { Detalhe } from './Detalhe';
 import { Executar } from './Executar';
@@ -12,6 +12,8 @@ import { CartaoTreino } from './Cartao';
 import { EditarTreino } from './EditarTreino';
 import { EditarExercicio } from './EditarExercicio';
 import { NovoTreino } from './NovoTreino';
+import { Livre } from './Livre';
+import { FREE_SESSION_ID } from '../../domain/weekStreak';
 import { Icon } from '../../ui/icons';
 import { WEEKDAYS, minutesLabel, plural, shortDay, statusOf, todayIso, weekDays } from './util';
 import { useStagger } from './stagger';
@@ -26,7 +28,7 @@ function MeuPlano() {
  const rv = useStagger('treino-plano');
  if (!state) return null;
  const today = todayIso(), plan = state.catalog.plan;
- const phase = phaseOf(state.settings.start, today);
+ const phase = phaseOf(state.settings.start, today, rirSequence(state.catalog.plan));
  const week = phase.kind === 'week' ? phase.week : phase.kind === 'done' ? 11 : 0;
  const days = weekDays(state, week);
  return <div>
@@ -46,8 +48,8 @@ function MeuPlano() {
      if (!s) return <li key={day} {...rv(i)}><CartaoTreino name="Treino removido" date={date} /></li>;
      return <li key={day} {...rv(i)}><CartaoTreino id={act.sessionId} name={s.name} href={hrefFor({ tab: 'treino', view: 'detalhe', id: act.sessionId })} date={date} exercises={plural(s.ex.length, 'exercício', 'exercícios')} minutes={minutesLabel(s.min)} status={phase.kind === 'week' ? status : null} /></li>;
     }
-    const label = act.kind === 'bjj' ? 'Jiu-jitsu' : act.kind === 'volei' ? 'Vôlei' : 'Descanso';
-    const icon = act.kind === 'bjj' ? 'alvo' : act.kind === 'volei' ? 'fogo' : 'lua';
+    const label = activityLabel(act);
+    const icon = act.kind === 'bjj' ? 'alvo' : act.kind === 'volei' || act.kind === 'esporte' ? 'fogo' : 'lua';
     return <li key={day} {...rv(i)}><CartaoTreino name={label} icon={icon} date={date} menu={false} quiet /></li>;
    })}
   </ul>
@@ -58,7 +60,8 @@ export function Treino({ route }: { route: Extract<Route, { tab: 'treino' }> }) 
  const [tab, setTab] = useState<Tab>(lastTab);
  const choose = (t: Tab) => { lastTab = t; setTab(t); };
  const id = route.id;
- const content = route.view === 'executar' && id ? <Executar key={`${id}|${route.day ?? ''}`} id={id} day={route.day} />
+ const content = route.view === 'executar' && id ? <Executar key={`${id}|${route.day ?? ''}|${route.ex ?? ''}`} id={id} day={route.day} picked={id === FREE_SESSION_ID ? route.ex : undefined} />
+  : route.view === 'detalhe' && id === FREE_SESSION_ID ? <Livre />
   : route.view === 'detalhe' && id ? <Detalhe id={id} />
   : route.view === 'concluido' && id ? <Concluido id={id} day={route.day} />
   : route.view === 'editar' && id ? <EditarTreino key={id} id={id} />
@@ -76,6 +79,7 @@ export function Treino({ route }: { route: Extract<Route, { tab: 'treino' }> }) 
     <button type="button" aria-pressed={tab === 'plano'} onClick={() => choose('plano')}>Meu plano</button>
     <button type="button" aria-pressed={tab === 'biblioteca'} onClick={() => choose('biblioteca')}>Biblioteca</button>
    </div>
+   <a className="tr-livre" href={hrefFor({ tab: 'treino', view: 'detalhe', id: FREE_SESSION_ID })}><Icon name="play" size={20} /><span><strong>Treino livre</strong><span className="muted">Escolha os exercícios na hora</span></span><Icon name="seta" size={20} /></a>
    {tab === 'plano' ? <MeuPlano /> : <Biblioteca />}
    <p className="tr-aviso">{AVISO_SAUDE}</p>
   </div>;

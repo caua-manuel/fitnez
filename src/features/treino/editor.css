@@ -102,3 +102,12 @@
 .ed-pick-list button{border:1px solid var(--border);border-radius:var(--radius-control);font-weight:600}
 .ed-pick-list button span{font-weight:400;font-size:.875rem}
 .ed-linkbtn{font-weight:600}
+
+/* Treino livre: seleção numerada e botão fixo na zona do polegar */
+.ed-pick-list .lv-opt{grid-template-columns:1fr auto;column-gap:12px}
+.lv-opt>strong,.lv-opt>span:not(.lv-mark){grid-column:1}
+.lv-mark{grid-column:2;grid-row:1/span 2;align-self:center;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--field-border);font-size:.875rem;font-weight:700}
+.ed-pick-list .lv-opt[aria-pressed=true]{border-color:var(--primary)}
+.lv-opt[aria-pressed=true] .lv-mark{background:var(--primary);border-color:var(--primary);color:var(--primary-foreground)}
+.lv-footer{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom));padding-bottom:8px;margin-top:16px;padding-top:8px;background:linear-gradient(transparent,var(--background) 30%)}
+.lv-hint{margin:6px 0 0;font-size:.875rem;text-align:center}

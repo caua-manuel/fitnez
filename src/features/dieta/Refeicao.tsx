@@ -49,6 +49,7 @@ function Recipe({ id }: { id: string }) {
 }
 
 export function Refeicao({ meal, day, today, setDay }: Props) {
+ const hide = useData().state?.settings.onboarding?.hideDietNumbers === true;
  const { dd, catalog, type, choose, mark, unmark, snapshotMeal, restoreMeal } = useDietDay(day);
  const [info, setInfo] = useState(false);
  const options = catalog[meal];
@@ -89,8 +90,8 @@ export function Refeicao({ meal, day, today, setDay }: Props) {
       <span className="dt-opt-text">
        <span className="dt-tag">Opção {i + 1}</span>
        <strong className="dt-opt-name">{o.name}</strong>
-       <span className="dt-opt-kcal">{fmt(o.kcal)} kcal</span>
-       <span className="dt-opt-macros"><span>P {fmt(o.p)} g</span><span>C {fmt(o.c)} g</span><span>G {fmt(o.g)} g</span></span>
+       {hide ? null : <><span className="dt-opt-kcal">{fmt(o.kcal)} kcal</span>
+       <span className="dt-opt-macros"><span>P {fmt(o.p)} g</span><span>C {fmt(o.c)} g</span><span>G {fmt(o.g)} g</span></span></>}
       </span>
       <span className="dt-radio" aria-hidden="true" />
       <span className="dt-opt-items">{o.items.join(' · ')}</span>

@@ -1,10 +1,11 @@
 import { activityFor } from '../../domain/dayActivity';
 import { addDays, mondayOf } from '../../domain/calendar';
 import type { DayIso } from '../../domain/calendar';
-import { hasAnyDone } from '../../domain/workoutRecord';
+import { planWorkoutsDone } from '../../domain/weekStreak';
+const hasAnyDone = (r: DayRecord | undefined) => planWorkoutsDone(r) > 0; // treino livre não marca o dia
 import type { DayRecord, Plan, Payload } from '../../application/repository';
 
-export type WeekKind = 'treino' | 'aula' | 'jogo' | 'descanso';
+export type WeekKind = 'treino' | 'aula' | 'jogo' | 'esporte' | 'descanso';
 export type WeekStatus = 'feito' | 'pendente' | 'hoje' | 'previsto' | 'livre';
 export interface WeekDay { weekday: number; day: DayIso; short: string; long: string; kind: WeekKind; name: string; status: WeekStatus; isToday: boolean; label: string }
 
@@ -28,6 +29,7 @@ export function weekStrip(input: { sched: Payload[]; plan: Plan; days: Record<st
     if (act.kind === 'gym') { kind = 'treino'; name = input.plan.sess[act.sessionId]?.name ?? 'Treino'; done = hasAnyDone(record); }
     else if (act.kind === 'bjj') { kind = 'aula'; name = 'Jiu-jitsu'; done = record?.acts?.bjj === true; }
     else if (act.kind === 'volei') { kind = 'jogo'; name = 'Vôlei'; done = record?.acts?.volei === true || hasAnyDone(record); }
+    else if (act.kind === 'esporte') { kind = 'esporte'; name = act.label; done = record?.acts?.esporte === true; }
     else { kind = 'descanso'; name = 'Descanso'; done = false; }
     const isToday = day === input.today;
     const status: WeekStatus = done ? 'feito' : isToday ? 'hoje' : kind === 'descanso' ? 'livre' : input.preplan || day > input.today ? 'previsto' : 'pendente';

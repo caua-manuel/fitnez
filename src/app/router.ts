@@ -33,8 +33,10 @@ export function parseRoute(hash: string): Route {
   const view = VIEWS.find(v => v === parts[2]) ?? 'detalhe';
   const route: Extract<Route, { tab: 'treino' }> = { tab: 'treino', view, id };
   if (view === 'exercicio' && parts[3] && parts[3] !== NEW) route.ex = parts[3];
-  const day = new URLSearchParams(query).get('dia');
+  const q = new URLSearchParams(query), day = q.get('dia'), list = q.get('ex');
   if ((view === 'executar' || view === 'concluido') && day && DAY.test(day)) route.day = day;
+  // Treino livre: os exercícios escolhidos vão na URL (?ex=a,b), então recarregar ou voltar não perde a escolha.
+  if (view === 'executar' && list) route.ex = list;
   return route;
  }
  return { tab: 'inicio' };
@@ -52,5 +54,9 @@ export function hrefFor(route: Route): string {
  const base = `#treino/${encodeURIComponent(route.id)}`;
  if (route.view === 'detalhe') return base;
  if (route.view === 'exercicio') return `${base}/exercicio/${route.ex ? encodeURIComponent(route.ex) : NEW}`;
- return `${base}/${route.view}${route.day ? `?dia=${route.day}` : ''}`;
+ const q = new URLSearchParams();
+ if (route.day) q.set('dia', route.day);
+ if (route.view === 'executar' && route.ex) q.set('ex', route.ex);
+ const qs = q.toString().replace(/%2C/g, ',');
+ return `${base}/${route.view}${qs ? `?${qs}` : ''}`;
 }

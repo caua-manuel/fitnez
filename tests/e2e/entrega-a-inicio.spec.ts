@@ -70,26 +70,25 @@ test('Início: dia de academia mostra semana, treino da rotina e Começar treino
  await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
  await page.goto('./'); await seed(page, START_SEMANA_4);
  await expect(page.getByText('Semana 04 de 12', { exact: true })).toBeVisible();
- await expect(page.getByText('Olá!', { exact: true })).toBeVisible();
- await expect(page.getByText('RIR 4', { exact: false })).toBeVisible();
- await expect(page.getByText('Deload', { exact: false }).first()).toBeVisible();
+ await expect(page.getByText('Qua, 11 nov', { exact: true })).toBeVisible();
+ // Sem jargão no topo: o RIR vira frase e a semana leve vem por extenso.
+ await expect(page.getByText('Semana leve · Pare 4 repetições antes da falha', { exact: false })).toBeVisible();
+ await expect(page.getByText('RIR', { exact: false })).toHaveCount(0);
+ await expect(page.getByRole('img', { name: 'Semana 4 de 12 do plano' })).toBeVisible();
  await expect(page.getByRole('heading', { name: 'Upper A', level: 2 })).toBeVisible();
  await expect(page.getByText('10 exercícios')).toBeVisible();
  const start = page.getByRole('link', { name: 'Começar treino' });
  await expect(start).toBeVisible();
  await expect(start).toHaveAttribute('href', /#treino\/UA\/executar/);
- await expect(page.getByRole('link', { name: /Dieta/ }).first()).toBeVisible();
- await expect(page.getByRole('link', { name: /Evolução/ }).first()).toBeVisible();
+ // Sem atalhos que repetem a barra inferior nem segmentado Treino/Dieta.
+ await expect(page.locator('.in-atalho')).toHaveCount(0);
+ await expect(page.getByRole('group', { name: 'O que mostrar no cartão principal' })).toHaveCount(0);
  const body = await page.locator('main').innerText();
  expect(body).not.toContain('João'); expect(body).not.toContain('1.850');
- const top = async (t: string) => (await page.getByText(t, { exact: true }).first().boundingBox())!.y;
- expect(await top('Olá!')).toBeLessThan(await top('Semana 04 de 12'));
- expect(await top('Semana 04 de 12')).toBeLessThan(200);
+ // A ação principal aparece sem rolar, acima da barra inferior.
+ expect((await start.boundingBox())!.y + 52).toBeLessThan(800 - 64);
  await expect(page.locator('.system-status')).toHaveCount(0);
- await expect(page.getByRole('progressbar', { name: 'Semana 4 de 12: 33% do plano' })).toBeVisible();
- const seg = page.getByRole('button', { name: 'Treino', exact: true });
- await expect(seg).toHaveAttribute('aria-pressed', 'true');
- expect(await seg.evaluate(e => getComputedStyle(e).backgroundColor)).toBe('rgb(10, 88, 240)');
+ expect(await start.evaluate(e => getComputedStyle(e).backgroundColor)).toBe('rgb(10, 88, 240)');
  expect(await noHScroll(page)).toBe(true);
  await page.screenshot({ path: info.outputPath('inicio-academia-360.png'), fullPage: true });
 });
@@ -97,7 +96,7 @@ test('Início: dia de academia mostra semana, treino da rotina e Começar treino
 test('Início: dia de aula grava acts.bjj e feel', async ({ page }, info) => {
  await page.clock.setFixedTime(new Date('2026-11-12T12:00:00'));
  await page.goto('./'); await seed(page, START_SEMANA_4);
- await page.getByRole('button', { name: 'Marcar aula como feita' }).click();
+ await page.getByRole('button', { name: 'Fiz a aula' }).click();
  await page.getByRole('button', { name: 'Nota 4 de 5' }).click();
  await expect(page.getByRole('button', { name: 'Nota 4 de 5' })).toHaveAttribute('aria-pressed', 'true');
  await expect.poll(async () => (await state(page)).history.days['2026-11-12']?.feel).toBe(4);
@@ -112,14 +111,16 @@ test('Início: dia de aula grava acts.bjj e feel', async ({ page }, info) => {
 test('Início: trocar treino de hoje grava over e Registrar outro dia abre outra data', async ({ page }) => {
  await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
  await page.goto('./'); await seed(page, START_SEMANA_4);
- await page.getByRole('button', { name: 'Trocar treino', exact: true }).click();
+ await page.getByRole('button', { name: 'Mais opções do dia' }).click();
+ await page.getByRole('menuitem', { name: 'Trocar treino' }).click();
  await page.getByRole('button', { name: /^Lower\b/ }).first().click();
  await expect(page.getByRole('heading', { name: 'Lower', level: 2 })).toBeVisible();
  await expect.poll(async () => (await state(page)).history.days['2026-11-11']?.over).toBe('LW');
- await page.getByRole('button', { name: 'Registrar outro dia' }).click();
+ await page.getByRole('button', { name: 'Mais opções do dia' }).click();
+ await page.getByRole('menuitem', { name: 'Registrar outro dia' }).click();
  await page.getByLabel('Dia do registro').fill('2026-11-09');
  await page.getByRole('button', { name: 'Usar este dia' }).click();
- await expect(page.getByRole('button', { name: 'Marcar aula como feita' })).toBeVisible();
+ await expect(page.getByRole('button', { name: 'Fiz a aula' })).toBeVisible();
 });
 
 test('Início: pré-semana mostra a contagem de dias', async ({ page }, info) => {
@@ -133,7 +134,7 @@ test('Início: pré-semana mostra a contagem de dias', async ({ page }, info) =>
  await expect(page.getByRole('heading', { name: 'Aula de jiu-jitsu', level: 2 })).toBeVisible();
  await expect(page.getByText('Primeiro treino do plano')).toBeVisible();
  await expect(page.getByRole('button', { name: 'Começar o plano hoje' })).toBeVisible();
- await expect(page.getByRole('link', { name: 'Treinar agora (sem alterar o plano)' })).toHaveAttribute('href', /#treino\/\w+\/executar/);
+ await expect(page.getByRole('link', { name: 'Treinar sem mudar a data' })).toHaveAttribute('href', /#treino\/\w+\/executar/);
  expect(await noHScroll(page)).toBe(true);
  await page.screenshot({ path: info.outputPath('inicio-pre-360.png'), fullPage: true });
  // Treinar agora não mexe na data de início.
@@ -174,7 +175,11 @@ test('Perfil: mudar a data de início grava a segunda-feira, desfaz e vale após
 test('Início: descanso mostra o checklist do condomínio e grava', async ({ page }) => {
  await page.clock.setFixedTime(new Date('2026-11-15T12:00:00')); // domingo
  await page.goto('./'); await seed(page, START_SEMANA_4);
+ await expect(page.getByText('Amanhã:', { exact: false })).toBeVisible();
+ await expect(page.getByRole('list', { name: 'Sua semana' })).toBeVisible();
  const first = page.getByRole('button', { name: /^Mobilidade: 90\/90/ });
+ await expect(first).toBeHidden();
+ await page.getByText('Opcional: treino do condomínio').click();
  await first.click();
  await expect(first).toHaveAttribute('aria-pressed', 'true');
  await expect.poll(async () => (await state(page)).history.days['2026-11-15']?.cond?.['0']).toBe(true);
@@ -183,8 +188,9 @@ test('Início: descanso mostra o checklist do condomínio e grava', async ({ pag
 test('Início: Trocar treino abre uma folha acessível, confirma a troca e devolve o foco', async ({ page }) => {
  await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
  await page.goto('./'); await seed(page, START_SEMANA_4);
- const trigger = page.getByRole('button', { name: 'Trocar treino', exact: true });
- await trigger.click();
+ const trigger = page.getByRole('button', { name: 'Mais opções do dia' });
+ const openSwap = async () => { await trigger.click(); await page.getByRole('menuitem', { name: 'Trocar treino' }).click(); };
+ await openSwap();
  const dlg = page.getByRole('dialog', { name: 'Escolha o treino do dia' });
  await expect(dlg).toBeVisible();
  await expect.poll(async () => { const b = (await dlg.boundingBox())!; return b.y >= 0 && b.y + b.height <= 801; }).toBe(true); // espera a animação de subida
@@ -197,7 +203,7 @@ test('Início: Trocar treino abre uma folha acessível, confirma a troca e devol
  await page.keyboard.press('Escape');
  await expect(dlg).toHaveCount(0);
  await expect(trigger).toBeFocused();
- await trigger.click();
+ await openSwap();
  await dlg.getByRole('button', { name: /^Upper B\b/ }).click();
  await expect(dlg).toHaveCount(0);
  await expect(page.locator('.ui-toast')).toContainText('Treino de hoje: Upper B');
@@ -209,7 +215,8 @@ test('Início: Trocar treino abre uma folha acessível, confirma a troca e devol
 test('Início: Registrar outro dia abre folha, recusa data futura e usa o dia escolhido', async ({ page }) => {
  await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
  await page.goto('./'); await seed(page, START_SEMANA_4);
- await page.getByRole('button', { name: 'Registrar outro dia' }).click();
+ await page.getByRole('button', { name: 'Mais opções do dia' }).click();
+ await page.getByRole('menuitem', { name: 'Registrar outro dia' }).click();
  const dlg = page.getByRole('dialog', { name: 'Registrar outro dia' });
  await expect(dlg.getByLabel('Dia do registro')).toBeFocused();
  await dlg.getByLabel('Dia do registro').fill('2026-11-12');
@@ -255,29 +262,23 @@ test('Início: treino concluído gravado só no campo legado também aparece com
 test('Início: Desmarcar aula oferece Desfazer e devolve a aula e a nota', async ({ page }) => {
  await page.clock.setFixedTime(new Date('2026-11-12T12:00:00')); // quinta-feira, dia de aula na semana 4
  await page.goto('./'); await seed(page, START_SEMANA_4);
- await page.getByRole('button', { name: 'Marcar aula como feita' }).click();
+ await page.getByRole('button', { name: 'Fiz a aula' }).click();
  await page.getByRole('button', { name: 'Nota 4 de 5' }).click();
  await expect.poll(async () => (await state(page)).history.days['2026-11-12']?.feel).toBe(4);
  await page.getByRole('button', { name: 'Desmarcar aula' }).click();
- await expect(page.getByRole('button', { name: 'Marcar aula como feita' })).toBeVisible();
+ await expect(page.getByRole('button', { name: 'Fiz a aula' })).toBeVisible();
  await page.locator('.ui-toast').getByRole('button', { name: 'Desfazer' }).click();
  await expect(page.getByRole('button', { name: 'Nota 4 de 5' })).toHaveAttribute('aria-pressed', 'true');
  await expect.poll(async () => { const d = (await state(page)).history.days['2026-11-12']; return [d?.acts?.bjj, d?.feel]; }).toEqual([true, 4]);
 });
 
-test('Início: o segmentado Dieta troca o cartão principal pelo resumo da dieta e os dois cartões Dieta e Evolução continuam', async ({ page }) => {
+test('Início: uma linha da dieta mostra a próxima refeição e as kcal restantes', async ({ page }) => {
  await page.clock.setFixedTime(new Date('2026-11-11T12:00:00'));
  await page.goto('./'); await seed(page, START_SEMANA_4);
- await expect(page.locator('.in-atalho')).toHaveCount(2);
- await expect(page.locator('.in-atalho').first()).toContainText('Seu plano alimentar');
- await expect(page.locator('.in-atalho').nth(1)).toContainText('Acompanhe seus resultados');
- await page.getByRole('button', { name: 'Dieta', exact: true }).click();
- const card = page.getByRole('region', { name: 'Dieta de hoje' });
- await expect(card.getByText(/kcal/).first()).toBeVisible();
- await expect(card.getByRole('progressbar', { name: 'Proteínas' })).toBeVisible();
- await expect(card.getByRole('link', { name: 'Abrir dieta' })).toHaveAttribute('href', /#dieta/);
- await expect(page.getByRole('link', { name: 'Começar treino' })).toHaveCount(0);
- await page.getByRole('button', { name: 'Treino', exact: true }).click();
+ const line = page.locator('a.in-dieta');
+ await expect(line).toContainText('Café da manhã');
+ await expect(line).toContainText(/\d kcal restantes/);
+ await expect(line).toHaveAttribute('href', /#dieta\/cafe/);
  await expect(page.getByRole('link', { name: 'Começar treino' })).toBeVisible();
 });
 
@@ -292,6 +293,7 @@ test('Início: 3ª aula com 3 semanas sintéticas mostra critérios, "sem dados"
  await page.goto('./');
  await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, tresSemanas()));
  const card = page.getByRole('region', { name: '3ª aula de jiu-jitsu' });
+ await card.getByRole('heading', { name: '3ª aula de jiu-jitsu' }).click(); // recolhido por padrão
  await expect(card).toBeVisible();
  await expect(card.getByText('Aulas: atende')).toBeVisible();
  await expect(card.getByText('Cargas: atende')).toBeVisible();
@@ -307,6 +309,7 @@ test('Início: 3ª aula com 3 semanas sintéticas mostra critérios, "sem dados"
  await expect(card.getByText('Ligado', { exact: true })).toBeVisible();
  await expect.poll(async () => (await state(page)).settings.sleepOk?.['5']).toBe(true);
  await page.reload();
+ await page.getByRole('heading', { name: '3ª aula de jiu-jitsu' }).click();
  await expect(page.getByRole('switch', { name: 'Dormi 7 h ou mais nesta semana' })).toHaveAttribute('aria-checked', 'true');
  await page.getByRole('switch', { name: 'Dormi 7 h ou mais nesta semana' }).click();
  await expect.poll(async () => (await state(page)).settings.sleepOk?.['5']).toBeUndefined();
@@ -317,6 +320,7 @@ test('Início: 3ª aula elegível quando o sono das 3 semanas foi declarado', as
  await page.goto('./');
  await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, tresSemanas(), { sleepOk: { '2': true, '3': true, '4': true } }));
  const card = page.getByRole('region', { name: '3ª aula de jiu-jitsu' });
+ await card.getByRole('heading', { name: '3ª aula de jiu-jitsu' }).click(); // recolhido por padrão
  await expect(card.getByText('Sono: atende')).toBeVisible();
  await expect(card.getByText('Você pode considerar uma 3ª aula', { exact: false })).toBeVisible();
 });
@@ -328,7 +332,8 @@ test.describe('320 x 640', () => {
   await page.goto('./');
   await seed(page, START_SEMANA_6, backupFull(START_SEMANA_6, tresSemanas()));
   expect(await noHScroll(page)).toBe(true);
-  for (const b of await page.locator('.in-ghost').all()) expect(await b.evaluate(e => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+  for (const b of await page.locator('.in-hoje .button').all()) expect(await b.evaluate(e => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+ expect((await page.getByRole('button', { name: 'Mais opções do dia' }).boundingBox())!.width).toBeGreaterThanOrEqual(44);
   await page.screenshot({ path: info.outputPath('inicio-320.png'), fullPage: true });
  });
 });

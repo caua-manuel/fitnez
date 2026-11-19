@@ -8,7 +8,7 @@ import { Icon } from '../../ui/icons';
 import { showToast } from '../../ui/UndoToast';
 import type { IconName } from '../../ui/icons';
 import { shouldShowBackupReminder } from '../../domain/userData';
-import { phaseOf, weekLabel } from '../../domain/calendar';
+import { phaseOf, rirSequence, weekLabel } from '../../domain/calendar';
 import { enableNotifications, notifySupport } from '../../pwa/notifications';
 import type { NotifySupport } from '../../pwa/notifications';
 
@@ -19,6 +19,9 @@ import { MetasSheet } from '../dieta/MetasSheet';
 import { diaLocal, refeicoesRegistradas, treinosConcluidos } from './metricas';
 import { DataInicioSheet } from './DataInicioSheet';
 import { ApagarDados } from './ApagarDados';
+import { ConfirmSheet } from '../../ui/Sheet';
+import { openAssistant } from '../assistente/store';
+import { canUndoOnboarding, undoOnboarding } from '../../application/onboarding';
 import { InstalarApp } from './InstalarApp';
 import { CountUp } from '../../ui/motion';
 import { catalogOf } from '../dieta/dietData';
@@ -67,6 +70,7 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
  const [dataOpen, setDataOpen] = useState(false);
  const [startOpen, setStartOpen] = useState(false);
  const [metasOpen, setMetasOpen] = useState(false);
+ const [undoOpen, setUndoOpen] = useState(false);
  const [backupOpen, setBackupOpen] = useState(false);
  const [notify, setNotify] = useState<NotifySupport>(() => notifySupport());
  const [notifyNote, setNotifyNote] = useState('');
@@ -89,7 +93,7 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
  const name = (profile?.name ?? '').trim();
  const goal = (profile?.goal ?? '').trim();
  const today = diaLocal(now());
- const phase = phaseOf(state.settings.start, today);
+ const phase = phaseOf(state.settings.start, today, rirSequence(state.catalog.plan));
  const days = state.history.days;
  const feitos = treinosConcluidos(days);
  const refeicoes = refeicoesRegistradas(days);
@@ -273,7 +277,20 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
     </span>
     <Icon name="seta" size={22} />
    </button></li>
+   <li className="tone-treino"><button type="button" className="list-row perfil-link" onClick={() => openAssistant('refazer')}>
+    <span className="icon-tile soft"><Icon name="troca" size={26} /></span>
+    <span className="grow"><strong>Refazer meu plano</strong><small>Responda as perguntas de novo; seus registros continuam salvos</small></span>
+    <Icon name="seta" size={22} />
+   </button></li>
+   {canUndoOnboarding(state) ? <li><button type="button" className="list-row perfil-link" aria-haspopup="dialog" onClick={() => setUndoOpen(true)}>
+    <span className="icon-tile soft"><Icon name="historico" size={26} /></span>
+    <span className="grow"><strong>Voltar ao plano anterior</strong><small>Desfaz o último plano montado pelo assistente</small></span>
+    <Icon name="seta" size={22} />
+   </button></li> : null}
   </ul>
+  {undoOpen ? <ConfirmSheet title="Voltar ao plano anterior?" confirmLabel="Voltar ao plano anterior" destructive={false} onCancel={() => setUndoOpen(false)} onConfirm={() => { setUndoOpen(false); void run(async () => undoOnboarding(repository, { expectedRevision: (await repository.read()).revision }), 'Plano anterior restaurado.'); }}>
+   <p>Treinos, rotina, data de início e metas voltam ao que eram antes do último plano montado. Seus registros, notas e medidas não mudam.</p>
+  </ConfirmSheet> : null}
   {metasOpen ? <MetasSheet onClose={() => setMetasOpen(false)} /> : null}
   {startOpen ? <DataInicioSheet today={today} onClose={() => setStartOpen(false)} /> : null}
 

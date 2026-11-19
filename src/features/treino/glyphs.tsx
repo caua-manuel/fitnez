@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 // Ícones de linha próprios das telas de Início e Treino (mesmo traço de src/ui/icons.tsx).
-type Name = 'trocar' | 'pausa' | 'camadas' | 'check-grande' | 'esq' | 'dir' | 'barras' | 'menos' | 'cima' | 'baixo';
+type Name = 'trocar' | 'pausa' | 'camadas' | 'check-grande' | 'esq' | 'dir' | 'barras' | 'menos' | 'cima' | 'baixo' | 'trofeu';
 
 const paths: Record<Name, ReactNode> = {
  trocar: <><path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5" /></>,
@@ -14,6 +14,7 @@ const paths: Record<Name, ReactNode> = {
  menos: <path d="M5.5 12h13" />,
  cima: <path d="m6 15 6-6 6 6" />,
  baixo: <path d="m6 9 6 6 6-6" />,
+ trofeu: <path d="M8 4h8v5a4 4 0 0 1-8 0ZM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M9 20h6" />,
 };
 
 export function Glyph({ name, size = 24, weight = 2, className }: { name: Name; size?: number; weight?: number; className?: string }) {

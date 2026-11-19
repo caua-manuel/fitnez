@@ -1,9 +1,11 @@
 import type { DayRecord, Plan, StateV3 } from '../../application/repository';
-import { addDays, mondayOf, phaseOf } from '../../domain/calendar';
+import { addDays, mondayOf, phaseOf, rirSequence } from '../../domain/calendar';
 import type { DayIso } from '../../domain/calendar';
 import { isLower, muscleGroupOf } from '../../domain/muscleGroups';
 import type { MuscleGroup } from '../../domain/muscleGroups';
 import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
+import { FREE_SESSION_ID } from '../../domain/weekStreak';
+import { exercisesWithSwaps } from '../../domain/swap';
 
 export function todayIso(): DayIso {
  const d = new Date();
@@ -12,7 +14,7 @@ export function todayIso(): DayIso {
 
 // Semana usada para séries e repetições: a atual; antes do início, a primeira; depois do fim, a última.
 export function planWeek(state: StateV3, today: DayIso): number {
- const phase = phaseOf(state.settings.start, today);
+ const phase = phaseOf(state.settings.start, today, rirSequence(state.catalog.plan));
  return phase.kind === 'week' ? phase.week : phase.kind === 'done' ? 11 : 0;
 }
 
@@ -138,3 +140,12 @@ export function writeCursor(day: string, id: string, idx: number | null) {
 export const plural =(n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export function normalize(s: string): string { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+
+/** Exercícios do treino livre no dia: os escolhidos (lista da URL, "a,b") e os já registrados no dia que não são de outro treino. */
+export function freeExercises(state: StateV3, day: DayIso, picked?: string): string[] {
+ const plan = state.catalog.plan, rec = state.history.days[day];
+ const own = new Set(listWorkouts(rec).filter(w => w.sessionId !== FREE_SESSION_ID).flatMap(w => exercisesWithSwaps(plan.sess[w.sessionId]?.ex ?? [], rec)));
+ const logged = Object.keys(rec?.log ?? {}).filter(e => !own.has(e) && (rec?.log?.[e] ?? []).some(r => r.done === true));
+ const chosen = (picked ?? '').split(',').filter(Boolean);
+ return [...new Set([...chosen, ...logged])].filter(e => plan.ex[e]);
+}

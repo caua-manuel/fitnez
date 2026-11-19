@@ -43,6 +43,12 @@ assert.ok(urls.includes(base));
 const manifest = JSON.parse(await readFile('dist/manifest.webmanifest', 'utf8'));
 for (const field of ['id', 'start_url', 'scope']) assert.equal(manifest[field], base);
 for (const icon of manifest.icons) assert.ok(urls.includes(icon.src), `Ícone sem precache: ${icon.src}`);
+// Atalhos do ícone: dentro da base do Pages, apontando para uma rota com hash, ícones no precache.
+assert.ok(Array.isArray(manifest.shortcuts) && manifest.shortcuts.length >= 3, 'Manifesto sem atalhos.');
+for (const s of manifest.shortcuts) {
+  assert.match(String(s.url), new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}#[a-z]+$`), `Atalho fora da base: ${s.url}`);
+  for (const icon of s.icons ?? []) assert.ok(urls.includes(icon.src), `Ícone de atalho sem precache: ${icon.src}`);
+}
 const html = await readFile('dist/index.html', 'utf8');
 assert.ok(html.includes(`href="${base}manifest.webmanifest"`));
 const falhas = verificarSegurancaHtml(html);
@@ -51,9 +57,9 @@ for (const file of artifact.filter(file => /\.(?:css|webmanifest)$/.test(file)))
 }
 assert.equal(falhas.length, 0, `Verificação de segurança do build falhou:\n- ${falhas.join('\n- ')}`);
 assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i);
-// Orçamento de tamanho (gzip, soma dos arquivos de assets/). O limite de CSS foi pedido em 12 KB, mas o CSS já estava em ~19,5 KB antes do movimento; 24 KB é o teto atual, a reduzir quando o CSS legado for enxugado.
-const LIMITE_JS_KB = 190;
-const LIMITE_CSS_KB = 24;
+// Orçamento de tamanho (gzip, soma dos arquivos de assets/). Revisado em 19/11/2026 (ADR 006): JS 215 KB, CSS 28 KB. Estourar de novo exige nova revisão.
+const LIMITE_JS_KB = 215;
+const LIMITE_CSS_KB = 28;
 const gzipKb = async (extension: 'js' | 'css') => {
   const names = artifact.filter(file => file.startsWith('assets/') && file.endsWith(`.${extension}`));
   const sizes = await Promise.all(names.map(async name => gzipSync(await readFile(join('dist', name))).length));

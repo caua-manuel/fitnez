@@ -49,6 +49,8 @@ test('apagar tudo e recomeçar leva a um app em primeira abertura', async ({ pag
  await page.getByRole('button', { name: 'Apagar tudo e recomeçar' }).click();
  await expect(page.getByText('não tem volta')).toBeVisible();
  await Promise.all([page.waitForEvent('load'), page.getByRole('button', { name: 'Sim, apagar tudo' }).click()]);
+ // Primeira abertura: o assistente de início abre antes do resto (agora carregado sob demanda; antes a corrida com o goto às vezes o pulava).
+ await page.getByRole('button', { name: 'Decidir depois' }).click();
  await page.goto('#perfil');
  await expect(page.getByText('Seu nome', { exact: true }).first()).toBeVisible();
  await expect(page.getByRole('heading', { name: 'O Fitnez encontrou um problema' })).toHaveCount(0);
@@ -69,6 +71,8 @@ test('capturas da tela de recuperação', async ({ page }) => {
   await page.getByRole('button', { name: 'Apagar tudo e recomeçar' }).click();
   await page.screenshot({ path: `capturas/recuperacao-${scheme}-confirmar.png` });
   await Promise.all([page.waitForEvent('load'), page.getByRole('button', { name: 'Sim, apagar tudo' }).click()]);
+  // Depois de apagar, o app volta à primeira abertura: o assistente de início abre antes do resto.
+  await page.getByRole('button', { name: 'Decidir depois' }).click();
   await page.goto('#perfil'); await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
  }
 });

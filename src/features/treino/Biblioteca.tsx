@@ -10,6 +10,7 @@ import { usePlanEditor } from './planActions';
 import { CartaoTreino } from './Cartao';
 import { formatDay, lastDoneDay, minutesLabel, normalize, plural, sessionIds, sessionKind } from './util';
 import type { SessionKind } from './util';
+import { ExercicioSheet } from './ExercicioPagina';
 import './treino.css';
 
 type Filter = 'todos' | 'superior' | 'inferior';
@@ -20,6 +21,7 @@ export function Biblioteca() {
  const [query, setQuery] = useState('');
  const [filter, setFilter] = useState<Filter>('todos');
  const [restore, setRestore] = useState(false);
+ const [page, setPage] = useState<string | null>(null);
  const { withUndo } = usePlanEditor();
  const rows = useMemo(() => {
   if (!state) return [];
@@ -27,7 +29,7 @@ export function Biblioteca() {
   return sessionIds(plan).map(id => {
    const s = plan.sess[id]!;
    const byName = !q || normalize(s.name).includes(q);
-   const found = q && !byName ? s.ex.map(e => plan.ex[e]?.n).find(n => n && normalize(n).includes(q)) ?? null : null;
+   const found = q && !byName ? s.ex.find(e => normalize(plan.ex[e]?.n ?? '').includes(q)) ?? null : null;
    return { id, s, kind: sessionKind(plan, id) as SessionKind, last: lastDoneDay(state, id), match: byName || found !== null, found };
   }).filter(r => (filter === 'todos' || r.kind === filter) && r.match);
  }, [state, query, filter]);
@@ -50,12 +52,13 @@ export function Biblioteca() {
      <CartaoTreino id={r.id} name={r.s.name} href={hrefFor({ tab: 'treino', view: 'detalhe', id: r.id })}
       date={r.last ? `Último treino: ${formatDay(r.last)}` : 'Ainda não feito'}
       exercises={plural(r.s.ex.length, 'exercício', 'exercícios')} minutes={minutesLabel(r.s.min)} />
-     {r.found ? <p className="tr-found">Tem {r.found}</p> : null}
+     {r.found ? <p className="tr-found">Tem <button type="button" className="ed-linkbtn" onClick={() => setPage(r.found)}>{state.catalog.plan.ex[r.found]?.n}</button></p> : null}
     </li>)}
    </ul>}
   <div className="ed-restore">
    <button type="button" className="ed-linkbtn" onClick={() => setRestore(true)}>Restaurar treinos originais</button>
   </div>
+  {page ? <ExercicioSheet exId={page} onClose={() => setPage(null)} /> : null}
   {restore ? <ConfirmSheet title="Restaurar treinos originais?" icon="historico" confirmLabel="Restaurar treinos" onCancel={() => setRestore(false)}
    onConfirm={() => { setRestore(false); void withUndo('Treinos originais restaurados', p => restoreSeedPlan(p, seedPlan.plan as unknown as Plan)); }}>
    <p>Os treinos e os exercícios originais do plano voltam como estavam. Treinos que você criou saem da lista, e as mudanças que fez nos exercícios originais são desfeitas.</p>

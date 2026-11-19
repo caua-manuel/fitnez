@@ -1,7 +1,9 @@
 import type { DayRecord, Exercise } from '../application/repository';
 import type { DayIso } from './calendar';
 
-export interface SetEntry { kg: string; reps: string; done: boolean }
+/** `kind: 'warm'` = série de aquecimento (ADR 009): fora de volume, recordes, progressão, "Antes" e contagens. */
+export interface SetEntry { kg: string; reps: string; done: boolean; kind?: 'warm' }
+export const isWarm = (s: { kind?: unknown } | null | undefined): boolean => !!s && s.kind === 'warm';
 
 export function parseNumber(v: unknown): number | null {
  if (typeof v === 'number') return Number.isFinite(v) && v >= 0 ? v : null;
@@ -25,20 +27,21 @@ export function setsForWeek(ex: Exercise, week: number): { sets: number; reps: s
 export function sessionVolume(entries: SetEntry[][]): number {
  let total = 0;
  for (const sets of entries) for (const s of sets) {
-  if (!s.done) continue;
+  if (!s.done || isWarm(s)) continue;
   const kg = parseNumber(s.kg), reps = parseNumber(s.reps);
   if (kg !== null && reps !== null) total += kg * reps;
  }
  return Math.round(total * 100) / 100;
 }
 
-export function countDoneSets(entries: SetEntry[][]): number { return entries.reduce((n, sets) => n + sets.filter(s => s.done).length, 0); }
+export function countDoneSets(entries: SetEntry[][]): number { return entries.reduce((n, sets) => n + sets.filter(s => s.done && !isWarm(s)).length, 0); }
 
 export function lastPerformance(days: Record<string, DayRecord>, exId: string, before: DayIso): { day: DayIso; sets: SetEntry[] } | null {
  const candidates = Object.keys(days).filter(d => d < before).sort().reverse();
  for (const day of candidates) {
-  const rows = days[day]?.log?.[exId];
-  if (Array.isArray(rows) && rows.some(r => r.done === true)) {
+  const all = days[day]?.log?.[exId];
+  const rows = Array.isArray(all) ? all.filter(r => !isWarm(r)) : null;
+  if (rows && rows.some(r => r.done === true)) {
    return { day, sets: rows.map(r => ({ kg: String(r.kg ?? ''), reps: String(r.reps ?? ''), done: r.done === true })) };
   }
  }

@@ -62,7 +62,7 @@ async function start(page: Page, days: Record<string, any> = {}) {
 test('Executar: série 1 inicia o descanso de 150 s e +15, −15 e Pular funcionam', async ({ page }) => {
  await start(page);
  await expect(page.getByText('Exercício 1 de 10')).toBeVisible();
- await expect(page.getByText('Sem registro anterior')).toBeVisible();
+ await expect(page.getByLabel('Antes: sem registro').first()).toBeVisible();
  await expect(kg(page, 1)).toHaveAttribute('inputmode', 'decimal');
  await expect(reps(page, 1)).toHaveAttribute('inputmode', 'decimal');
  await kg(page, 1).fill('30'); await reps(page, 1).fill('8');
@@ -174,14 +174,14 @@ test('Executar: retomar abre no primeiro exercício incompleto', async ({ page }
  await expect(page.getByRole('heading', { name: 'Remada curvada ou apoiada no banco', level: 2 })).toBeVisible();
 });
 
-test('Executar: série concluída com campos vazios mostra o que foi copiado', async ({ page }) => {
+test('Executar: série concluída com campos vazios grava o placeholder da série anterior', async ({ page }) => {
  await start(page);
  await kg(page, 1).fill('70'); await reps(page, 1).fill('8');
  await done(page, 1).click();
  await page.getByRole('button', { name: 'Pular' }).click();
  await done(page, 2).click();
- await expect(page.getByText('Usei 70 kg × 8 da série anterior.')).toBeVisible();
- await expect(kg(page, 2)).toHaveAttribute('data-suggested', 'true');
+ await expect(page.locator('.ui-toast')).toContainText('Registrado 70 kg × 8');
+ await expect(kg(page, 2)).toHaveValue('70');
 });
 
 test('Executar: Concluir treino com exercícios intocados pede confirmação', async ({ page }) => {

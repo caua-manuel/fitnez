@@ -14,6 +14,7 @@ export const LIMITS = {
  min: 40, // duração do treino (interface: 20)
  exerciseNote: 600, // observação do exercício (interface: 300)
  dayNote: 2000, // nota do dia / observação da aula (interface: 300)
+ sportLabel: 60, // nome do esporte na rotina (interface: SPORT_LABEL_MAX = 30)
  value: 100, // carga, repetições, tempo, medidas, escolha de opção (interface: 30)
  line: 1000, // ingrediente, passo de receita, item de cardápio, item do condomínio
  recipeText: 2000, // tipo, uso e dica da receita

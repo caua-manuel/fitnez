@@ -137,11 +137,11 @@ export function consistency(days: Record<string, DayRecord>, sched: Payload[], s
  let done = 0, planned = 0;
  for (let day = from; day <= to; day = addDays(day, 1)) {
   const kind = sched[(daysBetween(first, day) % 7 + 7) % 7]?.k;
-  if (kind !== 'gym' && kind !== 'bjj' && kind !== 'volei') continue;
+  if (kind !== 'gym' && kind !== 'bjj' && kind !== 'volei' && kind !== 'esporte') continue;
   const rec = days[day];
   // Academia: cada treino concluído no dia conta como feito; previsto = 1 por dia agendado, ou mais se houver mais concluídos.
   const gymDone = kind === 'gym' ? doneCount(rec) : 0;
-  const ok = kind === 'gym' ? gymDone > 0 : rec?.acts?.[kind as 'bjj' | 'volei'] === true;
+  const ok = kind === 'gym' ? gymDone > 0 : rec?.acts?.[kind as 'bjj' | 'volei' | 'esporte'] === true;
   if (day === today && !ok) continue;
   const w = byWeek[weekOf(day, from)];
   const units = kind === 'gym' ? Math.max(1, gymDone) : 1;

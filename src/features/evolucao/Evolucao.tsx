@@ -15,6 +15,7 @@ import {
 } from '../../domain/evolution';
 import type { MeasureKey, Weeks } from '../../domain/evolution';
 import { MeasureForm } from './MeasureForm';
+import { Sequencia, SeriesGrupo } from './SeriesGrupo';
 import { Bars, LineChart, MiniLine } from './Charts';
 import type { ChartPoint } from './Charts';
 import './evolucao.css';
@@ -180,7 +181,9 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
     <p className="ev-legend"><span className="ev-key done" aria-hidden="true" />Feito <span className="ev-key" aria-hidden="true" />Previsto</p>
     <Table caption="Constância por semana" head={['Semana', 'Feitas', 'Previstas']} rows={consWeeks.map(w => [w.label, String(w.done), String(w.planned)])} />
    </>}
+   <Sequencia state={state} today={today} />
   </section></Reveal>
+  <SeriesGrupo state={state} today={today} />
 
  </>{form}{DISCLAIMER}
   {picked ? <Sheet title={picked.label} onClose={() => setOpenMeasure(null)}>

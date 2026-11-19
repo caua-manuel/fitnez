@@ -159,7 +159,7 @@ test('Editor: adicionar exercício existente do catálogo', async ({ page }) => 
  await page.getByRole('link', { name: 'Editar treino' }).click();
  await page.getByRole('button', { name: 'Adicionar exercício' }).click();
  await page.getByRole('searchbox', { name: 'Buscar exercício' }).fill('face pull');
- await page.getByRole('button', { name: /Face pull/ }).click();
+ await page.getByRole('button', { name: /Face pull na polia/ }).click();
  await expect(page.getByRole('list', { name: 'Exercícios do treino' }).getByRole('listitem')).toHaveCount(2);
  await expect(page.getByRole('button', { name: 'Adicionar exercício' })).toBeFocused();
 });

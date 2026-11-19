@@ -88,6 +88,9 @@ Barra inferior plana de 5 colunas: Início, Treino, Dieta, Evolução, Perfil; �
 | Ícone-botão | 44×44 px, `aria-label` obrigatório. |
 | Segmentado | Trilho cinza claro, raio 12, opção ativa azul sólida raio 10, sem sombra; `aria-pressed` ou radios nativos. |
 | Chip | Fundo `surface-2`, ativo azul sólido, sem sombra, alvo de 44 px. |
+| Faixa de 12 semanas | 12 segmentos de 4 px no topo do Início; concluídas em `primary`, atual só contornada, futuras em `border`; `role="img"` com "Semana N de 12 do plano". Sequência de semanas ao lado, em texto com o ícone de fogo em brasa, só a partir de 2. |
+| Número herói | Só um por tela: no Início, a carga sugerida do 1º exercício (2rem, 800, tabular). |
+| Linha de lista | Atalho em linha (ícone, duas linhas de texto, valor à direita, seta), borda `border`, sem sombra; usada para a dieta no Início e o treino livre. |
 | Cartão e linha de lista | Borda hairline, raio 16, sombra quase invisível; item clicável com 44 px ou mais. |
 | Campo | 48 px, borda 1px `input`, raio 12, foco `ring` 2px; label visível; erro com `aria-invalid` e texto. |
 | Linha de série | Caixa de marcar 44 px, repetições e carga (`inputMode="decimal"`, aceita vírgula), concluir copia o último valor (2 toques). |

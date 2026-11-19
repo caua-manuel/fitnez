@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useData } from './DataProvider';
 import { hrefFor, parseRoute } from './router';
 import type { Route } from './router';
@@ -16,8 +16,11 @@ import { usePwa } from '../pwa/usePwa';
 import { Sheet } from '../ui/Sheet';
 import { ToastHost } from '../ui/UndoToast';
 import { shouldShowBackupReminder } from '../domain/userData';
-import { isStartConfirmed, localDayOf } from '../domain/planStart';
-import { DataInicioSheet } from '../features/perfil/DataInicioSheet';
+import { isStartConfirmed } from '../domain/planStart';
+import { openAssistant, useAssistantMode } from '../features/assistente/store';
+
+// O assistente de início só é usado na primeira abertura ou em Perfil: vai num chunk à parte (também no precache do SW).
+const Assistente = lazy(() => import('../features/assistente/Assistente').then(m => ({ default: m.Assistente })));
 
 /** Tempo em que o aviso de sucesso fica na tela; ele também some ao trocar de tela ou ao ser dispensado. */
 const NOTICE_MS = 8000;
@@ -49,14 +52,14 @@ export function App() {
   const apply = () => { document.documentElement.dataset.theme = theme === 'auto' ? (media.matches ? 'dark' : 'light') : theme; };
   apply(); media.addEventListener('change', apply); return () => media.removeEventListener('change', apply);
  }, [theme]);
- const [startOffer, setStartOffer] = useState(false); const offered = useRef(false);
- // Primeira abertura: com a data de início ainda não escolhida, oferece a escolha ao abrir o app no Início.
+ const assistant = useAssistantMode(); const offered = useRef(false);
+ // Primeira abertura: com a data de início ainda não escolhida, abre o assistente de início (ADR 008), uma vez por sessão.
  useEffect(() => {
   if (offered.current || !data.state || data.initialization?.status === 'migration-conflict') return;
   offered.current = true;
   if (isStartConfirmed(data.state.settings) || route.tab !== 'inicio') return;
   try { if (sessionStorage.getItem(START_OFFER_KEY)) return; sessionStorage.setItem(START_OFFER_KEY, '1'); } catch { /* sem sessionStorage: oferece mesmo assim */ }
-  setStartOffer(true);
+  openAssistant('primeira');
  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [data.state, data.initialization]);
  const [flash, setFlash] = useState(false); const wasSaving = useRef(false);
@@ -75,6 +78,7 @@ export function App() {
  const backupPending = shouldShowBackupReminder(data.state, data.protection?.backupDue);
  const hasAvisos = backupPending || pwa.updateAvailable;
  const name = (data.state?.settings.profile?.name as string | undefined)?.trim();
+ if (assistant && data.state) return <><Suspense fallback={<p className="loading" role="status">Abrindo o assistente…</p>}><Assistente key={assistant} mode={assistant} /></Suspense><ToastHost /></>;
  return <>
   <a className="skip" href="#conteudo" onClick={e => { e.preventDefault(); document.getElementById('conteudo')?.focus(); }}>Pular para o conteúdo</a>
   {executing || mealRoute ? null : <header className="app-header">
@@ -111,7 +115,6 @@ export function App() {
    </ul> : <p className="muted">Nenhum aviso no momento.</p>}
    <div className="sheet-actions"><button type="button" className="button secondary" onClick={() => setAvisosOpen(false)}>Fechar</button></div>
   </Sheet> : null}
-  {startOffer ? <DataInicioSheet firstRun title="Quando o plano começa?" today={localDayOf(Date.now())} onClose={() => setStartOffer(false)} /> : null}
   <ToastHost />
   {executing ? null : <TabBar current={route.tab} />}
  </>;

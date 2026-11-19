@@ -44,6 +44,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
  const rv = useStagger('dieta-resumo');
  const isToday = day === today;
  const link = (meal: MealKey) => hrefFor({ tab: 'dieta', meal, day: isToday ? undefined : day });
+ const hide = state?.settings.onboarding?.hideDietNumbers === true;
  const over = totals.kcal > target.kcal;
  const nextMeal = MEALS.find(m => !dd.eaten[m]);
  const cups = Math.max(Math.round((target.waterL * 1000) / 500), dd.water);
@@ -62,7 +63,10 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
  return <div className="dt tone-dieta">
   <DayNav day={day} today={today} onChange={setDay} />
 
-  <section className="card dt-summary" aria-label="Resumo do dia">
+  {hide ? <section className="card dt-summary-plain" aria-label="Resumo do dia">
+   <p><strong>{totals.eatenCount} de 5</strong> refeições marcadas</p>
+   <p className="muted">Por escolha do seu plano, a Dieta mostra só as refeições e as marcações, sem números de metas.</p>
+  </section> : <><section className="card dt-summary" aria-label="Resumo do dia">
    <KcalRing kcal={totals.kcal} target={target.kcal} />
    <div className="dt-macros">
     {MACROS.map(({ key, label, t }) => {
@@ -81,7 +85,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
    <div className={`dt-stat${over ? ' warn' : ''}`}><Icon name="alvo" size={22} weight={1.6} /><div><strong><CountUp value={Math.round(over ? totals.kcal - target.kcal : prog.remaining)} prefix={over ? '+' : ''} suffix=" kcal" duration={350} /></strong><span>{over ? 'Acima da meta' : 'Restantes'}</span></div></div>
   </div>
 
-  <MetaDieta />
+  <MetaDieta /></>}
 
   <div className="section-title"><h2>{isToday ? 'Refeições de hoje' : `Refeições de ${dayLabel(day, today).toLowerCase()}`}</h2><span className="dt-count">{totals.eatenCount} de 5</span></div>
   <ul className="list dt-meals" aria-label="Refeições">
@@ -89,7 +93,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
     const eaten = Boolean(dd.eaten[m]);
     const opt = eaten ? (dd.consumed?.[m] ?? catalog[m].find(o => o.key === dd.pick[m])) : catalog[m].find(o => o.key === dd.pick[m]);
     const picked = Boolean(dd.pick[m]);
-    const kcal = opt ? opt.kcal : null;
+    const kcal = opt && !hide ? opt.kcal : null;
     return <li key={m} {...rv(MEALS.indexOf(m), `dt-meal${eaten ? ' done' : ''}`)}>
      <a className="dt-meal-link" href={link(m)}>
       <MealThumb meal={m} size={56} />

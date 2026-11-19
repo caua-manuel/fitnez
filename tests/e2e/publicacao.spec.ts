@@ -9,7 +9,7 @@ const stored = (page: Page) => page.evaluate(async () => {
  return state;
 });
 const noHScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
-const welcome = (page: Page) => page.getByRole('dialog', { name: 'Quando o plano começa?' });
+const welcome = (page: Page) => page.locator('.as[role=dialog]');
 
 test.use({ viewport: { width: 360, height: 800 } });
 test.beforeEach(async ({ page }) => {
@@ -19,26 +19,28 @@ test.beforeEach(async ({ page }) => {
 });
 test.afterEach(async ({ page }) => { expect((page as any).__errors, 'Sem erros de console').toEqual([]); });
 
-test('Primeira abertura: usuário novo vê a escolha da data de início', async ({ page }) => {
+test('Primeira abertura: usuário novo vê o assistente de início', async ({ page }) => {
  await page.goto('./');
  const dialog = welcome(page);
  await expect(dialog).toBeVisible();
- await expect(dialog.getByText('O plano de exemplo começa na segunda-feira sugerida', { exact: false })).toBeVisible();
- await expect(dialog.getByText('dá para trocar depois em Perfil', { exact: false })).toBeVisible();
- await expect(dialog.getByRole('button', { name: 'Manter a segunda-feira sugerida' })).toBeVisible();
+ await expect(dialog.getByRole('heading', { level: 1, name: 'Vamos montar seu plano' })).toBeFocused();
+ await expect(dialog.getByRole('button', { name: 'Montar meu plano' })).toBeVisible();
+ await expect(dialog.getByRole('button', { name: 'Usar o plano de exemplo' })).toBeVisible();
+ await expect(dialog.getByText('não substitui nutricionista, médico ou educador físico', { exact: false })).toBeVisible();
  expect((await stored(page)).settings.startConfirmed).toBe(false);
  expect(await noHScroll(page)).toBe(true);
 });
 
-test('Primeira abertura: manter a segunda-feira sugerida confirma sem mudar a data e não reaparece', async ({ page }) => {
+test('Primeira abertura: plano de exemplo mantém a segunda-feira sugerida e não reaparece', async ({ page }) => {
  await page.goto('./');
  await expect(welcome(page)).toBeVisible();
  const before = (await stored(page)).settings.start;
- await welcome(page).getByRole('button', { name: 'Manter a segunda-feira sugerida' }).click();
+ await welcome(page).getByRole('button', { name: 'Usar o plano de exemplo' }).click();
+ await expect(welcome(page).getByRole('radio').first()).toBeChecked();
+ await welcome(page).getByRole('button', { name: 'Usar o plano de exemplo' }).click();
  await expect(welcome(page)).toHaveCount(0);
  await expect.poll(async () => (await stored(page)).settings.startConfirmed).toBe(true);
  expect((await stored(page)).settings.start).toBe(before);
- // Nova sessão (sem a marca de sessão): como a data já está confirmada, a escolha não volta.
  await page.evaluate(() => sessionStorage.clear());
  await page.reload();
  await expect(page.getByRole('heading', { name: 'Início', level: 1 })).toBeAttached();
@@ -46,25 +48,19 @@ test('Primeira abertura: manter a segunda-feira sugerida confirma sem mudar a da
  await expect(welcome(page)).toHaveCount(0);
 });
 
-test('Primeira abertura: escolher outra data confirma sozinho', async ({ page }) => {
+test('Primeira abertura: plano de exemplo com outra data usa a segunda da semana', async ({ page }) => {
  await page.goto('./');
- await expect(welcome(page)).toBeVisible();
+ await welcome(page).getByRole('button', { name: 'Usar o plano de exemplo' }).click();
+ await welcome(page).getByText('Outra data', { exact: true }).click();
  await page.getByLabel('Data de início').fill('2030-03-13');
- await welcome(page).getByRole('button', { name: 'Salvar', exact: true }).click();
+ await welcome(page).getByRole('button', { name: 'Usar o plano de exemplo' }).click();
  await expect(welcome(page)).toHaveCount(0);
  await expect.poll(async () => (await stored(page)).settings.startConfirmed).toBe(true);
- expect((await stored(page)).settings.start).toBe('2030-03-11'); // segunda-feira da semana escolhida
+ expect((await stored(page)).settings.start).toBe('2030-03-11');
  await page.evaluate(() => sessionStorage.clear());
  await page.reload();
  await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
  await expect(welcome(page)).toHaveCount(0);
-});
-
-test('Primeira abertura: salvar a própria data sugerida também confirma', async ({ page }) => {
- await page.goto('./');
- await expect(welcome(page)).toBeVisible();
- await welcome(page).getByRole('button', { name: 'Salvar', exact: true }).click();
- await expect.poll(async () => (await stored(page)).settings.startConfirmed).toBe(true);
 });
 
 test('Primeira abertura: decidir depois mantém sem confirmar e não insiste na mesma sessão', async ({ page }) => {

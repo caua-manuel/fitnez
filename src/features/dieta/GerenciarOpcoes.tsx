@@ -117,7 +117,7 @@ export function GerenciarOpcoes({ meal, day, today }: { meal: MealKey; day: DayI
     <div className="dt-mopt-text">
      <span className="dt-tag">Opção {i + 1}</span>
      <strong className="dt-opt-name">{o.name}</strong>
-     <span className="dt-opt-kcal">{fmt(o.kcal)} kcal</span>
+     {state.settings.onboarding?.hideDietNumbers ? null : <span className="dt-opt-kcal">{fmt(o.kcal)} kcal</span>}
     </div>
     <Menu label={`Mais ações da opção ${i + 1}, ${o.name}`} className="dt-menu-wrap" buttonClassName="icon-button dt-dots" trigger={<Icon name="mais" size={26} className="dots-h" />}
      items={[

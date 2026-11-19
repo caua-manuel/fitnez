@@ -292,3 +292,18 @@ html:has(.ex-footer){scroll-padding-bottom:calc(var(--ex-footer-h,132px) + 16px)
 .ok-mark .mv-check,.ex-check-box .mv-check{margin:0;vertical-align:0;display:block}
 .ok-mark .mv-check{stroke-width:2.75}
 .ex-check.on .ex-check-box{color:var(--primary-foreground)}
+.ex-row.has-antes{grid-template-columns:24px 52px minmax(0,1fr) minmax(0,1fr) 44px;gap:8px}.ex-row.has-antes.no-kg{grid-template-columns:24px 52px minmax(0,1fr) 44px}
+.ex-antes{font-size:.8125rem;color:var(--muted-foreground);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-pr{display:flex;align-items:center;gap:6px;margin:4px 0 2px 32px;font-size:.8125rem}.ex-pr svg{flex:none;color:var(--accent-brasa)}.ok-pr{margin:0;width:100%;font-size:.9375rem}
+.ok-volume{flex-wrap:wrap}.ok-volume>.num.muted{width:100%;font-size:.875rem}
+.ex-name{position:relative}.ex-more{position:absolute;top:0;right:0}.ex-title-btn{min-height:44px;padding:0 8px;border:0;background:none;color:inherit;font:inherit;letter-spacing:inherit}
+.pl-seg>*{padding:0 2px;min-width:0;white-space:nowrap;font-size:.875rem}.pl-out{margin:0;font-size:1.125rem;font-weight:600}
+.xp h3{font-size:1rem;margin:8px 0}.xp p{margin:0}.xp-steps{margin:0;padding-left:1.25rem}.xp-note{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.sw-list,.sg-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.sg-list{margin-bottom:12px}.sg-list li{display:grid;grid-template-columns:1fr auto;gap:4px}.sg-list .ex-bar{grid-column:1/-1}.sg-streak{margin:8px 0 0}
+body:has(.ex-footer) .ui-toast-wrap{bottom:calc(var(--ex-footer-h,140px) + 8px)}
+/* Entrada do treino livre: linha simples, sem cartão com sombra */
+.tr-livre{display:flex;align-items:center;gap:12px;min-height:56px;margin:12px 0 4px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-control);color:var(--foreground);text-decoration:none}
+.tr-livre>span{display:grid;flex:1;gap:2px;min-width:0}
+.tr-livre .muted{font-size:.875rem}
+.tr-livre>svg:first-child{color:var(--primary)}
+.tr-livre>svg:last-child{color:var(--muted-foreground)}

@@ -1,5 +1,5 @@
 import type { DayIso } from './calendar';
-import type { DayType } from './dayActivity';
+import type { AnyDayType, DayType } from './dayActivity';
 import { DAY_TARGET_DEFAULTS, DEFAULT_WATER_L, dayTarget } from './diet';
 import type { DayTarget } from './diet';
 import { DEFAULT_FAT_G, proteinTargetG } from './profile';
@@ -9,9 +9,16 @@ import { DEFAULT_FAT_G, proteinTargetG } from './profile';
 
 export const DAY_TYPES: readonly DayType[] = ['perna', 'academia', 'jiujitsu', 'volei', 'descanso'];
 export const DAY_TYPE_LABEL: Readonly<Record<DayType, string>> = { perna: 'Perna', academia: 'Academia', jiujitsu: 'Jiu-jitsu', volei: 'Vôlei', descanso: 'Descanso' };
+/** Com o dia de esporte do assistente (ADR 008). `DAY_TYPES` continua com os cinco originais. */
+export const ALL_DAY_TYPES: readonly AnyDayType[] = [...DAY_TYPES, 'esporte'];
+export const ANY_DAY_TYPE_LABEL: Readonly<Record<AnyDayType, string>> = { ...DAY_TYPE_LABEL, esporte: 'Esporte' };
+
+type DayRow = { kcal: number; carbs: number };
+/** Dias das metas: os cinco originais sempre; `esporte` opcional (ausente = usa o de vôlei). */
+export type DietTargetDays = Record<DayType, DayRow> & { esporte?: DayRow };
 
 export interface DietTargets {
- days: Record<DayType, { kcal: number; carbs: number }>;
+ days: DietTargetDays;
  proteinG: number | null; // null = automática pelo peso
  fatG: number;
  waterL: number;
@@ -49,9 +56,9 @@ export const waterCups = (waterL: number): number => Math.round((waterL * 1000) 
 
 // ---------- validação de formulário ----------
 export type WarningCode = 'macros-incoerentes' | 'kcal-baixa' | 'kcal-alta' | 'proteina-baixa' | 'proteina-alta' | 'gordura-baixa' | 'agua-alta';
-export interface DietWarning { code: WarningCode; message: string; day?: DayType }
+export interface DietWarning { code: WarningCode; message: string; day?: AnyDayType }
 export interface DietTargetsInput {
- days?: Partial<Record<DayType, { kcal?: unknown; carbs?: unknown } | null>> | null;
+ days?: Partial<Record<AnyDayType, { kcal?: unknown; carbs?: unknown } | null>> | null;
  /** null, undefined ou 'auto' = automática pelo peso */
  proteinG?: unknown;
  fatG?: unknown;
@@ -97,6 +104,13 @@ export function validateDietTargets(input: DietTargetsInput, ctx: { weightKg?: n
   const carbs = readInt(`days.${t}.carbs`, 'Carboidrato', row?.carbs, LIMITS.carbs.min, LIMITS.carbs.max, '305');
   days[t] = { kcal: kcal ?? 0, carbs: carbs ?? 0 };
  }
+ // Esporte (ADR 008) é opcional: só entra se veio no formulário; ausente = usa o dia de vôlei.
+ const sport = input.days?.esporte;
+ if (sport !== undefined && sport !== null) {
+  const kcal = readInt('days.esporte.kcal', 'Calorias', sport.kcal, LIMITS.kcal.min, LIMITS.kcal.max, '2500');
+  const carbs = readInt('days.esporte.carbs', 'Carboidrato', sport.carbs, LIMITS.carbs.min, LIMITS.carbs.max, '315');
+  days.esporte = { kcal: kcal ?? 0, carbs: carbs ?? 0 };
+ }
  let proteinG: number | null = null;
  if (!(isEmpty(input.proteinG) || input.proteinG === 'auto')) proteinG = readInt('proteinG', 'Proteína', input.proteinG, LIMITS.protein.min, LIMITS.protein.max, '185');
  const manualProtein = !(isEmpty(input.proteinG) || input.proteinG === 'auto');
@@ -119,8 +133,10 @@ export function validateDietTargets(input: DietTargetsInput, ctx: { weightKg?: n
  const weightOk = typeof weight === 'number' && Number.isFinite(weight) && weight >= 30 && weight <= 300;
  const effectiveProtein = proteinG ?? proteinTargetG(weight);
 
- for (const t of DAY_TYPES) {
-  const { kcal, carbs } = days[t];
+ for (const t of ALL_DAY_TYPES) {
+  const row = days[t as DayType] as DayRow | undefined;
+  if (!row) continue;
+  const { kcal, carbs } = row;
   if (kcal < WARN.kcalLow) warnings.push({ code: 'kcal-baixa', day: t, message: 'Calorias abaixo de 1.400 kcal por dia costumam pedir acompanhamento profissional. Converse com um nutricionista ou médico antes de seguir.' });
   if (kcal > WARN.kcalHigh) warnings.push({ code: 'kcal-alta', day: t, message: 'Calorias acima de 4.500 kcal por dia são incomuns. Confira se o valor está certo.' });
   const sum = kcalFromMacros(effectiveProtein, carbs, fat);
@@ -136,9 +152,10 @@ export function validateDietTargets(input: DietTargetsInput, ctx: { weightKg?: n
 }
 
 /** Valores do formulário (texto) a partir de metas salvas; proteína automática = ''. */
-export function targetsToInput(t: DietTargets): { days: Record<DayType, { kcal: string; carbs: string }>; proteinAuto: boolean; proteinG: string; fatG: string; waterL: string } {
- const days = {} as Record<DayType, { kcal: string; carbs: string }>;
+export function targetsToInput(t: DietTargets): { days: Record<DayType, { kcal: string; carbs: string }> & { esporte?: { kcal: string; carbs: string } }; proteinAuto: boolean; proteinG: string; fatG: string; waterL: string } {
+ const days = {} as Record<DayType, { kcal: string; carbs: string }> & { esporte?: { kcal: string; carbs: string } };
  for (const d of DAY_TYPES) days[d] = { kcal: String(t.days[d].kcal), carbs: String(t.days[d].carbs) };
+ if (t.days.esporte) days.esporte = { kcal: String(t.days.esporte.kcal), carbs: String(t.days.esporte.carbs) };
  return { days, proteinAuto: t.proteinG === null, proteinG: t.proteinG === null ? '' : String(t.proteinG), fatG: String(t.fatG), waterL: String(t.waterL).replace('.', ',') };
 }
 
@@ -157,7 +174,8 @@ export function isValidDietTargets(t: unknown): t is DietTargets {
   const row = t.days[d];
   if (!plain(row) || !int(row.kcal, LIMITS.kcal.min, LIMITS.kcal.max) || !int(row.carbs, LIMITS.carbs.min, LIMITS.carbs.max)) return false;
  }
- if (t.proteinG !== null && !int(t.proteinG, LIMITS.protein.min, LIMITS.protein.max)) return false;
+ const sport = t.days.esporte;
+ if (sport !== undefined && (!plain(sport) || !int(sport.kcal, LIMITS.kcal.min, LIMITS.kcal.max) || !int(sport.carbs, LIMITS.carbs.min, LIMITS.carbs.max))) return false; if (t.proteinG !== null && !int(t.proteinG, LIMITS.protein.min, LIMITS.protein.max)) return false;
  if (!int(t.fatG, LIMITS.fat.min, LIMITS.fat.max)) return false;
  return typeof t.waterL === 'number' && Number.isFinite(t.waterL) && t.waterL >= LIMITS.water.min && t.waterL <= LIMITS.water.max && Number.isInteger(t.waterL / LIMITS.water.step);
 }
@@ -193,8 +211,14 @@ export function effectiveDietTargets(settings: SettingsLike, date: DayIso): Diet
  return v?.targets ? v.targets : defaultDietTargets();
 }
 
+/** kcal e carboidrato de um tipo de dia. Esporte sem valor próprio usa o de vôlei (mesmo padrão da especificação). */
+export function dayRowFor(days: DietTargetDays, type: AnyDayType): DayRow {
+ if (type === 'esporte') return days.esporte ?? days.volei;
+ return days[type] ?? days.academia;
+}
+
 export interface ResolvedDietTargets {
- days: Record<DayType, { kcal: number; carbs: number }>;
+ days: DietTargetDays;
  protein: number;
  proteinAuto: boolean;
  fat: number;
@@ -212,9 +236,9 @@ export function resolveDietTargets(settings: SettingsLike, date: DayIso, profile
 }
 
 /** Meta completa do dia (compatível com `DayTarget`). Sem `dietTargets` devolve exatamente o padrão de `dayTargetForProfile`. */
-export function dayTargetFor(type: DayType, date: DayIso, settings: SettingsLike, profile?: { weightKg?: number } | null): DayTarget {
+export function dayTargetFor(type: AnyDayType, date: DayIso, settings: SettingsLike, profile?: { weightKg?: number } | null): DayTarget {
  const r = resolveDietTargets(settings, date, profile);
- const d = r.days[type] ?? r.days.academia;
+ const d = dayRowFor(r.days, type);
  return dayTarget(type, { kcal: d.kcal, carbs: d.carbs, protein: r.protein, fat: r.fat, waterL: r.waterL });
 }
 

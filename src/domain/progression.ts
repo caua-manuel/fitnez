@@ -1,5 +1,5 @@
 import type { Exercise } from '../application/repository';
-import { parseNumber, setsForWeek, type SetEntry } from './workout';
+import { isWarm, parseNumber, setsForWeek, type SetEntry } from './workout';
 
 export interface Suggestion { kg: number | null; reps: string; reason: 'sem-historico' | 'subir' | 'manter' | 'reduzir'; stagnant: boolean }
 
@@ -15,7 +15,7 @@ interface Valid { kg: number; reps: number }
 function validSets(sets: SetEntry[]): Valid[] {
  const out: Valid[] = [];
  for (const s of Array.isArray(sets) ? sets : []) {
-  if (!s || s.done !== true) continue;
+  if (!s || s.done !== true || isWarm(s)) continue;
   const kg = parseNumber(s.kg), reps = parseNumber(s.reps);
   if (kg !== null && reps !== null) out.push({ kg, reps });
  }

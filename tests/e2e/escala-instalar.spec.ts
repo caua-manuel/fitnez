@@ -51,7 +51,7 @@ test.describe('Como terminou e observações', () => {
  test('a escala diz 1 = leve e 5 = destruído, e os botões citam as pontas', async ({ page }, info) => {
   await page.clock.setFixedTime(new Date('2026-11-12T12:00:00'));
   await page.goto('./'); await seed(page);
-  await page.getByRole('button', { name: 'Marcar aula como feita' }).click();
+  await page.getByRole('button', { name: 'Fiz a aula' }).click();
   const grupo = page.getByRole('group', { name: 'Como terminou' });
   await expect(grupo.getByText('(1 = leve, 5 = destruído)')).toBeVisible();
   await expect(page.getByText('exausto')).toHaveCount(0);
@@ -64,7 +64,7 @@ test.describe('Como terminou e observações', () => {
  test('observações são opcionais, salvam, editam, voltam ao desfazer e somem ao apagar o texto', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-11-12T12:00:00'));
   await page.goto('./'); await seed(page);
-  await page.getByRole('button', { name: 'Marcar aula como feita' }).click();
+  await page.getByRole('button', { name: 'Fiz a aula' }).click();
   const campo = page.getByLabel(OBS);
   await expect(campo).toBeVisible();
   await expect(campo).toHaveAttribute('maxlength', '300');
@@ -85,7 +85,7 @@ test.describe('Como terminou e observações', () => {
   expect((await state(page)).history.days['2026-11-12'].feel).toBe(2);
   // Desmarcar e desfazer devolvem aula, nota e observação.
   await page.getByRole('button', { name: 'Desmarcar aula' }).click();
-  await expect(page.getByRole('button', { name: 'Marcar aula como feita' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Fiz a aula' })).toBeVisible();
   await page.locator('.ui-toast').getByRole('button', { name: 'Desfazer' }).click();
   await expect(page.getByLabel(OBS)).toHaveValue('Ombro melhor');
   await expect(page.getByRole('button', { name: 'Nota 2 de 5' })).toHaveAttribute('aria-pressed', 'true');
@@ -154,7 +154,7 @@ test.describe('Instalar na tela inicial', () => {
 
  test('atalho discreto no Início para quem ainda não instalou', async ({ page }) => {
   await page.goto('./');
-  await page.getByRole('dialog', { name: 'Quando o plano começa?' }).getByRole('button', { name: 'Decidir depois' }).click();
+  await page.getByRole('dialog', { name: 'Vamos montar seu plano' }).getByRole('button', { name: 'Decidir depois' }).click();
   await expect(page.getByRole('button', { name: 'Instalar na tela inicial' })).toBeVisible();
  });
 

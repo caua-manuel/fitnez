@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
-import { addDays, phaseOf } from '../../domain/calendar';
+import { addDays, phaseOf, rirSequence } from '../../domain/calendar';
 import { isLower, muscleGroupOf } from '../../domain/muscleGroups';
 import { suggestNext } from '../../domain/progression';
 import { lastPerformance, setsForWeek } from '../../domain/workout';
@@ -20,6 +20,7 @@ import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
 import { useStagger } from './stagger';
 import type { StaggerProps } from './stagger';
 import { GROUP_LABEL, dayBelongsTo, formatDay, formatKg, minutesLabel, plural, planWeek, repsText, sessionLetter, statusOf, todayIso } from './util';
+import { ExercicioSheet } from './ExercicioPagina';
 import './treino.css';
 
 const AVISO_SAUDE = 'Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.';
@@ -35,6 +36,7 @@ function performanceText(ex: Exercise, sets: SetEntry[]): string {
 function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first, reveal }: { state: StateV3; id: string; ex: Exercise; week: number; today: string; onHistory: () => void; treinoId: string; first: boolean; reveal: StaggerProps }) {
  const [expanded, setExpanded] = useState(first);
  const [confirmRemove, setConfirmRemove] = useState(false);
+ const [page, setPage] = useState(false);
  const { removeExercise } = usePlanEditor();
  const days = state.history.days;
  const group = muscleGroupOf(id, ex);
@@ -59,11 +61,13 @@ function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first, 
     </span>
    </button></h3>
    <Menu className="tr-more-ex" label={`Mais opções de ${ex.n}`} trigger={<Icon name="mais" size={22} weight={2} />} items={[
+    { label: 'Ver exercício', icon: 'info', onClick: () => setPage(true) },
     { label: "Editar exercício", icon: 'editar', href: hrefFor({ tab: "treino", view: "exercicio", id: treinoId, ex: id }) },
     { label: "Ver histórico do treino", icon: 'historico', onClick: onHistory },
     { label: "Remover do treino", danger: true, onClick: () => setConfirmRemove(true) },
    ]} />
   </div>
+  {page ? <ExercicioSheet exId={id} onClose={() => setPage(false)} /> : null}
   {confirmRemove ? <ConfirmSheet title={`Remover ${ex.n} do treino?`} confirmLabel="Remover do treino" onCancel={() => setConfirmRemove(false)} onConfirm={() => { setConfirmRemove(false); void removeExercise(treinoId, id); }}>
    <p>O exercício sai só deste treino. O histórico fica guardado e você poderá desfazer por 6 segundos.</p>
   </ConfirmSheet> : null}
@@ -90,7 +94,7 @@ export function Detalhe({ id }: { id: string }) {
  const back = <a className="tr-back" href={hrefFor({ tab: 'treino', view: 'lista' })}>← Voltar aos treinos</a>;
  if (!s) return <section className="card"><p>Treino não encontrado.</p>{back}</section>;
  const today = todayIso(), week = planWeek(state, today);
- const phase = phaseOf(state.settings.start, today);
+ const phase = phaseOf(state.settings.start, today, rirSequence(state.catalog.plan));
  const dur = minutesLabel(s.min);
  const letter = sessionLetter(plan, id);
  const todayRec = state.history.days[today];

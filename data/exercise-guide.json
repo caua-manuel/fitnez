@@ -1,0 +1,229 @@
+{
+ "versao": 1,
+ "seguranca": [
+  "Comece com uma carga que você controla em todas as repetições. Técnica vem antes da carga.",
+  "Dor forte, pontada ou formigamento: pare o exercício. Se a dor durar mais de 2 semanas, procure um fisioterapeuta ou médico."
+ ],
+ "itens": {
+  "supino": {
+   "passos": "Deitado no banco, pés firmes no chão e escápulas encaixadas para trás. Desça os halteres até a linha do peito com os cotovelos a cerca de 45° do corpo e suba sem bater um no outro.",
+   "erro": "abrir os cotovelos a 90° e perder o encaixe dos ombros."
+  },
+  "remada_a": {
+   "passos": "Tronco inclinado à frente com a coluna neutra, ou peito apoiado no banco inclinado. Puxe a carga em direção ao umbigo levando os cotovelos para trás e desça com controle.",
+   "erro": "arredondar a lombar ou dar impulso com o tronco."
+  },
+  "press_a": {
+   "passos": "Sentado ou ajoelhado, abdômen firme e costas sem arquear. Empurre a carga para cima e à frente até quase estender o cotovelo e volte devagar até a altura do ombro.",
+   "erro": "arquear a lombar para ajudar a subir."
+  },
+  "barra": {
+   "passos": "Mãos na pegada neutra, corpo sem balançar. Puxe até o queixo passar a barra levando os cotovelos em direção às costelas e desça até quase estender os braços.",
+   "erro": "usar balanço das pernas para subir."
+  },
+  "lat_a": {
+   "passos": "Em pé, halteres ao lado do corpo e cotovelos levemente dobrados. Eleve os braços pela lateral até a altura dos ombros e desça em 2 a 3 segundos.",
+   "erro": "subir com impulso do tronco ou passar muito da altura do ombro."
+  },
+  "face": {
+   "passos": "Polia na altura do rosto, corda nas mãos. Puxe em direção à testa abrindo os cotovelos, altos, e gire as mãos para trás no final.",
+   "erro": "puxar para o peito com os cotovelos baixos."
+  },
+  "rosca_a": {
+   "passos": "Em pé, cotovelos parados ao lado do corpo. Dobre o cotovelo subindo o halter e desça até estender quase todo o braço.",
+   "erro": "balançar o tronco e levar o cotovelo à frente."
+  },
+  "tri_a": {
+   "passos": "De frente para a polia, cotovelos colados ao corpo. Estenda os cotovelos até o fim e volte até cerca de 90° sem mexer os ombros.",
+   "erro": "deixar os cotovelos abrirem ou subirem."
+  },
+  "pallof": {
+   "passos": "De lado para a polia ou o elástico, segure junto ao peito. Empurre os braços à frente e segure 2 segundos sem deixar o tronco girar; volte devagar.",
+   "erro": "girar o quadril ou prender a respiração."
+  },
+  "farmer": {
+   "passos": "Pegue um halter pesado em cada mão, ombros para trás e abdômen firme. Caminhe com passos curtos pelo tempo marcado, sem inclinar para os lados.",
+   "erro": "deixar os ombros caírem para a frente e arredondar as costas."
+  },
+  "puxada": {
+   "passos": "Sentado, coxas presas no apoio, pegada um pouco mais aberta que os ombros. Puxe a barra até o alto do peito levando os cotovelos para baixo e volte até esticar os braços.",
+   "erro": "jogar o tronco para trás ou puxar a barra atrás da nuca."
+  },
+  "inclinado": {
+   "passos": "Banco a cerca de 30°, escápulas encaixadas. Desça os halteres até a linha do alto do peito e suba com controle.",
+   "erro": "banco inclinado demais, o que tira o trabalho do peito."
+  },
+  "press_b": {
+   "passos": "Sentado com as costas apoiadas, halteres na altura das orelhas. Empurre para cima sem travar os cotovelos e desça até a altura do queixo.",
+   "erro": "tirar as costas do encosto e arquear a lombar."
+  },
+  "remada_b": {
+   "passos": "Na remada unilateral, apoie a mão e o joelho no banco; na baixa, sente com o peito alto. Puxe em direção ao quadril e estique o braço com controle na volta.",
+   "erro": "girar o tronco para puxar mais carga."
+  },
+  "cruc": {
+   "passos": "Cotovelos levemente dobrados e fixos durante todo o movimento. Abra os braços até sentir alongar o peito e feche à frente do corpo.",
+   "erro": "dobrar e esticar o cotovelo, virando um supino."
+  },
+  "lat_b": {
+   "passos": "De lado para a polia baixa, cabo passando à frente do corpo. Eleve o braço pela lateral até a altura do ombro e desça devagar.",
+   "erro": "inclinar o tronco para longe da polia para ajudar."
+  },
+  "inverso": {
+   "passos": "Tronco inclinado à frente ou peito apoiado no banco, cotovelos levemente dobrados. Abra os braços para os lados até a linha do corpo, apertando a parte de trás dos ombros.",
+   "erro": "juntar as escápulas com força e usar carga demais."
+  },
+  "rosca_b": {
+   "passos": "Cotovelos parados ao lado do corpo. Na alternada, suba um braço de cada vez; com barra W, suba os dois juntos e desça até quase esticar.",
+   "erro": "soltar a descida rápido demais."
+  },
+  "tri_b": {
+   "passos": "No francês, halter atrás da cabeça com os cotovelos apontando para cima; na corda, cotovelos junto ao corpo. Estenda os cotovelos até o fim e volte devagar.",
+   "erro": "abrir os cotovelos para os lados."
+  },
+  "joelhos": {
+   "passos": "Pendurado na barra, ombros ativos, sem balançar. Suba os joelhos (ou as pernas) enrolando o quadril para a frente e desça devagar.",
+   "erro": "só balançar as pernas sem enrolar o quadril."
+  },
+  "pescoco": {
+   "passos": "Sentado ou em pé, mão contra a cabeça. Faça força com o pescoço contra a mão, sem mexer a cabeça, em cada direção pelo tempo marcado, com força leve a moderada.",
+   "erro": "fazer força máxima de repente. Com dor no pescoço, não faça e procure um profissional."
+  },
+  "salto_l": {
+   "passos": "Pés na largura do quadril, desça um pouco e salte o mais alto possível. Aterrisse macio, com os joelhos dobrados e alinhados com os pés, e descanse entre os saltos.",
+   "erro": "aterrissar com os joelhos para dentro ou de perna esticada."
+  },
+  "agach": {
+   "passos": "Barra apoiada no alto das costas, pés na largura dos ombros, abdômen firme. Desça levando o quadril para trás e para baixo até onde mantiver a coluna neutra e suba empurrando o chão.",
+   "erro": "joelhos caindo para dentro ou lombar arredondando no fundo."
+  },
+  "stiff": {
+   "passos": "Joelhos levemente dobrados e fixos, carga perto das pernas. Leve o quadril para trás descendo até sentir alongar a parte de trás da coxa, com a coluna neutra, e volte apertando o glúteo.",
+   "erro": "arredondar as costas para descer mais."
+  },
+  "bulg": {
+   "passos": "Pé de trás apoiado no banco, pé da frente longe o bastante para o joelho ficar sobre o pé. Desça reto até o joelho de trás quase tocar o chão e suba pela perna da frente.",
+   "erro": "pé da frente muito perto do banco, o que joga o peso no joelho."
+  },
+  "nordic": {
+   "passos": "Joelhos sobre um apoio macio e calcanhares presos. Desça o tronco à frente o mais devagar possível, quadril estendido, e use as mãos para amortecer e voltar.",
+   "erro": "dobrar o quadril para facilitar. Comece pela mesa flexora se for a primeira vez."
+  },
+  "hip_l": {
+   "passos": "Costas apoiadas no banco na altura das escápulas, barra com proteção sobre o quadril. Suba o quadril até alinhar com o tronco, aperte o glúteo 1 segundo e desça.",
+   "erro": "arquear a lombar no alto em vez de estender o quadril."
+  },
+  "pant_pe": {
+   "passos": "Ponta dos pés no degrau ou na plataforma, joelhos quase esticados. Desça o calcanhar até alongar e suba o máximo possível, com pausa no alto.",
+   "erro": "repetições curtas e rápidas, quicando no fundo."
+  },
+  "roll": {
+   "passos": "De joelhos, mãos na roda, abdômen firme e quadril encaixado. Role à frente só até onde a lombar não afundar e volte puxando com o abdômen.",
+   "erro": "deixar a lombar afundar no fim do movimento."
+  },
+  "copen_l": {
+   "passos": "De lado, apoiado no antebraço, perna de cima sobre um banco. Eleve o quadril até alinhar o corpo e segure pelo tempo marcado; comece com o joelho apoiado no banco.",
+   "erro": "deixar o quadril cair ou girar o tronco."
+  },
+  "salto_b": {
+   "passos": "Mesmo cuidado do salto vertical: desça um pouco e salte. Aterrisse macio, joelhos alinhados, e desça da caixa andando, sem pular para trás.",
+   "erro": "caixa alta demais para o seu nível."
+  },
+  "hip_b": {
+   "passos": "Costas apoiadas no banco na altura das escápulas, barra com proteção sobre o quadril. Suba o quadril até alinhar com o tronco, aperte o glúteo 1 segundo e desça.",
+   "erro": "arquear a lombar no alto em vez de estender o quadril."
+  },
+  "leg": {
+   "passos": "Costas e quadril apoiados no encosto, pés na altura média da plataforma. Desça até onde o quadril não sair do encosto e empurre sem travar os joelhos.",
+   "erro": "descer demais e tirar o quadril do encosto, arredondando a lombar."
+  },
+  "afundo": {
+   "passos": "Dê um passo à frente (ou suba no degrau) com o tronco alto. Desça até os dois joelhos ficarem perto de 90° e volte empurrando com a perna da frente.",
+   "erro": "joelho da frente caindo para dentro."
+  },
+  "mesa": {
+   "passos": "Deitado de bruços, joelho alinhado com o eixo do aparelho e apoio acima do calcanhar. Dobre os joelhos trazendo o apoio em direção ao glúteo e volte devagar.",
+   "erro": "tirar o quadril do banco para ajudar a subir."
+  },
+  "pant_sent": {
+   "passos": "Sentado, apoio sobre as coxas perto dos joelhos e ponta dos pés na plataforma. Desça o calcanhar até alongar e suba o máximo possível, com pausa no alto.",
+   "erro": "amplitude curta e ritmo rápido."
+  },
+  "med": {
+   "passos": "De lado para uma parede forte, bola na altura do quadril. Gire o quadril e o tronco juntos e arremesse a bola contra a parede; pegue e repita, com espaço livre ao redor.",
+   "erro": "girar só com os braços, sem usar o quadril."
+  },
+  "copen_b": {
+   "passos": "De lado, apoiado no antebraço, perna de cima sobre um banco. Eleve o quadril até alinhar o corpo e segure pelo tempo marcado; comece com o joelho apoiado no banco.",
+   "erro": "deixar o quadril cair ou girar o tronco."
+  },
+  "goblet": {
+   "passos": "Segure o halter em pé junto ao peito, cotovelos para baixo. Desça entre as pernas até onde mantiver a coluna neutra e suba empurrando o chão.",
+   "erro": "deixar o halter afastar do peito e o tronco cair à frente."
+  },
+  "agach_livre": {
+   "passos": "Pés na largura dos ombros, braços à frente para equilibrar. Desça como se fosse sentar numa cadeira e suba empurrando o chão.",
+   "erro": "tirar os calcanhares do chão."
+  },
+  "ponte_h": {
+   "passos": "Deitado de costas, joelhos dobrados e halter sobre o quadril. Suba o quadril até alinhar joelhos, quadril e ombros, aperte o glúteo e desça.",
+   "erro": "subir arqueando a lombar."
+  },
+  "ponte_uni": {
+   "passos": "Deitado de costas, uma perna dobrada com o pé no chão e a outra no ar. Suba o quadril sem deixar um lado cair e desça devagar; faça os dois lados.",
+   "erro": "quadril torto, caindo para o lado da perna no ar."
+  },
+  "afundo_livre": {
+   "passos": "Dê um passo à frente com o tronco alto. Desça até o joelho de trás quase tocar o chão e volte; apoie a mão na parede se precisar.",
+   "erro": "passo curto demais, com o joelho da frente indo muito à frente do pé."
+  },
+  "stiff_uni": {
+   "passos": "Em pé numa perna, joelho levemente dobrado. Leve o quadril para trás e incline o tronco, com a perna de trás subindo alinhada, e volte; segure numa parede se precisar.",
+   "erro": "arredondar as costas ou girar o quadril para fora."
+  },
+  "supino_chao": {
+   "passos": "Deitado no chão, joelhos dobrados e halteres sobre o peito. Desça até o cotovelo tocar o chão de leve e suba sem bater os halteres.",
+   "erro": "deixar o cotovelo cair com força no chão."
+  },
+  "flexao": {
+   "passos": "Mãos um pouco mais abertas que os ombros, corpo reto da cabeça aos pés. Desça o peito até perto do chão e empurre de volta; se for difícil, use as mãos num apoio alto ou os joelhos no chão.",
+   "erro": "deixar o quadril afundar ou subir."
+  },
+  "flexao_fechada": {
+   "passos": "Mãos na largura dos ombros e cotovelos junto ao corpo. Desça o peito até perto das mãos e empurre de volta, corpo reto.",
+   "erro": "abrir os cotovelos para os lados."
+  },
+  "pike": {
+   "passos": "Mãos e pés no chão, quadril alto formando um V invertido. Dobre os cotovelos levando a cabeça em direção ao chão, entre as mãos, e empurre de volta.",
+   "erro": "baixar o quadril e virar uma flexão comum."
+  },
+  "puxada_elastico": {
+   "passos": "Elástico bem preso no alto da porta, longe da dobradiça. Puxe até a altura do queixo levando os cotovelos para baixo e volte devagar.",
+   "erro": "elástico mal preso. Confira antes de cada série."
+  },
+  "remada_mochila": {
+   "passos": "Mochila com peso firme, tronco inclinado à frente e coluna neutra. Puxe em direção ao umbigo levando os cotovelos para trás e desça com controle.",
+   "erro": "arredondar as costas ou puxar com impulso."
+  },
+  "face_elastico": {
+   "passos": "Elástico preso na altura do rosto. Puxe em direção à testa com os cotovelos altos e abertos e volte devagar.",
+   "erro": "puxar para o peito com os cotovelos baixos."
+  },
+  "ytw": {
+   "passos": "Deitado de bruços, testa num apoio baixo. Eleve os braços formando Y, depois T, depois W, com os polegares para cima, sem levantar o peito do chão.",
+   "erro": "usar impulso ou erguer a lombar."
+  },
+  "pant_degrau": {
+   "passos": "Ponta dos pés na borda de um degrau, mão no corrimão. Desça o calcanhar até alongar e suba o máximo possível, devagar.",
+   "erro": "soltar o corrimão e perder o equilíbrio."
+  },
+  "deadbug": {
+   "passos": "Deitado de costas, braços para o alto e joelhos dobrados a 90°. Estenda o braço e a perna opostos até perto do chão, volte e troque o lado, com a lombar encostada no chão.",
+   "erro": "deixar a lombar sair do chão ao estender a perna."
+  },
+  "prancha": {
+   "passos": "Antebraços no chão sob os ombros, corpo reto da cabeça aos pés e abdômen firme. Segure pelo tempo marcado respirando normalmente.",
+   "erro": "quadril afundando ou alto demais."
+  }
+ }
+}
