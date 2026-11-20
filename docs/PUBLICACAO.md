@@ -1,7 +1,10 @@
 # Publicação e operação — Fase 1
 
 Data: 12/11/2026. Responsável: agente `devops_github`.
-Situação: configuração local, sem commit, push ou publicação executados.
+Situação em 20/11/2026: publicado em <https://caua-manuel.github.io/fitnez/>.
+O Pages usa GitHub Actions como fonte e a variável `PUBLICAR_PAGES` está `true`
+desde 17/11/2026, então todo push na `main` que passa nas verificações publica.
+Para pausar a publicação sem tirar o site do ar, mude a variável para `false`.
 
 ## Comandos locais
 

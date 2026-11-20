@@ -6,6 +6,24 @@ import { listWorkouts } from './workoutRecord';
 export type Criterion = { key: 'aulas' | 'sono' | 'cargas' | 'semana'; ok: boolean | null; text: string };
 export type Eligibility = { status: 'indisponivel' | 'ainda-nao' | 'elegivel'; criteria: Criterion[]; summary: string };
 
+/** Escala "Como terminou" da aula: fonte única para a tela e para a regra. */
+export const FEEL_SCALE = { min: 1, max: 5, destroyed: 5, labels: { 1: 'leve', 5: 'destruído' } } as const;
+
+/** Notas da escala em ordem: [1, 2, 3, 4, 5]. */
+export const FEEL_VALUES: readonly number[] = Array.from({ length: FEEL_SCALE.max - FEEL_SCALE.min + 1 }, (_, i) => FEEL_SCALE.min + i);
+
+/** Legenda visível da escala: "1 = leve, 5 = destruído". */
+export function feelLegend(): string {
+ const { min, max, labels } = FEEL_SCALE;
+ return `${min} = ${labels[min]}, ${max} = ${labels[max]}`;
+}
+
+/** Rótulo acessível de cada nota: "Nota n de 5", com ", leve"/", destruído" nas pontas. */
+export function feelAriaLabel(n: number): string {
+ const label = (FEEL_SCALE.labels as Record<number, string | undefined>)[n];
+ return `Nota ${n} de ${FEEL_SCALE.max}${label ? `, ${label}` : ''}`;
+}
+
 const MIN_WEEK = 5; // índice 0-based: a partir da 6ª semana
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const isMain = (id: string, name: unknown) => id === 'UA' || id === 'LW' || /upper a|lower/i.test(String(name ?? ''));
@@ -57,7 +75,7 @@ export function thirdClassEligibility(input: { start: DayIso; today: DayIso; day
   let n = 0, destroyed = false;
   for (let i = 0; i < 7; i++) {
    const d = days[addDays(monday, w * 7 + i)];
-   if (d?.acts?.bjj === true) { n++; if (d.feel === 5) destroyed = true; }
+   if (d?.acts?.bjj === true) { n++; if (d.feel === FEEL_SCALE.destroyed) destroyed = true; }
   }
   if (n < 2) { aulasOk = false; bad.push(`semana ${w + 1} com ${n} aula${n === 1 ? '' : 's'}`); }
   else if (destroyed) { aulasOk = false; bad.push(`semana ${w + 1} com aula "destruído"`); }

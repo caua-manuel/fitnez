@@ -30,6 +30,7 @@ import { setsForWeek } from '../../domain/workout';
 import type { SetEntry } from '../../domain/workout';
 import { exercisesWithSwaps } from '../../domain/swap';
 import { FREE_SESSION_ID, weekStreak } from '../../domain/weekStreak';
+import { FEEL_VALUES, feelAriaLabel, feelLegend } from '../../domain/jiujitsu';
 import type { DayRecord, StateV3 } from '../../application/repository';
 
 /** Número que conta até o valor, seguido da palavra no singular ou no plural ("10 exercícios"). */
@@ -237,8 +238,8 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
     {on ? <>
      <p className="success" role="status"><CheckDraw play={fresh === `${day}:bjj`} />Aula registrada.</p>
      <div role="group" aria-label="Como terminou">
-      <p><strong>Como terminou</strong> <span className="muted">(1 = leve, 5 = destruído)</span></p>
-      <div className="segmented soft">{[1, 2, 3, 4, 5].map(n => <button key={n} type="button" aria-label={`Nota ${n} de 5${n === 1 ? ', leve' : n === 5 ? ', destruído' : ''}`} aria-pressed={record.feel === n} onClick={() => edit(r => { r.feel = n; })}>{n}</button>)}</div>
+      <p><strong>Como terminou</strong> <span className="muted">({feelLegend()})</span></p>
+      <div className="segmented soft">{FEEL_VALUES.map(n => <button key={n} type="button" aria-label={feelAriaLabel(n)} aria-pressed={record.feel === n} onClick={() => edit(r => { r.feel = n; })}>{n}</button>)}</div>
      </div>
      <ObservacaoAula key={day} value={record.notes?.[BJJ_NOTE] ?? ''} onSave={setBjjNote} />
      <button type="button" className="button secondary block gap-top" onClick={() => unmark('bjj', 'Aula desmarcada')}>Desmarcar aula</button>
