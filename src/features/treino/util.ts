@@ -1,4 +1,5 @@
 import type { DayRecord, Plan, StateV3 } from '../../application/repository';
+import { storageKey } from '../../app/mode';
 import { addDays, mondayOf, phaseOf, rirSequence } from '../../domain/calendar';
 import type { DayIso } from '../../domain/calendar';
 import { isLower, muscleGroupOf } from '../../domain/muscleGroups';
@@ -124,7 +125,7 @@ export function firstIncomplete(rows: Record<string, { done: boolean }[]>, exIds
  return i < 0 ? 0 : i;
 }
 
-const cursorKey = (day: string, id: string) => `treino12:cursor:${day}:${id}`;
+const cursorKey = (day: string, id: string) => storageKey(`cursor:${day}:${id}`);
 /** Exercício em que a pessoa estava (estado leve, por aba); null quando não há valor válido. */
 export function readCursor(day: string, id: string, count: number): number | null {
  try {

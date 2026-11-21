@@ -3,7 +3,7 @@ export type TreinoView = 'lista' | 'detalhe' | 'executar' | 'concluido' | 'edita
 export type DietMeal = 'cafe' | 'almoco' | 'lanche' | 'pos' | 'jantar';
 export const DIET_MEALS: readonly DietMeal[] = ['cafe', 'almoco', 'lanche', 'pos', 'jantar'];
 export type Route =
- | { tab: 'inicio' } | { tab: 'evolucao' } | { tab: 'perfil' }
+ | { tab: 'inicio' } | { tab: 'evolucao' } | { tab: 'perfil'; view?: 'compartilhar' }
  | { tab: 'dieta'; meal?: DietMeal; manage?: boolean; day?: DayIso }
  | { tab: 'treino'; view: TreinoView; id?: string; day?: DayIso; ex?: string };
 
@@ -25,7 +25,8 @@ export function parseRoute(hash: string): Route {
   if (day && DAY.test(day)) route.day = day;
   return route;
  }
- if (head === 'evolucao' || head === 'perfil') return { tab: head };
+ if (head === 'perfil') return parts[1] === 'compartilhar' ? { tab: 'perfil', view: 'compartilhar' } : { tab: 'perfil' };
+ if (head === 'evolucao') return { tab: head };
  if (head === 'treino') {
   const id = parts[1];
   if (!id) return { tab: 'treino', view: 'lista' };
@@ -50,6 +51,7 @@ export function hrefFor(route: Route): string {
   if (!route.meal) return `#dieta${q}`;
   return `#dieta/${route.meal}${route.manage ? '/gerenciar' : ''}${q}`;
  }
+ if (route.tab === 'perfil') return route.view ? `#perfil/${route.view}` : '#perfil';
  if (route.tab !== 'treino') return `#${route.tab}`;
  if (route.view === 'novo' || route.view === 'hoje') return `#treino/${NEW}/${route.view}`;
  if (!route.id || route.view === 'lista') return '#treino';

@@ -724,6 +724,23 @@
     "rest": 60,
     "g": "posterior-gluteos"
    },
+   "ponte": {
+    "n": "Ponte de glúteo",
+    "s": [
+     3,
+     3,
+     4
+    ],
+    "r": [
+     "10–15",
+     "12–15",
+     "12–20"
+    ],
+    "m": "rep",
+    "t": "Deitado de costas, joelhos dobrados. Suba o quadril, aperte o glúteo e desça devagar.",
+    "rest": 60,
+    "g": "posterior-gluteos"
+   },
    "afundo_livre": {
     "n": "Afundo com peso do corpo",
     "s": [
@@ -737,8 +754,25 @@
      "12–15"
     ],
     "m": "rep",
-    "t": "Repetições por perna. Apoie a mão na parede se perder o equilíbrio.",
+    "t": "Repetições por perna. Fique ao lado de uma parede ou cadeira e apoie a mão.",
     "rest": 60,
+    "g": "quadriceps"
+   },
+   "sentar_levantar": {
+    "n": "Sentar e levantar da cadeira",
+    "s": [
+     3,
+     3,
+     4
+    ],
+    "r": [
+     "8–12",
+     "10–15",
+     "12–15"
+    ],
+    "m": "rep",
+    "t": "Cadeira firme, encostada na parede. Levante sem usar as mãos se conseguir; se não, apoie as mãos nos joelhos.",
+    "rest": 90,
     "g": "quadriceps"
    },
    "stiff_uni": {

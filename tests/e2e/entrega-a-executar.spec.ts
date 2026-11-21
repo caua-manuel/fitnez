@@ -62,21 +62,21 @@ async function start(page: Page, days: Record<string, any> = {}) {
 test('Executar: série 1 inicia o descanso de 150 s e +15, −15 e Pular funcionam', async ({ page }) => {
  await start(page);
  await expect(page.getByText('Exercício 1 de 10')).toBeVisible();
- await expect(page.getByLabel('Antes: sem registro').first()).toBeVisible();
+ await expect(page.getByLabel('Última vez: sem registro').first()).toBeVisible();
  await expect(kg(page, 1)).toHaveAttribute('inputmode', 'decimal');
- await expect(reps(page, 1)).toHaveAttribute('inputmode', 'decimal');
+ await expect(reps(page, 1)).toHaveAttribute('inputmode', 'numeric'); // ADR 011, 2.2: repetições sem vírgula
  await kg(page, 1).fill('30'); await reps(page, 1).fill('8');
  await done(page, 1).click();
  const timer = page.getByRole('timer');
  await expect(timer).toHaveText(/2:30/);
- await page.getByRole('button', { name: '+15 s' }).click();
+ await page.getByRole('button', { name: 'Somar 15 segundos' }).click();
  await expect(timer).toHaveText(/2:45/);
- await page.getByRole('button', { name: '−15 s' }).click();
- await page.getByRole('button', { name: '−15 s' }).click();
+ await page.getByRole('button', { name: 'Tirar 15 segundos' }).click();
+ await page.getByRole('button', { name: 'Tirar 15 segundos' }).click();
  await expect(timer).toHaveText(/2:15/);
  await page.clock.runFor(5_000);
  await expect(timer).toHaveText(/2:10/);
- await page.getByRole('button', { name: 'Pular' }).click();
+ await page.getByRole('button', { name: 'Pular descanso' }).click();
  await expect(page.getByRole('timer')).toHaveCount(0);
  expect(await noHScroll(page)).toBe(true);
 });
@@ -153,7 +153,7 @@ test('Executar: Concluir treino grava os campos e mostra o resumo real', async (
  await expect(stats).toContainText(/2\s*Exercícios/);
  await expect(stats).toContainText(/3\s*Séries/);
  await expect(stats).toContainText('Duração');
- await expect(page.getByText('Volume')).toBeVisible();
+ await expect(page.getByText('Total levantado')).toBeVisible();
  await expect(page.getByText(/(?:^|\D)690\s*kg/)).toBeVisible();
  const rec = await dayRecord(page);
  expect(rec.workout).toMatchObject({ sessionId: 'UA', status: 'done', sets: 3, volume: 690 });
@@ -220,7 +220,8 @@ test('Executar: 320x640 com descanso ativo, o rodapé é enxuto e não cobre o c
  const fh = (await footer.boundingBox())!.height;
  expect(fh).toBeLessThanOrEqual(640 * 0.25);
  expect(await noHScroll(page)).toBe(true);
- for (const name of ['−15 s', '+15 s', 'Pular', 'Concluir treino']) {
+ // Fase 3: os botões do descanso são falados por extenso (o texto visível continua −15 s, +15 s e Pular).
+ for (const name of ['Tirar 15 segundos', 'Somar 15 segundos', 'Pular descanso', 'Concluir treino']) {
   const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
   expect(box.height).toBeGreaterThanOrEqual(44);
   expect(box.x + box.width).toBeLessThanOrEqual(320);

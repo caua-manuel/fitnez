@@ -108,11 +108,11 @@ describe('aplicar e desfazer o assistente', () => {
   const custom = defaultDietTargets(); custom.days.academia = { kcal: 2300, carbs: 280 };
   st.settings.dietTargets = withDietTargetsVersion(undefined, '2026-11-01', custom);
   const p = preview({ safety: ['condicao'] });
-  const next = applyOnboardingToState(st, p, { start: '2026-11-23', today: TODAY, now: NOW });
+  const next = applyOnboardingToState(st, p, { start: '2026-11-23', today: TODAY, now: NOW, clearanceConfirmed: true });
   expect(isExampleTarget(next.settings)).toBe(true);
   expect(effectiveDietTargets(next.settings, '2026-11-10').days.academia.kcal).toBe(2300);
   expect(next.settings.onboarding).toMatchObject({ dietTargetsDisabled: true, hideDietNumbers: false });
-  const fresh = applyOnboardingToState(foundation(NOW), p, { start: '2026-11-23', today: TODAY, now: NOW });
+  const fresh = applyOnboardingToState(foundation(NOW), p, { start: '2026-11-23', today: TODAY, now: NOW, clearanceConfirmed: true });
   expect('dietTargets' in fresh.settings).toBe(false);
  });
 
@@ -129,16 +129,51 @@ describe('aplicar e desfazer o assistente', () => {
   expect(next.settings.onboarding).toMatchObject({ dietTargetsDisabled: true, hideDietNumbers: true });
   expect('dietTargets' in next.settings).toBe(false);
  });
+
+ // ADR 012: gestação e menos de 14 anos não geram plano; condição de saúde e amamentação exigem a liberação médica.
+ it('gestação e menos de 14 anos: prévia bloqueada e nada é gravado', async () => {
+  const r = setup();
+  const s0 = await withHistory(r);
+  for (const over of [{ safety: ['gestacao'] }, { safety: ['menor18'], body: { age: 12 } }, { safety: ['nenhum'], body: { age: 13, heightCm: 150, weightKg: 40 } }]) {
+   const p = preview(over);
+   expect(p.blocked).toBe(over.safety[0] === 'gestacao' ? 'gestacao' : 'menor14');
+   expect(p.generated).toBeNull();
+   expect(p.requiresClearance).toBe(false);
+   expect(p.diet).toMatchObject({ kind: 'none', reason: 'seguranca' });
+   expect(p.summary).toMatchObject({ gymDays: 0, scheduledGymDays: 0, sessionNames: [], kcalMin: null, kcalMax: null, proteinG: null });
+   expect(p.usedDayTypes).toEqual([]);
+   expect(() => applyOnboardingToState(s0, p, { start: '2026-11-23', today: TODAY, now: NOW, clearanceConfirmed: true })).toThrow(/não monta um plano/);
+   await expect(applyOnboarding(r, { preview: p, start: '2026-11-23', today: TODAY, expectedRevision: s0.revision, now: NOW })).rejects.toBeInstanceOf(RepositoryError);
+  }
+  expect(await r.read()).toEqual(s0);
+  // 14 anos já gera o plano leve (menor de 18).
+  expect(preview({ body: { age: 14 } })).toMatchObject({ blocked: null, generated: { experience: 'nunca' } });
+ });
+
+ it('condição de saúde e amamentação: só aplica com a liberação marcada, que não é gravada', async () => {
+  for (const flag of ['condicao', 'amamentacao']) {
+   const p = preview({ safety: [flag] });
+   expect(p.requiresClearance).toBe(true);
+   expect(p.blocked).toBeNull();
+   expect(() => applyOnboardingToState(foundation(NOW), p, { start: '2026-11-23', today: TODAY, now: NOW })).toThrow(/liberação/);
+   expect(() => applyOnboardingToState(foundation(NOW), p, { start: '2026-11-23', today: TODAY, now: NOW, clearanceConfirmed: false })).toThrow(/liberação/);
+   const next = applyOnboardingToState(foundation(NOW), p, { start: '2026-11-23', today: TODAY, now: NOW, clearanceConfirmed: true });
+   expect(JSON.stringify(next.settings)).not.toMatch(/clearance|liberou|condicao|amamentacao/);
+   expect(next.settings.onboarding).toMatchObject({ dietTargetsDisabled: true, hideDietNumbers: false });
+  }
+  expect(preview().requiresClearance).toBe(false);
+ });
 });
 
 describe('privacidade: sexo e marcações de saúde nunca são gravados', () => {
- const SENSITIVE = /"sex"|"safety"|"body"|menor18|gestacao|transtorno|nao_informar|"lifestyle"/;
+ const SENSITIVE = /"sex"|"safety"|"body"|menor18|gestacao|amamentacao|condicao|transtorno|nao_informar|"lifestyle"|clearance/;
  it('estado salvo, recuperação e backup exportado não contêm sexo nem marcações', async () => {
   const r = setup();
   const s0 = await withHistory(r);
   expect(JSON.stringify(s0)).not.toMatch(SENSITIVE); // linha de base: o estado comum não tem nada disso
-  const p = preview({ safety: ['gestacao', 'transtorno', 'menor18', 'condicao'], body: { sex: 'nao_informar', age: 17, heightCm: 160, weightKg: 55, lifestyle: 'muito' } });
-  const s1 = await applyOnboarding(r, { preview: p, start: '2026-11-23', today: TODAY, expectedRevision: s0.revision, now: NOW });
+  // Gestação não gera plano (ADR 012); as demais marcações juntas, com a liberação médica (que também não é gravada).
+  const p = preview({ safety: ['transtorno', 'menor18', 'amamentacao', 'condicao'], body: { sex: 'nao_informar', age: 17, heightCm: 160, weightKg: 55, lifestyle: 'muito' } });
+  const s1 = await applyOnboarding(r, { preview: p, start: '2026-11-23', today: TODAY, expectedRevision: s0.revision, now: NOW, clearanceConfirmed: true });
   const s2 = await undoOnboarding(r, { expectedRevision: s1.revision, now: NOW + 1 });
   const s3 = await applyOnboarding(r, { preview: preview({ safety: ['transtorno'], body: { sex: 'f', age: 30, heightCm: 165, weightKg: 60 } }), start: '2026-11-23', today: TODAY, expectedRevision: s2.revision, now: NOW + 2 });
   for (const s of [s1, s2, s3, await r.read()]) expect(JSON.stringify(s)).not.toMatch(SENSITIVE);

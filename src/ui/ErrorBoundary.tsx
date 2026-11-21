@@ -3,6 +3,8 @@ import type { ErrorInfo, ReactNode } from 'react';
 import { eraseAllData } from '../application/eraseAll';
 import './recovery.css';
 import { asError, open, request } from '../data/idb';
+import { appMode, clearDemoMark, dbName as activeDbName } from '../app/mode';
+import { deleteDemoDatabase } from '../data/demo';
 
 /**
  * Rede de proteção da raiz: nenhum erro de renderização deixa a tela em branco.
@@ -13,7 +15,8 @@ import { asError, open, request } from '../data/idb';
 
 export interface RawBackup { text: string; filename: string; revision: unknown }
 
-const dbName = () => `treino12:${encodeURIComponent(import.meta.env.BASE_URL)}`;
+// Banco do modo ativo (achado A1): na demo, a recuperação nunca lê nem apaga o banco real.
+const dbName = () => activeDbName();
 
 /** Lê o estado e as cópias de recuperação sem validar nada (o estado pode estar malformado). */
 export async function readRawState(factory: IDBFactory | null | undefined = globalThis.indexedDB, name = dbName()): Promise<{ state: Record<string, unknown> | undefined; recovery: Record<string, unknown> }> {
@@ -69,6 +72,21 @@ function Recovery({ onRetry }: { onRetry: () => void }) {
    setNote({ kind: 'alert', text: `${asError(e).message} Nada foi apagado por completo.` }); setBusy(false);
   }
  }
+
+ async function leaveDemo() {
+  setBusy(true);
+  clearDemoMark();
+  try { await deleteDemoDatabase(); } catch { /* a próxima abertura no modo real apaga de novo */ }
+  window.location.hash = ''; window.location.reload();
+ }
+ if (appMode() === 'demo') return <div className="rec" role="alert" aria-live="assertive"><div className="rec-in">
+  <h1 ref={title} tabIndex={-1}>A demonstração encontrou um problema</h1>
+  <p className="rec-lead">Os dados de exemplo podem ter se perdido. Seus dados reais não foram tocados.</p>
+  <div className="rec-acts">
+   <button type="button" className="rec-main" disabled={busy} onClick={() => void leaveDemo()}>Sair da demonstração</button>
+   <button type="button" disabled={busy} onClick={onRetry}>Tentar de novo</button>
+  </div>
+ </div></div>;
 
  return <div className="rec" role="alert" aria-live="assertive"><div className="rec-in">
   <h1 ref={title} tabIndex={-1}>O Fitnez encontrou um problema ao abrir seus dados</h1>

@@ -1,17 +1,14 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
 import type { Route } from '../../app/router';
 import { activityFor, activityLabel } from '../../domain/dayActivity';
 import { phaseOf, rirSequence, weekLabel } from '../../domain/calendar';
-import { Biblioteca } from './Biblioteca';
 import { Detalhe } from './Detalhe';
 import { Executar } from './Executar';
 import { Concluido } from './Concluido';
 import { CartaoTreino } from './Cartao';
-import { EditarTreino } from './EditarTreino';
-import { EditarExercicio } from './EditarExercicio';
-import { NovoTreino } from './NovoTreino';
+import { Biblioteca, Carregando, EditarExercicio, EditarTreino, NovoTreino } from './lazy';
 import { Livre } from './Livre';
 import { FREE_SESSION_ID } from '../../domain/weekStreak';
 import { getWorkout } from '../../domain/workoutRecord';
@@ -101,5 +98,5 @@ export function Treino({ route }: { route: Extract<Route, { tab: 'treino' }> }) 
    {tab === 'plano' ? <MeuPlano /> : <Biblioteca />}
    <p className="tr-aviso">{AVISO_SAUDE}</p>
   </div>;
- return content;
+ return <Suspense fallback={<Carregando />}>{content}</Suspense>;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { eraseAllData } from '../../application/eraseAll';
+import { appMode } from '../../app/mode';
 import { Icon } from '../../ui/icons';
 import { Sheet } from '../../ui/Sheet';
 
@@ -22,12 +23,13 @@ export function ApagarDados({ onDownloadBackup }: { onDownloadBackup: () => Prom
  useEffect(() => {
   if (step === 'confirmar') actions.current?.querySelector<HTMLElement>('[data-cancel]')?.focus({ preventScroll: true });
  }, [step]);
- if (!state) return null;
+ // Achado A1: na demonstração esta área nunca aparece (e eraseAllData recusa com mode 'demo').
+ if (!state || appMode() === 'demo') return null;
 
  const close = () => { if (!busy) setStep('fechado'); };
  const backup = async () => { if (await onDownloadBackup()) setBackupDone(true); };
  const erase = async () => {
-  const result = await run(() => eraseAllData({ expectedRevision: state.revision }), 'Todos os dados foram apagados');
+  const result = await run(() => eraseAllData({ expectedRevision: state.revision, mode: appMode() }), 'Todos os dados foram apagados');
   if (!result) return;
   if (result.storageWarnings.length) { setWarnings(result.storageWarnings); setStep('avisos'); return; }
   reiniciar();

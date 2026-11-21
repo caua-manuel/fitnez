@@ -44,7 +44,8 @@ function freeKey(s: StateV3, prefix: string, time: number): string {
  return id;
 }
 
-export interface ApplyOnboardingOptions { start: DayIso; today: DayIso; now: number }
+/** `clearanceConfirmed`: a pessoa marcou "Meu médico me liberou para fazer musculação." (obrigatório com `requiresClearance`; nunca é gravado). */
+export interface ApplyOnboardingOptions { start: DayIso; today: DayIso; now: number; clearanceConfirmed?: boolean }
 
 /**
  * Função pura: estado novo com o plano do assistente aplicado. Use `applyOnboarding` para gravar.
@@ -58,12 +59,16 @@ export function applyOnboardingToState(state: StateV3, preview: OnboardingPrevie
  if (!checked.ok) throw new RepositoryError('validation', `Respostas do assistente inválidas. ${Object.values(checked.errors)[0]}`);
  // Refaz a prévia a partir das respostas: o que é gravado nunca diverge das regras.
  const fresh = buildOnboardingPreview(checked.value, assistantCatalog());
+ // Gestação e menos de 14 anos: sem plano (ADR 012). Condição de saúde e amamentação: só com a liberação médica marcada.
+ if (fresh.blocked || !fresh.generated) throw new RepositoryError('validation', 'O app não monta um plano para esta situação.');
+ if (fresh.requiresClearance && opts.clearanceConfirmed !== true) throw new RepositoryError('validation', 'Marque a liberação do seu médico antes de começar o plano.');
+ const generated = fresh.generated;
  const next = clone(state);
  const undoKey = freeKey(next, 'onboarding-undo', opts.now);
  next.recovery = { ...next.recovery, [undoKey]: undoRecordOf(state, 'onboarding-undo', opts.now) };
 
- next.catalog = { ...next.catalog, plan: mergeGeneratedPlan(next.catalog.plan, fresh.generated.plan), revision: (next.catalog.revision ?? 0) + 1 };
- next.settings.sched = clone(fresh.generated.sched);
+ next.catalog = { ...next.catalog, plan: mergeGeneratedPlan(next.catalog.plan, generated.plan), revision: (next.catalog.revision ?? 0) + 1 };
+ next.settings.sched = clone(generated.sched);
  next.settings.start = opts.start;
  next.settings.startConfirmed = true;
  if (fresh.diet.kind === 'targets') next.settings.dietTargets = withDietTargetsVersion(next.settings.dietTargets, opts.today, fresh.diet.targets);
@@ -106,10 +111,10 @@ export function undoOnboardingInState(state: StateV3, now: number): StateV3 {
 }
 
 /** Grava o plano do assistente numa única transação. Conflito se os dados mudaram desde `expectedRevision`. */
-export async function applyOnboarding(repo: Repository, input: { preview: OnboardingPreview; start: DayIso; today: DayIso; expectedRevision: number; now?: number }): Promise<StateV3> {
+export async function applyOnboarding(repo: Repository, input: { preview: OnboardingPreview; start: DayIso; today: DayIso; expectedRevision: number; now?: number; clearanceConfirmed?: boolean }): Promise<StateV3> {
  const current = await repo.read();
  if (current.revision !== input.expectedRevision) throw new RepositoryError('conflict', 'Os dados mudaram em outra aba. Recarregue antes de tentar novamente.');
- const next = applyOnboardingToState(current, input.preview, { start: input.start, today: input.today, now: input.now ?? Date.now() });
+ const next = applyOnboardingToState(current, input.preview, { start: input.start, today: input.today, now: input.now ?? Date.now(), clearanceConfirmed: input.clearanceConfirmed });
  return repo.save({ state: next, expectedRevision: input.expectedRevision });
 }
 

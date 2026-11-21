@@ -63,9 +63,11 @@
 .ev-bars{display:grid;grid-template-columns:repeat(var(--cols,12),minmax(0,1fr));gap:4px;margin-top:6px}
 .ev-bar-col{display:grid;gap:8px;justify-items:center;min-width:0}
 .ev-bar-slot{display:flex;align-items:flex-end;justify-content:center;width:100%;height:92px}
-.ev-bar-track{position:relative;width:min(100%,16px);display:flex;align-items:flex-end;background:var(--track);border-radius:6px;overflow:hidden;transition:height 300ms ease-out}
+.ev-bar-track{position:relative;width:min(100%,16px);display:flex;align-items:flex-end;background:var(--track);border-radius:6px;overflow:hidden}
 .ev-bar-track.future{opacity:.6}
-.ev-bar-fill{width:100%;background:var(--primary);border-radius:6px;transform-origin:bottom;animation:ev-grow 450ms ease-out backwards}
+/* ADR 006: só transform (scaleY a partir da base), 300 ms, sem animar altura. */
+.ev-bar-fill{width:100%;background:var(--primary);border-radius:6px;transform-origin:bottom;animation:ev-grow 300ms var(--mv-ease,ease-out) backwards}
+@media(prefers-reduced-motion:reduce){.ev-bar-fill{animation:none}}
 @keyframes ev-grow{from{transform:scaleY(0)}to{transform:none}}
 .ev-axis-label{font-size:.75rem;font-weight:500;color:var(--muted-foreground);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
 .ev-legend{display:flex;align-items:center;gap:6px;margin:12px 0 0;font-size:.8125rem;color:var(--muted-foreground)}
@@ -152,3 +154,4 @@ li:first-child>.ev-row-measure{border-top:0}
 .evolucao .ev-head>.icon,.evolucao .ev-row-btn .icon,.evolucao .ev-tile .icon{color:var(--tone)}
 .evolucao .ev-tile[aria-pressed=true] .icon{color:var(--primary)}
 .evolucao .ev-big{color:var(--foreground)}
+.ev-resumo{width:100%;margin:0 0 14px;justify-content:flex-start;text-align:left;font-weight:400;cursor:pointer}

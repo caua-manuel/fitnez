@@ -8,7 +8,7 @@ type Props = { value: number; decimals?: number; prefix?: string; suffix?: strin
  * O texto final está sempre no DOM: o React renderiza o valor final e a animação só reescreve o nó de texto
  * durante a contagem, terminando no mesmo texto. Sem aria-live; movimento reduzido mostra o valor final direto.
  */
-export function CountUp({ value, decimals = 0, prefix = '', suffix = '', duration = 600, className }: Props) {
+export function CountUp({ value, decimals = 0, prefix = '', suffix = '', duration = 350, className }: Props) {
   const ref = useRef<HTMLSpanElement>(null);
   const previous = useRef<number | null>(null);
   const final = countText(value, decimals, prefix, suffix);

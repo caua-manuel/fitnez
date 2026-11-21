@@ -8,7 +8,6 @@ import { TabBar } from '../ui/TabBar';
 import { PageTransition } from '../ui/motion';
 import { Inicio } from '../features/inicio/Inicio';
 import { Perfil } from '../features/perfil/Perfil';
-import { Evolucao } from '../features/evolucao/Evolucao';
 import { Treino } from '../features/treino/Treino';
 import { Dieta } from '../features/dieta/Dieta';
 import { MEAL_NAME } from '../features/dieta/dietData';
@@ -18,14 +17,19 @@ import { ToastHost } from '../ui/UndoToast';
 import { shouldShowBackupReminder } from '../domain/userData';
 import { isStartConfirmed } from '../domain/planStart';
 import { openAssistant, useAssistantMode } from '../features/assistente/store';
+import { DemoBanner, isDemo } from './demo';
+import { FREE_SESSION_ID } from '../domain/weekStreak';
+import { storageKey } from './mode';
 
 // O assistente de início só é usado na primeira abertura ou em Perfil: vai num chunk à parte (também no precache do SW).
 const Assistente = lazy(() => import('../features/assistente/Assistente').then(m => ({ default: m.Assistente })));
+// Compartilhar plano (ADR 011, 1.3): chunk à parte, só ao abrir a tela.
+const Compartilhar = lazy(() => import('../features/compartilhar/Compartilhar').then(m => ({ default: m.Compartilhar })));
 
 /** Tempo em que o aviso de sucesso fica na tela; ele também some ao trocar de tela ou ao ser dispensado. */
 const NOTICE_MS = 8000;
 /** Marca da sessão: a escolha da data de início é oferecida uma vez por sessão (prefixo treino12: é limpo ao apagar tudo). */
-const START_OFFER_KEY = 'treino12:inicio-oferecido';
+const START_OFFER_KEY = storageKey('inicio-oferecido');
 
 /** Cada aba declara se mostra o título (h1) grande com subtítulo; onde a referência não mostra título, o h1 fica só para leitores de tela. */
 const headings: Record<Route['tab'], { title: string; subtitle?: string }> = {
@@ -35,6 +39,9 @@ const headings: Record<Route['tab'], { title: string; subtitle?: string }> = {
  evolucao: { title: 'Evolução', subtitle: 'Acompanhe seus resultados e veja sua evolução.' },
  perfil: { title: 'Perfil' },
 };
+const SHARE_TITLE = 'Compartilhar plano';
+// Evolução (gráficos e medidas) fica fora da carga inicial (ADR 011, orçamento de peso); vem do precache offline.
+const Evolucao = lazy(() => import('../features/evolucao/Evolucao').then(m => ({ default: m.Evolucao })));
 const readRoute = () => parseRoute(window.location.hash);
 
 export function App() {
@@ -72,15 +79,21 @@ export function App() {
  const offlineText = pwa.development ? 'Prévia local · offline disponível no build' : pwa.ready ? (pwa.online ? 'Disponível offline' : 'Sem conexão · disponível offline') : pwa.error ? 'Uso offline indisponível' : pwa.online ? 'Preparando o uso offline…' : 'Sem conexão · uso offline não confirmado';
  const mealRoute = route.tab === 'dieta' && route.meal ? route.meal : null;
  const { title: baseTitle, subtitle } = headings[route.tab];
- const title = mealRoute ? MEAL_NAME[mealRoute] : baseTitle;
- const showTitle = Boolean(subtitle) && !mealRoute;
+ const sharing = route.tab === 'perfil' && route.view === 'compartilhar';
+ // Execução e Concluído: o h1 (que recebe o foco a cada rota) diz onde a pessoa está, não só "Treino".
+ const sessTitle = route.tab === 'treino' && (route.view === 'executar' || route.view === 'concluido') && route.id
+  ? (route.view === 'concluido' ? 'Treino concluído' : `${route.id === FREE_SESSION_ID ? 'Treino livre' : data.state?.catalog.plan.sess[route.id]?.name ?? 'Treino'}, em andamento`) : null;
+ const title = mealRoute ? MEAL_NAME[mealRoute] : sharing ? SHARE_TITLE : sessTitle ?? baseTitle;
+ const showTitle = (Boolean(subtitle) && !mealRoute) || sharing;
  const executing = route.tab === 'treino' && route.view === 'executar';
  const backupPending = shouldShowBackupReminder(data.state, data.protection?.backupDue);
  const hasAvisos = backupPending || pwa.updateAvailable;
  const name = (data.state?.settings.profile?.name as string | undefined)?.trim();
- if (assistant && data.state) return <><Suspense fallback={<p className="loading" role="status">Abrindo o assistente…</p>}><Assistente key={assistant} mode={assistant} /></Suspense><ToastHost /></>;
+ const demo = isDemo();
+ if (assistant && data.state) return <>{demo ? <DemoBanner repository={data.repository} /> : null}<Suspense fallback={<p className="loading" role="status">Abrindo o assistente…</p>}><Assistente key={assistant} mode={assistant} /></Suspense><ToastHost /></>;
  return <>
   <a className="skip" href="#conteudo" onClick={e => { e.preventDefault(); document.getElementById('conteudo')?.focus(); }}>Pular para o conteúdo</a>
+  {demo ? <DemoBanner repository={data.repository} /> : null}
   {executing || mealRoute ? null : <header className="app-header">
    <a className="brand" href={hrefFor({ tab: 'inicio' })} aria-label="Fitnez, ir para o início"><Logo size={34} withTagline /></a>
    <div className="header-actions">
@@ -97,15 +110,17 @@ export function App() {
     {data.initialization?.status === 'ready' && data.initialization.warnings.length ? <aside className="warning"><strong>Atenção à recuperação</strong>{data.initialization.warnings.map((w, i) => <p key={i}>{w}</p>)}</aside> : null}
     {data.initialization?.status === 'migration-conflict' && route.tab !== 'perfil' ? <aside className="warning"><strong>Encontramos duas fontes diferentes</strong><p>Escolha no Perfil qual histórico será usado. As fontes originais continuam preservadas.</p><a href={hrefFor({ tab: 'perfil' })}>Escolher origem dos dados</a></aside> : null}
     <PageTransition routeKey={routeKey}>
-     {route.tab === 'perfil' ? <Perfil offlineStatus={offlineText} />
+     {sharing ? <Suspense fallback={<p className="loading" role="status">Abrindo…</p>}><Compartilhar /></Suspense>
+      : route.tab === 'perfil' ? <Perfil offlineStatus={offlineText} />
       : route.tab === 'dieta' ? <Dieta route={route} />
-      : route.tab === 'evolucao' ? <Evolucao />
+      : route.tab === 'evolucao' ? <Suspense fallback={<p className="loading" role="status">Abrindo…</p>}><Evolucao /></Suspense>
       : route.tab === 'treino' ? <Treino route={route} />
       : <Inicio />}
     </PageTransition>
    </> : <p>Seus dados não foram abertos. Use a ação acima para tentar novamente.</p>}
    {pwa.error ? <p className="warning">{pwa.error}</p> : null}
-   <p className={flash ? 'save-status' : 'visually-hidden'} role="status">{data.saving ? 'Salvando…' : data.state && !data.error ? 'Salvo neste aparelho' : ''}</p>
+   {/* Na execução, cada série já tem anúncio próprio: a região de salvamento só fala em erro (o erro vai no alerta acima). */}
+   <p className={flash && !executing ? 'save-status' : 'visually-hidden'} role="status">{executing ? '' : data.saving ? 'Salvando…' : data.state && !data.error ? 'Salvo neste aparelho' : ''}</p>
    {route.tab === 'perfil' ? null : <p className="visually-hidden" role="status">{offlineText}</p>}
   </main>
   {avisosOpen ? <Sheet title="Avisos" onClose={() => setAvisosOpen(false)}>

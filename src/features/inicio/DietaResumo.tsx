@@ -4,6 +4,7 @@ import type { DayIso } from '../../domain/calendar';
 import { Icon } from '../../ui/icons';
 import { MEALS, MEAL_NAME, fmt } from '../dieta/dietData';
 import { useDietDay } from '../dieta/useDietDay';
+import { isExampleTarget } from '../../domain/dietTargets';
 
 /** Uma linha da dieta no Início: a próxima refeição e as kcal restantes (ou só as refeições, com hideDietNumbers). */
 export function DietaResumo({ day, isToday }: { day: DayIso; isToday: boolean }) {
@@ -14,13 +15,15 @@ export function DietaResumo({ day, isToday }: { day: DayIso; isToday: boolean })
  const dayQ = isToday ? undefined : day;
  const over = totals.kcal > target.kcal;
  const detail = hide || target.kcal <= 0 ? `${totals.eatenCount} de 5 refeições` : over ? `${fmt(totals.kcal - target.kcal)} kcal acima da meta` : `${fmt(prog.remaining)} kcal restantes`;
+ // Meta que ninguém calculou para a pessoa: dizer que é de exemplo (ux-primeira-abertura.md, DR1).
+ const example = !hide && target.kcal > 0 && !!state && isExampleTarget(state.settings);
  return <a className="in-dieta" href={hrefFor(next ? { tab: 'dieta', meal: next, day: dayQ } : { tab: 'dieta', day: dayQ })}>
   <Icon name="dieta" size={22} />
   <span className="in-dieta-text">
    <span className="in-dieta-k">{next ? 'Próxima refeição' : 'Dieta de hoje'}</span>
    <strong>{next ? MEAL_NAME[next] : 'Todas as refeições marcadas'}</strong>
   </span>
-  <span className="in-dieta-v num">{detail}</span>
+  <span className="in-dieta-v num">{detail}{example ? <span className="in-dieta-note">meta de exemplo</span> : null}</span>
   <Icon name="seta" size={20} />
  </a>;
 }

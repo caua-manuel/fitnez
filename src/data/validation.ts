@@ -4,8 +4,9 @@ import { isValidDietTargetsSetting } from '../domain/dietTargets';
 import { LIMITS as L } from '../domain/limits';
 import { checkStoredProfile } from '../domain/profile';
 import { checkStoredOnboarding } from '../domain/onboarding';
-import { checkStoredExerciseNotes } from '../domain/exerciseNotes';
+import { checkStoredExerciseNotes } from '../domain/exerciseNotesCheck';
 import { checkStoredPlates } from '../domain/plates';
+import { USAGE_MAX } from '../domain/userData';
 export const clone = <T>(value: T): T => structuredClone(value);
 const fail = (message: string): never => { throw new RepositoryError('validation', message); };
 export function object(v: unknown, name = 'objeto'): asserts v is Payload { if (v === null || typeof v !== 'object' || Array.isArray(v)) fail(`${name}: esperado objeto.`); }
@@ -64,7 +65,12 @@ function settings(s: unknown) {
  if (s.exerciseNotes !== undefined) { const why = checkStoredExerciseNotes(s.exerciseNotes); if (why) fail(`Notas dos exercícios do backup inválidas: ${why}`); }
  if (s.plates !== undefined) { const why = checkStoredPlates(s.plates); if (why) fail(`Anilhas do backup inválidas: ${why}`); }
  if (s.profile !== undefined) { const first = Object.values(checkStoredProfile(s.profile))[0]; if (first) fail(`Perfil do backup inválido. ${first}`); }
+ if (s.planImport !== undefined) planImport(s.planImport);
 }
+// ADR 011: campos opcionais; validados só quando presentes (backups v3 antigos continuam válidos).
+function planImport(p: unknown) { object(p, 'Plano importado'); if (p.v !== 1) fail('Plano importado: versão inválida.'); civil(p.appliedOn); text(p.name, 'Nome do plano importado', L.name); if (p.undoKey !== undefined) text(p.undoKey, 'Desfazer plano importado', L.id); }
+function usage(u: unknown) { object(u, 'Dias de uso'); civil(u.lastDay); integer(u.daysSinceBackup, 'Dias de uso'); if (u.daysSinceBackup > USAGE_MAX) fail(`Dias de uso: no máximo ${USAGE_MAX}.`); }
+function prompts(p: unknown) { object(p, 'Pedidos'); for (const k of ['persistAskedAt', 'installShownAt']) if (p[k] !== undefined) { number(p[k], k); if (p[k] < 0) fail(`${k}: instante inválido.`); } if (p.backupSnoozedOn !== undefined) civil(p.backupSnoozedOn); }
 export function noPhotos(v: Payload) { for(const k of ['photos','attachments','anexos','fotos']) if(v[k]!==undefined && v[k]!==null && (typeof v[k]!=='object' || Object.keys(v[k]).length)) fail('Fotos/anexos não são suportados nesta fase.'); }
 export function validateLegacy(v: Payload) {
  noPhotos(v); if(v.v!==undefined && v.v!==1 && v.v!==2) { if(typeof v.v==='number'&&v.v>3) throw new RepositoryError('future-version','Este backup usa uma versão futura.'); fail('Versão legada inválida.'); }
@@ -81,5 +87,5 @@ export function validateState(v: unknown): asserts v is StateV3 {
  safeJson(v); object(v); noPhotos(v); if(v.v!==3) { if(v.v>3) throw new RepositoryError('future-version','Este backup usa uma versão futura.'); fail('Estado v3 inválido.'); }
  integer(v.revision,'Revisão'); object(v.catalog); validatePlan(v.catalog.plan); integer(v.catalog.revision,'Revisão catálogo'); catalogDiet(v.catalog.diet); recipes(v.catalog.recipes);
  settings(v.settings);
- object(v.history); dates(v.history.days,'Dias',day); dates(v.history.measurements,'Medidas',measurement,L.measurements); snapshotsAndRecovery(v); object(v.meta); for(const k of ['initializedAt','updatedAt']) number(v.meta[k],k); bool(v.meta.migrationCompleted,'Migração'); for(const k of ['lastBackupGeneratedAt','lastBackupConfirmedAt']) if(v.meta[k]!==null) number(v.meta[k],k); noPhotos(v.catalog); noPhotos(v.history);
+ object(v.history); dates(v.history.days,'Dias',day); dates(v.history.measurements,'Medidas',measurement,L.measurements); snapshotsAndRecovery(v); object(v.meta); for(const k of ['initializedAt','updatedAt']) number(v.meta[k],k); bool(v.meta.migrationCompleted,'Migração'); for(const k of ['lastBackupGeneratedAt','lastBackupConfirmedAt']) if(v.meta[k]!==null) number(v.meta[k],k); if(v.meta.usage!==undefined) usage(v.meta.usage); if(v.meta.prompts!==undefined) prompts(v.meta.prompts); if(v.meta.demo!==undefined) bool(v.meta.demo,'Demonstração'); noPhotos(v.catalog); noPhotos(v.history);
 }

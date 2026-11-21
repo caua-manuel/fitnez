@@ -3,7 +3,9 @@ import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import type { ImportPreview } from '../../application/repository';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
-import { Card, formatInstant } from '../../ui/components';
+import { BackupReminder, Card, formatInstant } from '../../ui/components';
+import { ExitDemoSheet, isDemo } from '../../app/demo';
+import type { Payload } from '../../application/repository';
 import { Icon } from '../../ui/icons';
 import { showToast } from '../../ui/UndoToast';
 import type { IconName } from '../../ui/icons';
@@ -15,7 +17,7 @@ import type { NotifySupport } from '../../pwa/notifications';
 import { planConsistency } from '../../domain/evolution';
 import { validateProfile } from '../../domain/profile';
 import { isExampleTarget, resolveDietTargets } from '../../domain/dietTargets';
-import { MetasSheet } from '../dieta/MetasSheet';
+import { MetasSheet } from '../dieta/MetasSheetLazy';
 import { diaLocal, refeicoesRegistradas, treinosConcluidos } from './metricas';
 import { DataInicioSheet } from './DataInicioSheet';
 import { ApagarDados } from './ApagarDados';
@@ -72,6 +74,8 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
  const [metasOpen, setMetasOpen] = useState(false);
  const [undoOpen, setUndoOpen] = useState(false);
  const [backupOpen, setBackupOpen] = useState(false);
+ const [exitOpen, setExitOpen] = useState(false);
+ const [shareUndoOpen, setShareUndoOpen] = useState(false);
  const [notify, setNotify] = useState<NotifySupport>(() => notifySupport());
  const [notifyNote, setNotifyNote] = useState('');
  const [notifyBusy, setNotifyBusy] = useState(false);
@@ -89,6 +93,11 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
  useEffect(() => { if (conflict) setBackupOpen(true); }, [conflict]);
  if (!state) return null;
  const locked = busy || conflict;
+ const demo = isDemo();
+ // Mesmo critério de canUndoPlanShare (src/application/planShare.ts), sem trazer o módulo para a carga inicial.
+ const shareUndoKey = state.settings.planImport?.undoKey;
+ const canUndoShare = typeof shareUndoKey === 'string' && (state.recovery[shareUndoKey] as Payload | undefined)?.kind === 'plan-import-undo';
+ const undoShare = () => run(async () => { const { undoPlanShare } = await import('../../application/planShare'); return undoPlanShare(repository, { expectedRevision: (await repository.read()).revision }); }, 'Plano anterior restaurado.');
  const profile = state.settings.profile;
  const name = (profile?.name ?? '').trim();
  const goal = (profile?.goal ?? '').trim();
@@ -133,7 +142,7 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
  const pct = phase.kind === 'week' ? Math.round(phase.progress * 100) : phase.kind === 'done' ? 100 : 0;
  const planText = phase.kind === 'week' ? weekLabel(phase.week) : phase.kind === 'done' ? 'Plano concluído' : `Começa em ${phase.daysUntil} ${phase.daysUntil === 1 ? 'dia' : 'dias'}`;
  const enabled = state.settings.notifications?.enabled === true && notify === 'granted';
- const notifyState = notify === 'unsupported' ? 'Indisponível neste aparelho' : notify === 'denied' ? 'Bloqueadas no navegador' : enabled ? 'Ativadas' : 'Desativadas';
+ const notifyState = isDemo() ? 'Indisponível na demonstração' : notify === 'unsupported' ? 'Indisponível neste aparelho' : notify === 'denied' ? 'Bloqueadas no navegador' : enabled ? 'Ativadas' : 'Desativadas';
 
  function openEditor(target: 'name' | 'goal' | 'body') {
   setNameDraft(name); setGoalDraft(goal); setErrors({});
@@ -209,7 +218,13 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
  function clearFile(focus: boolean) { setPreview(null); setImportError(''); setFilename(NO_FILE); if (fileInput.current) { fileInput.current.value = ''; if (focus) fileInput.current.focus(); } }
 
  return <div className="perfil">
-  {shouldShowBackupReminder(state, protection?.backupDue) ? <aside className="reminder perfil-lembrete"><strong>Faça um backup dos seus dados</strong><p>Seu backup semanal está pendente. Guarde o arquivo fora deste aparelho e confirme o backup.</p><button type="button" className="link-button" onClick={() => { setBackupOpen(true); window.setTimeout(() => document.getElementById('backup-cabeca')?.scrollIntoView({ block: 'start' }), 0); }}>Fazer backup</button></aside> : null}
+  {!demo && shouldShowBackupReminder(state, protection?.backupDue) ? <BackupReminder /> : null}
+  {demo ? <ul className="list perfil-list"><li><button type="button" className="list-row perfil-link" aria-haspopup="dialog" onClick={() => setExitOpen(true)}>
+   <span className="icon-tile soft"><Icon name="voltar" size={26} /></span>
+   <span className="grow"><strong>Sair da demonstração</strong><small>Volta ao app com seus dados; os de exemplo somem.</small></span>
+   <Icon name="seta" size={22} />
+  </button></li></ul> : null}
+  {exitOpen ? <ExitDemoSheet repository={repository} onCancel={() => setExitOpen(false)} /> : null}
   {conflict ? <Card title="Escolher origem dos dados"><p>Encontramos duas fontes diferentes do protótipo. Escolha qual histórico será usado. As duas fontes originais serão preservadas para recuperação.</p><fieldset disabled={busy}><legend>Histórico a usar</legend>{initialization.sources.map(s => <label className="source-choice" key={s.id}><input type="radio" name="migration-source" value={s.id} checked={source === s.id} onChange={() => setSource(s.id)} /><span><strong>Protótipo (versão {s.version})</strong><small>{s.days} dias · {s.measurements} datas com medidas</small></span></label>)}</fieldset><button disabled={busy || !source} onClick={() => void run(() => repository.selectMigration({ sourceId: source, expectedRevision: state.revision }), 'Origem escolhida. Seus dados foram migrados e os originais preservados.')}>Confirmar origem escolhida</button><p className="muted">Tema, importação e confirmação de backup ficam bloqueados até essa escolha.</p></Card> : null}
 
   <header className="perfil-head">
@@ -279,10 +294,21 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
    </button></li>
    <li className="tone-treino"><button type="button" className="list-row perfil-link" onClick={() => openAssistant('refazer')}>
     <span className="icon-tile soft"><Icon name="troca" size={26} /></span>
-    <span className="grow"><strong>Refazer meu plano</strong><small>Responda as perguntas de novo; seus registros continuam salvos</small></span>
+    {state.settings.onboarding
+     ? <span className="grow"><strong>Refazer meu plano</strong><small>Responda as perguntas de novo; seus registros continuam salvos</small></span>
+     : <span className="grow"><strong>Montar meu plano</strong><small>Responda algumas perguntas; seus registros continuam salvos.</small></span>}
     <Icon name="seta" size={22} />
    </button></li>
-   {canUndoOnboarding(state) ? <li><button type="button" className="list-row perfil-link" aria-haspopup="dialog" onClick={() => setUndoOpen(true)}>
+   {demo ? null : <li className="tone-treino"><a className="list-row perfil-link" href={hrefFor({ tab: 'perfil', view: 'compartilhar' })}>
+    <span className="icon-tile soft"><Icon name="compartilhar" size={26} /></span>
+    <span className="grow"><strong>Compartilhar plano</strong><small>Envie seu plano a um amigo ou use o de outra pessoa</small></span>
+    <Icon name="seta" size={22} />
+   </a></li>}
+   {canUndoShare ? <li><button type="button" className="list-row perfil-link" aria-haspopup="dialog" onClick={() => setShareUndoOpen(true)}>
+    <span className="icon-tile soft"><Icon name="historico" size={26} /></span>
+    <span className="grow"><strong>Voltar ao plano anterior</strong><small>Desfaz o último plano aplicado (seu ou de um amigo)</small></span>
+    <Icon name="seta" size={22} />
+   </button></li> : canUndoOnboarding(state) ? <li><button type="button" className="list-row perfil-link" aria-haspopup="dialog" onClick={() => setUndoOpen(true)}>
     <span className="icon-tile soft"><Icon name="historico" size={26} /></span>
     <span className="grow"><strong>Voltar ao plano anterior</strong><small>Desfaz o último plano montado pelo assistente</small></span>
     <Icon name="seta" size={22} />
@@ -290,6 +316,9 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
   </ul>
   {undoOpen ? <ConfirmSheet title="Voltar ao plano anterior?" confirmLabel="Voltar ao plano anterior" destructive={false} onCancel={() => setUndoOpen(false)} onConfirm={() => { setUndoOpen(false); void run(async () => undoOnboarding(repository, { expectedRevision: (await repository.read()).revision }), 'Plano anterior restaurado.'); }}>
    <p>Treinos, rotina, data de início e metas voltam ao que eram antes do último plano montado. Seus registros, notas e medidas não mudam.</p>
+  </ConfirmSheet> : null}
+  {shareUndoOpen ? <ConfirmSheet title="Voltar ao plano anterior?" confirmLabel="Voltar" destructive={false} onCancel={() => setShareUndoOpen(false)} onConfirm={() => { setShareUndoOpen(false); void undoShare(); }}>
+   <p>O plano atual sai e o anterior volta. Seus registros continuam.</p>
   </ConfirmSheet> : null}
   {metasOpen ? <MetasSheet onClose={() => setMetasOpen(false)} /> : null}
   {startOpen ? <DataInicioSheet today={today} onClose={() => setStartOpen(false)} /> : null}
@@ -306,23 +335,24 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
    <div className="list-row perfil-notify">
     <span className="icon-tile soft sm"><Icon name="sino" size={22} /></span>
     <span className="grow"><strong id="notif-rotulo">Notificações</strong><small>{notifyState}</small></span>
-    <button type="button" role="switch" className="switch" aria-checked={enabled} aria-labelledby="notif-rotulo" disabled={notifyBusy || notify === 'unsupported' || notify === 'denied'} onClick={() => void toggleNotifications()} />
+    <button type="button" role="switch" className="switch" aria-checked={enabled && !demo} aria-labelledby="notif-rotulo" aria-describedby={demo ? 'notif-demo' : undefined} disabled={demo || notifyBusy || notify === 'unsupported' || notify === 'denied'} onClick={() => void toggleNotifications()} />
+    {demo ? <p id="notif-demo" className="perfil-help">Saia da demonstração para usar com seus dados.</p> : null}
     <p className="perfil-help">Avisos de fim de descanso. No iPhone, instale o app na tela inicial. Lembretes com o app fechado exigem um serviço de envio, que ainda não está ativo.</p>
     {notifyNote ? <p className="perfil-help perfil-aviso" role="status">{notifyNote}</p> : null}
    </div>
 
    <Disclosure id="dados" icon="info" title="Dados neste aparelho" subtitle={offlineStatus || 'Armazenamento, instalação e uso offline'} open={dataOpen} onToggle={() => setDataOpen(o => !o)}>
     <dl className="facts"><div><dt>Armazenamento persistente</dt><dd>{protection ? persistenceLabels[protection.persistence] : 'Consultando…'}</dd></div>{protection?.usage !== undefined ? <div><dt>Espaço estimado em uso</dt><dd>{new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(protection.usage / 1048576)} MB{protection.quota !== undefined ? ` de ${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(protection.quota / 1048576)} MB` : ''}</dd></div> : null}</dl>
-    <button className="button secondary" disabled={busy} onClick={() => void requestPersistence()}>Pedir armazenamento persistente</button>
+    {demo ? <p className="demo-off">Indisponível na demonstração. Saia para usar com seus dados.</p> : <button className="button secondary" disabled={busy} onClick={() => void requestPersistence()}>Pedir armazenamento persistente</button>}
     {protection?.message ? <p className="warning">{protection.message}</p> : null}
     <p className="muted">A limpeza do navegador ou a perda do aparelho pode apagar seus dados. A persistência não substitui um backup externo.</p>
     <h3>Instalar e usar offline</h3>
     <p>Instale o app para abri-lo pelo ícone, como qualquer outro. O uso offline estará pronto quando aparecer “Disponível offline” aqui, em Dados neste aparelho.</p>
-    <InstalarApp />
+    {demo ? null : <InstalarApp />}
     <p className="muted">Cada navegador e aparelho guarda seus próprios dados. Para mudar de endereço ou aparelho, baixe e importe o backup. Não há login nem sincronização.</p>
    </Disclosure>
 
-   <Disclosure id="backup" icon="nuvem" title="Backup e restauração" subtitle="Salve e restaure seus dados" open={backupOpen} onToggle={() => setBackupOpen(o => !o)}>
+   {demo ? <section className="card perfil-sec"><div className="perfil-sec-head"><span className="icon-tile soft sm"><Icon name="nuvem" size={22} /></span><span className="grow"><strong>Backup e restauração</strong><small>Indisponível na demonstração. Saia para usar com seus dados.</small></span></div></section> : <Disclosure id="backup" icon="nuvem" title="Backup e restauração" subtitle="Salve e restaure seus dados" open={backupOpen} onToggle={() => setBackupOpen(o => !o)}>
     <h3>Backup dos seus dados</h3>
     <p>Baixe ou copie o backup completo, incluindo o histórico e os originais preservados. O backup é um arquivo de texto com todos os seus dados de saúde. Guarde em lugar seguro.</p>
     <div className="actions"><button className="button" disabled={busy} onClick={() => void exportBackup(false)}>Baixar backup</button><button className="button secondary" disabled={busy} onClick={() => void exportBackup(true)}>Copiar backup</button></div>
@@ -344,9 +374,9 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
     <div className="file-picker"><label className="button secondary" htmlFor="backup-file">Escolher arquivo JSON</label><input className="visually-hidden" ref={fileInput} id="backup-file" type="file" aria-describedby="file-help file-name" accept=".json,application/json" disabled={locked} onChange={e => void selectFile(e)} /><span id="file-name" className="muted">{filename}</span></div>
     {importError ? <div ref={importErrorRef} className="perfil-import-erro" role="alert" tabIndex={-1}><p>{importError}</p><button type="button" className="button secondary" onClick={() => { clearFile(false); fileInput.current?.click(); }}>Escolher outro arquivo</button></div> : null}
     {preview ? <section className="import-preview" aria-labelledby="preview-title"><h3 ref={previewHeading} id="preview-title" tabIndex={-1}>Prévia da importação</h3><p>Backup versão {preview.sourceVersion}</p><dl className="facts"><div><dt>Dias com dados</dt><dd>{preview.summary.days}</dd></div><div><dt>Datas com medidas</dt><dd>{preview.summary.measurements}</dd></div><div><dt>Exercícios</dt><dd>{preview.summary.exercises}</dd></div><div><dt>Treinos</dt><dd>{preview.summary.sessions}</dd></div></dl>{preview.warnings.map((w, i) => <p className="muted" key={i}>{w}</p>)}<p className="warning"><strong>Os dados atuais serão substituídos.</strong> Uma cópia de recuperação será preservada neste aparelho na mesma operação.</p><div className="actions"><button className="danger" disabled={locked} onClick={async () => { const result = await run(() => repository.confirmImport({ token: preview.token, expectedRevision: preview.expectedRevision }), 'Backup importado. Os dados anteriores estão preservados para recuperação.'); if (result) clearFile(false); }}>Confirmar importação</button><button className="button secondary" disabled={busy} onClick={() => clearFile(true)}>Cancelar</button></div></section> : null}
-   </Disclosure>
+   </Disclosure>}
   </div>
-  <ApagarDados onDownloadBackup={() => exportBackup(false)} />
+  {demo ? null : <ApagarDados onDownloadBackup={() => exportBackup(false)} />}
   <p className="perfil-aviso-saude">Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.</p>
  </div>;
 }

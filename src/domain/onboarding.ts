@@ -13,7 +13,8 @@ import { validateProfile } from './profile';
 // devolve esses campos para gravação (ver `storedAnswersOf`).
 
 // ---------- respostas ----------
-export type SafetyFlag = 'menor18' | 'gestacao' | 'condicao' | 'transtorno';
+/** `amamentacao`: opção separada da gravidez (ADR 012, P2, adotada pelo orquestrador; aguarda o dono). A tela do passo 0 ainda junta as duas. */
+export type SafetyFlag = 'menor18' | 'gestacao' | 'amamentacao' | 'condicao' | 'transtorno';
 export type SafetyAnswer = SafetyFlag | 'nenhum';
 export type Goal = 'perder' | 'massa' | 'recomp' | 'saude';
 export type Experience = 'nunca' | 'iniciante' | 'intermediario';
@@ -38,7 +39,7 @@ export interface OnboardingAnswers {
  body?: BodyAnswers;
 }
 
-export const SAFETY_FLAGS: readonly SafetyFlag[] = ['menor18', 'gestacao', 'condicao', 'transtorno'];
+export const SAFETY_FLAGS: readonly SafetyFlag[] = ['menor18', 'gestacao', 'amamentacao', 'condicao', 'transtorno'];
 export const GOALS: readonly Goal[] = ['perder', 'massa', 'recomp', 'saude'];
 export const EXPERIENCES: readonly Experience[] = ['nunca', 'iniciante', 'intermediario'];
 export const DAYS_OPTIONS: readonly DaysPerWeek[] = [2, 3, 4, 5, 6];
@@ -124,11 +125,33 @@ export function safetyFlagsOf(a: OnboardingAnswers): SafetyFlag[] {
  return SAFETY_FLAGS.filter(f => flags.includes(f));
 }
 export const isMinor = (a: OnboardingAnswers): boolean => safetyFlagsOf(a).includes('menor18');
-/** Experiência usada nas regras: menor de 18 recebe o treino leve de quem nunca treinou (decisão do dono). */
-export const effectiveExperience = (a: OnboardingAnswers): Experience => (isMinor(a) ? 'nunca' : a.experience);
+/** RIR do plano para condição de saúde, amamentação e 60 anos ou mais (ADR 012; a verificar). */
+export const RIR_CONSERVADOR: readonly string[] = ['4', '3', '3', '4', '3', '3', '3', '4', '3', '3', '3', '4'];
+/** Idade a partir da qual o plano fica mais leve e com exercícios estáveis (ADR 012; a verificar). */
+export const OLDER_AGE = 60;
+/** Abaixo desta idade informada, o assistente não gera plano (ADR 012, P1, adotada pelo orquestrador; aguarda o dono). */
+export const MIN_PLAN_AGE = 14;
+/** Teto de dias e sem duração longa com transtorno alimentar (ADR 012, P3, adotada pelo orquestrador; aguarda o dono). */
+export const TRANSTORNO_MAX_DAYS = 4;
+export const isOlder = (a: OnboardingAnswers): boolean => typeof a.body?.age === 'number' && a.body.age >= OLDER_AGE;
+/** Plano leve com liberação médica: condição de saúde ou amamentação. */
+export const isConservative = (a: OnboardingAnswers): boolean => { const f = safetyFlagsOf(a); return f.includes('condicao') || f.includes('amamentacao'); };
+export type PlanBlockedReason = 'gestacao' | 'menor14';
+/** Motivo para não gerar plano nem metas (a tela mostra texto próprio, sem "Começar o plano"); `null` = pode gerar. */
+export function planBlockedReason(a: OnboardingAnswers): PlanBlockedReason | null {
+ if (safetyFlagsOf(a).includes('gestacao')) return 'gestacao';
+ if (typeof a.body?.age === 'number' && a.body.age < MIN_PLAN_AGE) return 'menor14';
+ return null;
+}
+/** Experiência usada nas regras: menor de 18, condição de saúde, amamentação e 60+ (salvo intermediário) recebem o treino de quem nunca treinou. */
+export const effectiveExperience = (a: OnboardingAnswers): Experience => (isMinor(a) || isConservative(a) || (isOlder(a) && a.experience !== 'intermediario') ? 'nunca' : a.experience);
 export const bmiOf = (weightKg: number, heightCm: number): number => weightKg / ((heightCm / 100) ** 2);
 
-export type OnboardingWarning = SafetyFlag | 'sem-dados' | 'imc-baixo' | 'imc-alto-massa' | 'semana-cheia';
+export type OnboardingWarning = SafetyFlag | 'idade60' | 'sem-dados' | 'imc-baixo' | 'imc-alto-massa' | 'duracao-reduzida' | 'semana-cheia';
+/** Ordem de exibição dos avisos (ADR 012): segurança, idade60, sem-dados, imc-*, duracao-reduzida, semana-cheia. */
+export const WARNING_ORDER: readonly OnboardingWarning[] = [...SAFETY_FLAGS, 'idade60', 'sem-dados', 'imc-baixo', 'imc-alto-massa', 'duracao-reduzida', 'semana-cheia'];
+/** Por que a divisão tem menos treinos do que o pedido: teto por experiência ou atividades fixas (no máximo 6 dias ativos). */
+export type DaysReason = 'teto' | 'atividades';
 
 // ---------- divisão e rotina ----------
 type SlotKey = 'joelho' | 'joelho2' | 'quadril' | 'unilateral' | 'posterior' | 'empH' | 'empInc' | 'empV' | 'puxV' | 'puxH' | 'ombroLat' | 'ombroPost' | 'biceps' | 'triceps' | 'panturrilha' | 'core' | 'core2';
@@ -137,17 +160,17 @@ const PRINCIPAL: ReadonlySet<SlotKey> = new Set(['joelho', 'joelho2', 'quadril',
 const CORE_SLOTS: ReadonlySet<SlotKey> = new Set(['core', 'core2']);
 
 const TEMPLATES: Readonly<Record<SessionKey, { name: string; sub: string; full: boolean; slots: readonly SlotKey[] }>> = {
- CIA: { name: 'Corpo inteiro A', sub: 'Pernas, peito, costas e core', full: true, slots: ['joelho', 'empH', 'puxV', 'quadril', 'ombroLat', 'core', 'biceps', 'panturrilha'] },
- CIB: { name: 'Corpo inteiro B', sub: 'Pernas, ombros, costas e core', full: true, slots: ['quadril', 'empV', 'puxH', 'unilateral', 'ombroPost', 'core', 'triceps', 'panturrilha'] },
+ CIA: { name: 'Corpo inteiro A', sub: 'Pernas, peito, costas e abdômen', full: true, slots: ['joelho', 'empH', 'puxV', 'quadril', 'ombroLat', 'core', 'biceps', 'panturrilha'] },
+ CIB: { name: 'Corpo inteiro B', sub: 'Pernas, ombros, costas e abdômen', full: true, slots: ['quadril', 'empV', 'puxH', 'unilateral', 'ombroPost', 'core', 'triceps', 'panturrilha'] },
  SUPA: { name: 'Superior A', sub: 'Peito, costas, ombros e braços', full: false, slots: ['empH', 'puxV', 'empV', 'puxH', 'ombroLat', 'biceps', 'triceps'] },
  SUPB: { name: 'Superior B', sub: 'Costas, peito, ombros e braços', full: false, slots: ['puxH', 'empInc', 'puxV', 'ombroLat', 'ombroPost', 'triceps', 'biceps'] },
- PERA: { name: 'Pernas A', sub: 'Pernas, glúteos e core', full: false, slots: ['joelho', 'quadril', 'unilateral', 'posterior', 'panturrilha', 'core', 'core2'] },
- PERB: { name: 'Pernas B', sub: 'Pernas, glúteos e core', full: false, slots: ['quadril', 'joelho2', 'unilateral', 'posterior', 'panturrilha', 'core', 'core2'] }
+ PERA: { name: 'Pernas A', sub: 'Pernas, glúteos e abdômen', full: false, slots: ['joelho', 'quadril', 'unilateral', 'posterior', 'panturrilha', 'core', 'core2'] },
+ PERB: { name: 'Pernas B', sub: 'Pernas, glúteos e abdômen', full: false, slots: ['quadril', 'joelho2', 'unilateral', 'posterior', 'panturrilha', 'core', 'core2'] }
 };
 // Variantes do ajuste de volume (conteudo-ajuste-volume-assistente.md, ADR 010; a verificar).
 const SUPB_INICIO: readonly SlotKey[] = ['puxH', 'empInc', 'ombroLat', 'ombroPost', 'triceps', 'biceps', 'empV'];
 const CIB_2DIAS: readonly SlotKey[] = ['quadril', 'empInc', 'puxH', 'unilateral', 'ombroPost', 'core', 'triceps', 'panturrilha'];
-export const CIB_2DIAS_SUB = 'Pernas, peito, costas e core';
+export const CIB_2DIAS_SUB = 'Pernas, peito, costas e abdômen';
 /** Vagas e subtítulo do treino. `days` = número final de treinos da divisão (depois de teto, atividades fixas e semana cheia). */
 function templateFor(key: SessionKey, exp: Experience, days: number): { name: string; sub: string; full: boolean; slots: readonly SlotKey[] } {
  const tpl = TEMPLATES[key];
@@ -156,18 +179,24 @@ function templateFor(key: SessionKey, exp: Experience, days: number): { name: st
  return tpl;
 }
 export const isLegSession = (key: SessionKey): boolean => key === 'PERA' || key === 'PERB';
+/** Treinos que trabalham pernas (inclui Corpo inteiro): não ficam em dias seguidos quando há dia livre que resolva. */
+const hasLegs = (key: SessionKey): boolean => key === 'PERA' || key === 'PERB' || key === 'CIA' || key === 'CIB';
 
-/** Exercício por vaga e local (tabela 3.2). `null` = vaga pulada. */
-function slotExercise(slot: SlotKey, place: Place, exp: Experience): string | null {
+/** Ajustes por vaga (ADR 012): `older` = 60 anos ou mais; `conservative` = condição de saúde ou amamentação. */
+interface SlotMods { older: boolean; conservative: boolean }
+const NO_MODS: SlotMods = { older: false, conservative: false };
+/** Exercício por vaga e local (tabela 3.2 e ADR 012). `null` = vaga pulada. */
+function slotExercise(slot: SlotKey, place: Place, exp: Experience, mods: SlotMods = NO_MODS): string | null {
+ const { older, conservative } = mods;
  const T: Record<SlotKey, Record<Place, string | null>> = {
-  joelho: { academia: exp === 'nunca' ? 'leg' : 'agach', casa_equip: 'goblet', casa_livre: 'agach_livre' },
-  joelho2: { academia: 'leg', casa_equip: 'goblet', casa_livre: 'agach_livre' },
-  quadril: { academia: 'hip_b', casa_equip: 'ponte_h', casa_livre: 'ponte_uni' },
+  joelho: { academia: exp === 'nunca' ? 'leg' : 'agach', casa_equip: 'goblet', casa_livre: older ? 'sentar_levantar' : 'agach_livre' },
+  joelho2: { academia: 'leg', casa_equip: 'goblet', casa_livre: older ? 'sentar_levantar' : 'agach_livre' },
+  quadril: { academia: conservative ? 'ponte_h' : 'hip_b', casa_equip: 'ponte_h', casa_livre: exp === 'nunca' || older ? 'ponte' : 'ponte_uni' },
   unilateral: { academia: exp === 'intermediario' ? 'bulg' : 'afundo', casa_equip: 'bulg', casa_livre: 'afundo_livre' },
-  posterior: { academia: exp === 'intermediario' ? 'stiff' : 'mesa', casa_equip: 'stiff', casa_livre: 'stiff_uni' },
+  posterior: { academia: exp === 'intermediario' ? 'stiff' : 'mesa', casa_equip: 'stiff', casa_livre: older ? null : 'stiff_uni' },
   empH: { academia: 'supino', casa_equip: 'supino_chao', casa_livre: 'flexao' },
   empInc: { academia: 'inclinado', casa_equip: 'supino_chao', casa_livre: 'flexao' },
-  empV: { academia: 'press_b', casa_equip: 'press_b', casa_livre: 'pike' },
+  empV: { academia: 'press_b', casa_equip: 'press_b', casa_livre: older || conservative ? 'flexao' : 'pike' },
   puxV: { academia: 'puxada', casa_equip: 'puxada_elastico', casa_livre: 'remada_mochila' },
   puxH: { academia: 'remada_b', casa_equip: 'remada_b', casa_livre: 'remada_mochila' },
   ombroLat: { academia: 'lat_a', casa_equip: 'lat_a', casa_livre: 'ytw' },
@@ -183,7 +212,8 @@ function slotExercise(slot: SlotKey, place: Place, exp: Experience): string | nu
 
 /** IDs que o assistente pode usar (todos precisam existir no catálogo). */
 const ALL_SLOTS: readonly SlotKey[] = ['joelho', 'joelho2', 'quadril', 'unilateral', 'posterior', 'empH', 'empInc', 'empV', 'puxV', 'puxH', 'ombroLat', 'ombroPost', 'biceps', 'triceps', 'panturrilha', 'core', 'core2'];
-export const ASSISTANT_EXERCISE_IDS: readonly string[] = [...new Set(PLACES.flatMap(p => EXPERIENCES.flatMap(e => ALL_SLOTS.map(s => slotExercise(s, p, e)))).filter((x): x is string => x !== null))].sort();
+const ALL_MODS: readonly SlotMods[] = [NO_MODS, { older: true, conservative: false }, { older: false, conservative: true }, { older: true, conservative: true }];
+export const ASSISTANT_EXERCISE_IDS: readonly string[] = [...new Set(PLACES.flatMap(p => EXPERIENCES.flatMap(e => ALL_MODS.flatMap(m => ALL_SLOTS.map(s => slotExercise(s, p, e, m))))).filter((x): x is string => x !== null))].sort();
 
 const VOLUME: Readonly<Record<Experience, { ps: number[]; pr: string[]; as: number[]; ar: string[]; prest: number; arest: number }>> = {
  nunca: { ps: [2, 3, 3], pr: ['10–12', '8–12', '8–12'], as: [2, 2, 3], ar: ['12–15', '12–15', '10–15'], prest: 120, arest: 60 },
@@ -191,6 +221,10 @@ const VOLUME: Readonly<Record<Experience, { ps: number[]; pr: string[]; as: numb
  intermediario: { ps: [3, 4, 4], pr: ['6–10', '6–8', '5–8'], as: [3, 3, 4], ar: ['10–12', '10–12', '8–12'], prest: 150, arest: 60 }
 };
 const CORE_REST = 45;
+/** Descanso do exercício principal sem carga (rep, s e carga limitada): ADR 012, a verificar. */
+const NO_LOAD_PRINCIPAL_REST = 90;
+/** Carga limitada: mantém as repetições do catálogo mesmo medido em kg (a mochila não comporta 5–8 repetições). */
+const LOAD_LIMITED: ReadonlySet<string> = new Set(['remada_mochila']);
 const SLOT_COUNT: Readonly<Record<Duration, number>> = { curto: 4, medio: 6, longo: 8 };
 const TETO: Readonly<Record<Experience, number>> = { nunca: 3, iniciante: 4, intermediario: 5 };
 const PREFERRED: Readonly<Record<number, readonly number[]>> = { 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 4], 5: [0, 1, 2, 4, 5] };
@@ -228,22 +262,37 @@ export interface GeneratedPlan {
  experience: Experience;
  duration: Duration;
  warnings: OnboardingWarning[];
+ /** Por que a divisão tem menos treinos do que o pedido (`null`: nada cortou, ou semana cheia). Textos no handoff do conteúdo. */
+ daysReason: DaysReason | null;
 }
 
 export class OnboardingError extends Error { constructor(message: string) { super(message); this.name = 'OnboardingError'; } }
 
-/** Monta divisão, rotina, exercícios, séries, repetições, descanso e RIR (seções 2 a 4). */
+/** Monta divisão, rotina, exercícios, séries, repetições, descanso e RIR (seções 2 a 4 e ADR 012). */
 export function buildPlanFromAnswers(answers: OnboardingAnswers, catalog: Readonly<Record<string, Exercise>>): GeneratedPlan {
+ const blocked = planBlockedReason(answers);
+ // Defesa: a tela nunca deve pedir plano nesses casos (ver `OnboardingPreview.blocked`).
+ if (blocked) throw new OnboardingError(blocked === 'gestacao' ? 'Plano não gerado: gestação.' : `Plano não gerado: menos de ${MIN_PLAN_AGE} anos.`);
  const exp = effectiveExperience(answers);
+ const older = isOlder(answers);
+ const conservative = isConservative(answers);
+ const transtorno = safetyFlagsOf(answers).includes('transtorno');
+ const mods: SlotMods = { older, conservative };
  const warnings: OnboardingWarning[] = [];
+ if (older) warnings.push('idade60');
  const week = fixedWeek(answers);
  const fixas = week.filter(Boolean).length;
- let days = Math.min(answers.daysPerWeek, TETO[exp]);
- if (days + fixas > 6) days = Math.max(2, 6 - fixas);
+ const teto = transtorno ? Math.min(TETO[exp], TRANSTORNO_MAX_DAYS) : TETO[exp];
+ let days = Math.min(answers.daysPerWeek, teto);
+ let daysReason: DaysReason | null = days < answers.daysPerWeek ? 'teto' : null;
+ if (days + fixas > 6) { days = Math.max(2, 6 - fixas); daysReason = 'atividades'; }
  const full = fixas >= 6;
- if (full) { days = 2; warnings.push('semana-cheia'); }
+ if (full) { days = 2; daysReason = null; }
  // Semana cheia: 2 treinos curtos, fora da rotina (decisão do dono: não marcar musculação no mesmo dia da atividade fixa).
- const duration: Duration = full ? 'curto' : answers.duration;
+ let duration: Duration = full ? 'curto' : answers.duration;
+ // Quem nunca treinou (inclui menor de 18, condição, amamentação e 60+) e transtorno alimentar: sem treino longo.
+ if (duration === 'longo' && (exp === 'nunca' || transtorno)) { duration = 'medio'; if (exp === 'nunca') warnings.push('duracao-reduzida'); }
+ if (full) warnings.push('semana-cheia');
  const split = splitFor(days, exp);
 
  // Dias da semana (2.3)
@@ -254,14 +303,36 @@ export function buildPlanFromAnswers(answers: OnboardingAnswers, catalog: Readon
  }
  const assigned = chosen.map((d, i) => ({ day: d, key: split[i] }));
  const busy = (d: number) => week[d] !== null;
+ const legOk = (d: number) => !busy(d) && !busy((d + 1) % 7);
+ // Pernas no dia ou na véspera de atividade fixa: troca com um treino que não é de pernas, primeiro os seguintes,
+ // depois os anteriores (do mais próximo ao mais distante), desde que o dia do parceiro sirva para pernas (ADR 012).
  for (let i = 0; i < assigned.length; i++) {
   const a = assigned[i];
-  if (!isLegSession(a.key) || !(busy(a.day) || busy((a.day + 1) % 7))) continue;
-  const j = assigned.findIndex((b, k) => k > i && !isLegSession(b.key));
+  if (!isLegSession(a.key) || legOk(a.day)) continue;
+  const ok = (k: number) => !isLegSession(assigned[k].key) && legOk(assigned[k].day);
+  let j = -1;
+  for (let k = i + 1; k < assigned.length && j < 0; k++) if (ok(k)) j = k;
+  for (let k = i - 1; k >= 0 && j < 0; k--) if (ok(k)) j = k;
   if (j >= 0) { const t = a.key; a.key = assigned[j].key; assigned[j].key = t; }
  }
+ const slots: (SessionKey | null)[] = Array(7).fill(null);
+ for (const a of assigned) slots[a.day] = a.key;
+ // Treinos com pernas em dias seguidos: o segundo vai para um dia livre que não fique ao lado de outro treino
+ // com pernas nem na véspera de atividade fixa. Sem dia assim, fica como está (ADR 012).
+ const legDay = (d: number) => { const k = slots[d]; return k !== null && hasLegs(k); };
+ for (let d = 0; d < 7; d++) {
+  const e = (d + 1) % 7;
+  if (!legDay(d) || !legDay(e)) continue;
+  for (let f = 0; f < 7; f++) {
+   if (slots[f] !== null || busy(f) || busy((f + 1) % 7)) continue;
+   const prev = (f + 6) % 7, next = (f + 1) % 7;
+   if ((prev !== e && legDay(prev)) || (next !== e && legDay(next))) continue;
+   slots[f] = slots[e]; slots[e] = null;
+   break;
+  }
+ }
  const sched: Payload[] = week.map(x => (x ? { ...x } : { k: 'rest' }));
- for (const a of assigned) sched[a.day] = { k: 'gym', s: a.key };
+ slots.forEach((k, d) => { if (k) sched[d] = { k: 'gym', s: k }; });
 
  // Exercícios (3 e 4)
  const vol = VOLUME[exp];
@@ -275,7 +346,7 @@ export function buildPlanFromAnswers(answers: OnboardingAnswers, catalog: Readon
   const ids: string[] = [];
   for (const slot of tpl.slots) {
    if (ids.length >= limit) break;
-   const id = slotExercise(slot, answers.place, exp);
+   const id = slotExercise(slot, answers.place, exp, mods);
    if (!id || ids.includes(id)) continue;
    const base = catalog[id];
    if (!base) throw new OnboardingError(`Exercício ${id} não está no catálogo.`);
@@ -284,16 +355,24 @@ export function buildPlanFromAnswers(answers: OnboardingAnswers, catalog: Readon
    const principal = PRINCIPAL.has(slot);
    const e: Exercise = structuredClone(base);
    e.s = [...(principal ? vol.ps : vol.as)];
-   if (e.m === 'kg' || e.m === 'bw') e.r = [...(principal ? vol.pr : vol.ar)];
-   e.rest = CORE_SLOTS.has(slot) ? CORE_REST : principal ? vol.prest : vol.arest;
+   // Sem carga (rep, s) ou com carga limitada: repetições do catálogo (a progressão é por repetição).
+   const keepCatalogReps = !(e.m === 'kg' || e.m === 'bw') || LOAD_LIMITED.has(id);
+   if (!keepCatalogReps) {
+    e.r = [...(principal ? vol.pr : vol.ar)];
+    // "10 por perna" vira "12–15": a unidade passa para a observação, para não fazer metade.
+    const unit = /\spor (lado|perna)\s*$/.exec(String(base.r[0] ?? ''))?.[1];
+    if (unit && !/^Repetições por /.test(e.t ?? '')) e.t = `Repetições por ${unit}.${e.t ? ` ${e.t}` : ''}`;
+   }
+   e.rest = CORE_SLOTS.has(slot) ? CORE_REST : principal ? (keepCatalogReps ? NO_LOAD_PRINCIPAL_REST : vol.prest) : vol.arest;
    ex[id] = e;
   }
   sess[key] = { name: tpl.name, sub: tpl.sub, min: DURATION_TEXT[duration], ex: ids };
   order.push(key);
  }
  const plan: GeneratedPlan['plan'] = { ex, sess, order };
- if (exp !== 'intermediario') plan.rir = [...RIR_BEGINNER];
- return { plan, sched, gymDays: split.length, scheduledGymDays: assigned.length, experience: exp, duration, warnings };
+ if (conservative || older) plan.rir = [...RIR_CONSERVADOR];
+ else if (exp !== 'intermediario') plan.rir = [...RIR_BEGINNER];
+ return { plan, sched, gymDays: split.length, scheduledGymDays: assigned.length, experience: exp, duration, warnings, daysReason };
 }
 
 /**
@@ -360,36 +439,50 @@ export interface OnboardingFlags {
 }
 export interface OnboardingPreview {
  answers: OnboardingAnswers;
- generated: GeneratedPlan;
+ /**
+  * Plano não gerado (gestação ou menos de 14 anos, ADR 012): a tela mostra texto próprio e não oferece
+  * "Começar o plano". Com \`blocked\`, \`generated\` é \`null\`, \`usedDayTypes\` é \`[]\` e o resumo vem zerado.
+  */
+ blocked: PlanBlockedReason | null;
+ /** Condição de saúde ou amamentação: "Começar o plano" só depois de marcar a liberação médica (não gravada). */
+ requiresClearance: boolean;
+ generated: GeneratedPlan | null;
  diet: DietTargetsFromAnswers;
  flags: OnboardingFlags;
- /** Avisos na ordem de exibição (segurança primeiro). Textos na seção 10 da especificação. */
+ /** Avisos na ordem de exibição (\`WARNING_ORDER\`: segurança primeiro). Textos na seção 10 da especificação e no ADR 012. */
  warnings: OnboardingWarning[];
  /** Tipos de dia que a rotina gerada usa (para a faixa "de {min} a {max} kcal"). */
  usedDayTypes: AnyDayType[];
- summary: { gymDays: number; scheduledGymDays: number; sessionNames: string[]; weeks: 12; kcalMin: number | null; kcalMax: number | null; proteinG: number | null };
+ /** \`daysRequested\` e \`daysReason\` alimentam a linha "Você pediu {pedido} dias..." (só com \`daysReason !== null\`). */
+ summary: { gymDays: number; scheduledGymDays: number; sessionNames: string[]; weeks: 12; kcalMin: number | null; kcalMax: number | null; proteinG: number | null; daysRequested: DaysPerWeek; daysReason: DaysReason | null };
 }
 
+const sortWarnings = (list: OnboardingWarning[]): OnboardingWarning[] => WARNING_ORDER.filter(w => list.includes(w));
+
 export function buildOnboardingPreview(answers: OnboardingAnswers, catalog: Readonly<Record<string, Exercise>>): OnboardingPreview {
- const generated = buildPlanFromAnswers(answers, catalog);
+ const blocked = planBlockedReason(answers);
+ const generated = blocked ? null : buildPlanFromAnswers(answers, catalog);
  const diet = buildDietTargetsFromAnswers(answers);
  const flags: OnboardingFlags = { dietTargetsDisabled: diet.kind === 'none' && diet.reason === 'seguranca', hideDietNumbers: safetyFlagsOf(answers).includes('transtorno') };
  const used: AnyDayType[] = [];
- for (let d = 0; d < 7; d++) {
+ if (generated) for (let d = 0; d < 7; d++) {
   const act = activityFor({ sched: generated.sched, weekday: d });
   const t = anyDayTypeOf(act, act.kind === 'gym' ? generated.plan.sess[act.sessionId]?.name : undefined);
   if (!used.includes(t)) used.push(t);
  }
  const usedDayTypes = ALL_DAY_TYPES.filter(t => used.includes(t));
  let kcalMin: number | null = null, kcalMax: number | null = null;
- if (diet.kind === 'targets') {
+ if (diet.kind === 'targets' && usedDayTypes.length) {
   const values = usedDayTypes.map(t => (diet.targets.days as Record<AnyDayType, { kcal: number }>)[t].kcal);
   kcalMin = Math.min(...values); kcalMax = Math.max(...values);
  }
- const warnings = [...diet.warnings, ...generated.warnings];
+ const warnings = sortWarnings([...diet.warnings, ...(generated?.warnings ?? [])]);
  return {
-  answers: structuredClone(answers), generated, diet, flags, warnings, usedDayTypes,
-  summary: { gymDays: generated.gymDays, scheduledGymDays: generated.scheduledGymDays, sessionNames: generated.plan.order.map(k => generated.plan.sess[k].name), weeks: 12, kcalMin, kcalMax, proteinG: diet.kind === 'targets' ? diet.targets.proteinG : null }
+  answers: structuredClone(answers), blocked, requiresClearance: !blocked && isConservative(answers), generated, diet, flags, warnings, usedDayTypes,
+  summary: {
+   gymDays: generated?.gymDays ?? 0, scheduledGymDays: generated?.scheduledGymDays ?? 0, sessionNames: generated ? generated.plan.order.map(k => generated.plan.sess[k].name) : [], weeks: 12,
+   kcalMin, kcalMax, proteinG: diet.kind === 'targets' ? diet.targets.proteinG : null, daysRequested: answers.daysPerWeek, daysReason: generated?.daysReason ?? null
+  }
  };
 }
 

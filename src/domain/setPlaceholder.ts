@@ -58,7 +58,8 @@ export interface Placeholder {
  dica: { kg: string; reps: string };
 }
 
-const fmt = (n: number): string => String(Math.round(n * 100) / 100);
+/** Número no formato pt-BR, igual ao que a pessoa digita: 30,5 (vírgula), inteiro sem casas. parseNumber lê os dois. */
+const fmt = (n: number): string => String(Math.round(n * 100) / 100).replace('.', ',');
 
 export function placeholderFor(input: PlaceholderInput): Placeholder {
  const { ex, week, suggestion, previous, index } = input;

@@ -3,6 +3,8 @@
 Data: 19/11/2026. Responsável: agente `conteudo-treino-nutricao`. Status: PROPOSTA (depende do dono, ver seção 9).
 ADR: [008-assistente-de-inicio.md](../decisoes/008-assistente-de-inicio.md). Base: `docs/ESPECIFICACAO.md` (3, 4, 9), `data/plan.json`, ADR 007, `src/domain/dietTargets.ts`, `src/domain/profile.ts`, `src/domain/dayActivity.ts`.
 
+**Revisão de 20/11/2026:** gestação, condição de saúde, 60 anos ou mais, descanso sem carga, duração de quem nunca treinou e escolha de dias foram alterados por [conteudo-revisao-10-perfis.md](conteudo-revisao-10-perfis.md) (ADR 012). Onde houver conflito, vale a revisão.
+
 Tudo aqui é regra pura e determinística: mesma resposta, mesmo resultado. Números de referência e afirmações científicas estão marcados **(a verificar)**; nenhum estudo foi conferido nesta passada.
 
 ## 1. Perguntas (7 passos + 1 de segurança)

@@ -10,7 +10,7 @@ import { usePlanEditor } from './planActions';
 import { CartaoTreino } from './Cartao';
 import { formatDay, lastDoneDay, minutesLabel, normalize, plural, sessionIds, sessionKind } from './util';
 import type { SessionKind } from './util';
-import { ExercicioSheet } from './ExercicioPagina';
+import { ExercicioSheet } from './lazy';
 import './treino.css';
 
 type Filter = 'todos' | 'superior' | 'inferior';

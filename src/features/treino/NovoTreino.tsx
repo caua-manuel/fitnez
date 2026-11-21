@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
+import { NEW_KEY } from './Detalhe';
 import { createSessionWithExercise } from '../../domain/planEdit';
 import { NAME_MAX, emptyDraft, validateDraft, validateSessionFields } from '../../domain/exerciseDraft';
 import type { DraftErrors, ExerciseDraft } from '../../domain/exerciseDraft';
@@ -45,7 +46,7 @@ export function NovoTreino() {
   setSaving(true);
   const ok = await apply(p => createSessionWithExercise(p, input, ex).plan);
   setSaving(false);
-  if (ok) { try { sessionStorage.setItem('treino12:treino-novo', created.id); } catch { /* sem armazenamento: só o aviso */ } showToast('Treino criado');window.location.hash = hrefFor({ tab: 'treino', view: 'detalhe', id: created.id }); }
+  if (ok) { try { sessionStorage.setItem(NEW_KEY, created.id); } catch { /* sem armazenamento: só o aviso */ } showToast('Treino criado');window.location.hash = hrefFor({ tab: 'treino', view: 'detalhe', id: created.id }); }
  };
 
  return <form className="ed-page" onSubmit={submit} noValidate>

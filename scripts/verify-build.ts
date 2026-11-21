@@ -5,6 +5,7 @@ import { gzipSync } from 'node:zlib';
 import { Script } from 'node:vm';
 import { resolveBasePath } from './base-path.ts';
 import { verificarRecursoRemoto, verificarSegurancaHtml } from './csp-check.ts';
+import { arquivosIniciais, entradasDinamicasDaDemo, importsEstaticosDaDemo, medir, resumoOrcamento, verificarDemoForaDoHtml, verificarOrcamento } from './build-budget.ts';
 
 const base = resolveBasePath(process.env);
 const worker = await readFile('dist/sw.js', 'utf8');
@@ -61,18 +62,33 @@ for (const file of artifact.filter(file => /\.(?:css|webmanifest)$/.test(file)))
 }
 assert.equal(falhas.length, 0, `Verificação de segurança do build falhou:\n- ${falhas.join('\n- ')}`);
 assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i);
-// Orçamento de tamanho (gzip, soma dos arquivos de assets/). Revisado em 19/11/2026 (ADR 006): JS 215 KB, CSS 28 KB. Estourar de novo exige nova revisão.
-const LIMITE_JS_KB = 215;
-const LIMITE_CSS_KB = 28;
-const gzipKb = async (extension: 'js' | 'css') => {
-  const names = artifact.filter(file => file.startsWith('assets/') && file.endsWith(`.${extension}`));
-  const sizes = await Promise.all(names.map(async name => gzipSync(await readFile(join('dist', name))).length));
-  return sizes.reduce((a, b) => a + b, 0) / 1024;
-};
-const jsKb = await gzipKb('js');
-const cssKb = await gzipKb('css');
-const fmtKb = (n: number) => n.toFixed(1).replace('.', ',');
-assert.ok(jsKb <= LIMITE_JS_KB, `JavaScript acima do orçamento: ${fmtKb(jsKb)} KB (gzip) para um limite de ${LIMITE_JS_KB} KB. Remova dependências ou divida o código.`);
-assert.ok(cssKb <= LIMITE_CSS_KB, `CSS acima do orçamento: ${fmtKb(cssKb)} KB (gzip) para um limite de ${LIMITE_CSS_KB} KB. Enxugue regras antigas.`);
-console.log(`Tamanho (gzip): JavaScript ${fmtKb(jsKb)} KB de ${LIMITE_JS_KB} KB; CSS ${fmtKb(cssKb)} KB de ${LIMITE_CSS_KB} KB.`);
+// Orçamento de peso em três medidas (carga inicial, total e cada chunk sob demanda), em gzip.
+// Números e regras: docs/decisoes/011-pronto-para-amigos-e-ferramentas-da-academia.md,
+// seção "Orçamento de peso (revisão do ADR 006)". Estourar exige nova revisão no ADR, não só aqui.
+const iniciais = arquivosIniciais(html, base);
+assert.ok(iniciais.some(file => file.endsWith('.js')), 'Nenhum script de assets/ citado no index.html.');
+for (const file of iniciais) assert.ok(artifact.includes(file), `index.html cita arquivo ausente: ${file}`);
+const tamanhos: Record<string, number> = {};
+for (const file of artifact.filter(file => /^assets\/[^/]+\.(?:js|css)$/.test(file))) {
+  tamanhos[file] = gzipSync(await readFile(join('dist', file))).length;
+}
+const medidas = medir(tamanhos, iniciais);
+const falhasOrcamento = verificarOrcamento(medidas);
+for (const linha of resumoOrcamento(medidas)) console.log(linha);
+assert.equal(falhasOrcamento.length, 0, `Orçamento de peso estourado (ADR 011):\n- ${falhasOrcamento.join('\n- ')}`);
+// Isolamento da demonstração (ADR 011): fora de src/demo/ só import() dinâmico, e nenhum chunk
+// do gerador aparece no index.html. Passa também enquanto src/demo/ não existe.
+const fontes = (await files('src')).filter(file => /\.(?:[cm]?[jt]sx?)$/.test(file)).map(file => `src/${file}`);
+const falhasDemo: string[] = [];
+const entradasDemo: string[] = [];
+for (const file of fontes) {
+  const codigo = await readFile(file, 'utf8');
+  for (const especificador of importsEstaticosDaDemo(file, codigo)) {
+    falhasDemo.push(`${file} importa estaticamente ${especificador}; use import() dinâmico.`);
+  }
+  entradasDemo.push(...entradasDinamicasDaDemo(file, codigo));
+}
+falhasDemo.push(...verificarDemoForaDoHtml(entradasDemo, iniciais));
+assert.equal(falhasDemo.length, 0, `Isolamento da demo falhou (ADR 011):\n- ${falhasDemo.join('\n- ')}`);
+console.log(`Demo isolada: ${entradasDemo.length} import() dinâmico(s) para src/demo/; nenhum import estático; nada no index.html.`);
 console.log(`Artefato verificado: base ${base}; ${artifact.length} arquivos; ${urls.length} URLs de precache; CSP de produção.`);

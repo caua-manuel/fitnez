@@ -20,3 +20,5 @@
 .as-later{justify-self:center}
 @keyframes as-in{from{opacity:0;transform:translateX(12px)}}
 @media (prefers-reduced-motion:reduce){.as-body{animation:none}}
+.as-days .as-taken{grid-column:1/-1;margin:0;font-size:.875rem;line-height:1.35}
+.as-week abbr{text-decoration:none}.as-sess{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}.as-sess li{display:flex;justify-content:space-between;gap:12px}.as-sess .muted{font-size:.875rem;white-space:nowrap}.as-demo{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}.as-clear{margin-top:16px}

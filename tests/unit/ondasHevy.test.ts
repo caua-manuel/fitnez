@@ -21,19 +21,19 @@ const sug = (kg: number | null, reason: 'sem-historico' | 'subir' | 'manter' | '
 describe('placeholderFor (seção 1, exemplos 1 a 9)', () => {
  const ph = (o: Partial<Parameters<typeof placeholderFor>[0]>) => placeholderFor({ ex: EX.supino!, week: 1, suggestion: sug(40, 'manter'), previous: [], today: [], index: 0, ...o });
  it('1 semana normal, manter', () => expect(ph({ previous: [S('40', '7')] })).toMatchObject({ kg: '40', reps: '7', podeConfirmar: true }));
- it('2 semana normal, subir', () => expect(ph({ suggestion: sug(42.5, 'subir'), previous: [S('40', '8')] })).toMatchObject({ kg: '42.5', reps: '5', podeConfirmar: true }));
+ it('2 semana normal, subir', () => expect(ph({ suggestion: sug(42.5, 'subir'), previous: [S('40', '8')] })).toMatchObject({ kg: '42,5', reps: '5', podeConfirmar: true }));
  it('3 semana leve não sobe carga', () => expect(ph({ week: 3, suggestion: sug(42.5, 'subir'), previous: [S('40', '8')] })).toMatchObject({ kg: '40', reps: '8', podeConfirmar: true }));
  it('4 antes acima da faixa nova', () => expect(ph({ week: 4, suggestion: sug(45, 'manter'), previous: [S('45', '8')] })).toMatchObject({ kg: '45', reps: '6', podeConfirmar: true }));
  it('5 primeira vez kg', () => expect(ph({ suggestion: sug(null, 'sem-historico') })).toEqual({ kg: null, reps: null, podeConfirmar: false, falta: 'reps', dica: { kg: 'kg', reps: '5–8' } }));
  it('6 primeira vez, série 2', () => expect(ph({ suggestion: sug(null, 'sem-historico'), today: [S('30', '8')], index: 1 })).toMatchObject({ kg: '30', reps: '8', podeConfirmar: true }));
- it('7 mudou a carga hoje', () => expect(ph({ previous: [S('40', '8'), S('40', '7')], today: [S('37.5', '8')], index: 1 })).toMatchObject({ kg: '37.5', reps: '7', podeConfirmar: true }));
+ it('7 mudou a carga hoje', () => expect(ph({ previous: [S('40', '8'), S('40', '7')], today: [S('37.5', '8')], index: 1 })).toMatchObject({ kg: '37,5', reps: '7', podeConfirmar: true }));
  it('defeito: mudou para 35 com sugestão 30, a série 3 segue 35', () => {
   const o = { suggestion: sug(30, 'manter'), previous: [S('30', '8'), S('30', '8'), S('30', '8')], today: [S('35', '8'), S('35', '8')], index: 2 };
   expect(ph(o)).toMatchObject({ kg: '35', podeConfirmar: true });
   expect(ph({ ...o, index: 1, today: [S('35', '8')] })).toMatchObject({ kg: '35' });
  });
  it('defeito: primeira vez com 2 séries feitas, a série 3 mostra a última carga', () => {
-  expect(ph({ suggestion: sug(null, 'sem-historico'), today: [S('30', '8'), S('32.5', '8')], index: 2 })).toMatchObject({ kg: '32.5', reps: '8', podeConfirmar: true });
+  expect(ph({ suggestion: sug(null, 'sem-historico'), today: [S('30', '8'), S('32.5', '8')], index: 2 })).toMatchObject({ kg: '32,5', reps: '8', podeConfirmar: true });
   expect(ph({ suggestion: sug(null, 'sem-historico'), today: [S('30', '8'), S('30', '8')], index: 2 })).toMatchObject({ kg: '30', podeConfirmar: true });
  });
  it('voltou à carga sugerida hoje: segue a sugestão', () => expect(ph({ suggestion: sug(30, 'manter'), today: [S('35', '8'), S('30', '8')], index: 2 })).toMatchObject({ kg: '30' }));
@@ -230,8 +230,8 @@ describe('weekStreak (seção 6)', () => {
 });
 
 describe('instruções e nota fixa', () => {
- it('55 exercícios com instruções, cobrindo plano e assistente', () => {
-  expect(Object.keys(EXERCISE_GUIDE.itens)).toHaveLength(55);
+ it('57 exercícios com instruções, cobrindo plano e assistente (2 do ADR 012)', () => {
+  expect(Object.keys(EXERCISE_GUIDE.itens)).toHaveLength(57);
   for (const id of Object.keys(EX)) expect(guideFor(id), id).not.toBeNull();
   for (const id of ASSISTANT_EXERCISE_IDS) expect(guideFor(id), id).not.toBeNull();
   expect(GUIDE_SAFETY).toHaveLength(2);

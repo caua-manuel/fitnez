@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { Icon } from '../../ui/icons';
 import { isExampleTarget } from '../../domain/dietTargets';
-import { MetasSheet } from './MetasSheet';
+import { MetasSheet } from './MetasSheetLazy';
 import { useMetasActions } from './metasActions';
 import './metas.css';
 

@@ -1,5 +1,7 @@
 ﻿import type { DietTargetsSetting } from '../domain/dietTargets';
 import type { OnboardingSetting } from '../domain/onboarding';
+import type { Prompts, Usage } from '../domain/userData';
+export type { Prompts, Usage };
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 // Campos adicionais preservam formatos legados e extensões sem normalização destrutiva.
 export type Payload = Record<string, any>;
@@ -14,10 +16,13 @@ export interface DayRecord extends Payload { log?: Record<string, Payload[]>; do
 export interface StateV3 extends Payload {
  v: 3; revision: number;
  catalog: { plan: Plan; diet: Payload; recipes: Payload[]; revision: number; [key: string]: any };
- settings: { start: string; startConfirmed?: boolean; dietTargets?: DietTargetsSetting; onboarding?: OnboardingSetting; sched: Payload[]; theme: 'auto'|'light'|'dark'; sleepOk?: Record<string, boolean>; profile?: { name: string; goal: string; age?: number; weightKg?: number; heightCm?: number }; notifications?: { enabled: boolean; restEnd: boolean }; [key: string]: any };
+ settings: { start: string; startConfirmed?: boolean; dietTargets?: DietTargetsSetting; onboarding?: OnboardingSetting; sched: Payload[]; theme: 'auto'|'light'|'dark'; sleepOk?: Record<string, boolean>; profile?: { name: string; goal: string; age?: number; weightKg?: number; heightCm?: number }; notifications?: { enabled: boolean; restEnd: boolean };
+  /** ADR 011 (1.3): último plano de amigo aplicado; `undoKey` aponta para `recovery['plan-import-undo:<t>']` (1 nível). */ planImport?: { v: 1; appliedOn: string; name: string; undoKey?: string }; [key: string]: any };
  history: { days: Record<string, DayRecord>; measurements: Record<string, Payload>; [key: string]: any };
  snapshots: Record<string, Payload>; recovery: Record<string, Payload>;
- meta: { initializedAt: number; updatedAt: number; migrationCompleted: boolean; migrationStatus?: 'none'|'completed'|'pending'|'invalid'; lastBackupGeneratedAt: number|null; lastBackupConfirmedAt: number|null; [key: string]: any };
+ meta: { initializedAt: number; updatedAt: number; migrationCompleted: boolean; migrationStatus?: 'none'|'completed'|'pending'|'invalid'; lastBackupGeneratedAt: number|null; lastBackupConfirmedAt: number|null;
+  /** ADR 011 (1.2): dias de uso desde o último backup confirmado; atualizado só por `save`, na mesma transação. */ usage?: Usage;
+  /** ADR 011 (1.2 e 1.4): pedidos já mostrados e adiamento do lembrete. */ prompts?: Prompts; [key: string]: any };
 }
 export type ErrorCode = 'unavailable'|'quota'|'conflict'|'validation'|'future-version'|'blocked'|'transaction';
 export class RepositoryError extends Error { constructor(public code: ErrorCode, message: string) { super(message); this.name = 'RepositoryError'; } }
@@ -35,7 +40,12 @@ export interface Repository {
  confirmImport(input: { token: string; expectedRevision: number }): Promise<StateV3>;
  selectMigration(input: { sourceId: string; expectedRevision: number }): Promise<StateV3>;
  confirmBackup(input: { expectedRevision: number }): Promise<StateV3>;
- protection(input?: { requestPersistence?: boolean }): Promise<Protection>; close(): void;
+ protection(input?: { requestPersistence?: boolean }): Promise<Protection>;
+ /** "Agora não" no lembrete de backup: grava `meta.prompts.backupSnoozedOn` = hoje (some até o dia seguinte). */
+ snoozeBackup(input: { expectedRevision: number }): Promise<StateV3>;
+ /** Registra que um pedido apareceu: `persist` grava `meta.prompts.persistAskedAt`; `install`, `installShownAt` (instante atual). */
+ markPrompt(input: { prompt: 'persist'|'install'; expectedRevision: number }): Promise<StateV3>;
+ close(): void;
 }
-export interface RepositoryOptions { basePath?: string; now?: () => number; indexedDB?: IDBFactory|null; storage?: Pick<Storage, 'getItem'>|null; storageManager?: Partial<Pick<StorageManager, 'persist'|'persisted'|'estimate'>>|null }
+export interface RepositoryOptions { basePath?: string; /** Nome do banco (só `src/data/` usa; a demo usa `treino12:demo:<base>`). */ dbName?: string; now?: () => number; indexedDB?: IDBFactory|null; storage?: Pick<Storage, 'getItem'>|null; storageManager?: Partial<Pick<StorageManager, 'persist'|'persisted'|'estimate'>>|null }
 

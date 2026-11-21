@@ -25,7 +25,7 @@ test('Primeira abertura: usuário novo vê o assistente de início', async ({ pa
  await expect(dialog).toBeVisible();
  await expect(dialog.getByRole('heading', { level: 1, name: 'Vamos montar seu plano' })).toBeFocused();
  await expect(dialog.getByRole('button', { name: 'Montar meu plano' })).toBeVisible();
- await expect(dialog.getByRole('button', { name: 'Usar o plano de exemplo' })).toBeVisible();
+ await expect(dialog.getByRole('button', { name: 'Usar o plano padrão' })).toBeVisible();
  await expect(dialog.getByText('não substitui nutricionista, médico ou educador físico', { exact: false })).toBeVisible();
  expect((await stored(page)).settings.startConfirmed).toBe(false);
  expect(await noHScroll(page)).toBe(true);
@@ -35,9 +35,9 @@ test('Primeira abertura: plano de exemplo mantém a segunda-feira sugerida e nã
  await page.goto('./');
  await expect(welcome(page)).toBeVisible();
  const before = (await stored(page)).settings.start;
- await welcome(page).getByRole('button', { name: 'Usar o plano de exemplo' }).click();
+ await welcome(page).getByRole('button', { name: 'Usar o plano padrão' }).click();
  await expect(welcome(page).getByRole('radio').first()).toBeChecked();
- await welcome(page).getByRole('button', { name: 'Usar o plano de exemplo' }).click();
+ await welcome(page).getByRole('button', { name: 'Usar o plano padrão' }).click();
  await expect(welcome(page)).toHaveCount(0);
  await expect.poll(async () => (await stored(page)).settings.startConfirmed).toBe(true);
  expect((await stored(page)).settings.start).toBe(before);
@@ -50,10 +50,10 @@ test('Primeira abertura: plano de exemplo mantém a segunda-feira sugerida e nã
 
 test('Primeira abertura: plano de exemplo com outra data usa a segunda da semana', async ({ page }) => {
  await page.goto('./');
- await welcome(page).getByRole('button', { name: 'Usar o plano de exemplo' }).click();
+ await welcome(page).getByRole('button', { name: 'Usar o plano padrão' }).click();
  await welcome(page).getByText('Outra data', { exact: true }).click();
  await page.getByLabel('Data de início').fill('2030-03-13');
- await welcome(page).getByRole('button', { name: 'Usar o plano de exemplo' }).click();
+ await welcome(page).getByRole('button', { name: 'Usar o plano padrão' }).click();
  await expect(welcome(page)).toHaveCount(0);
  await expect.poll(async () => (await stored(page)).settings.startConfirmed).toBe(true);
  expect((await stored(page)).settings.start).toBe('2030-03-11');

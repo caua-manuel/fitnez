@@ -2,15 +2,18 @@ import { useEffect, useRef, useSyncExternalStore } from 'react';
 
 /** Padrão único de aviso temporário: 6 s, pausa com foco ou ponteiro, anúncio único em região persistente. */
 export const TOAST_MS = 6000;
-interface Item { id: number; message: string; undo?: () => void }
+interface Item { id: number; message: string; undo?: () => void; silent?: boolean }
 let current: Item | null = null;
 let seq = 0;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 
-/** Mostra o aviso; com `undo`, aparece o botão "Desfazer". Um novo aviso substitui o anterior. */
-export function showToast(message: string, undo?: () => void) { current = { id: ++seq, message, undo }; emit(); }
+/**
+ * Mostra o aviso; com `undo`, aparece o botão "Desfazer". Um novo aviso substitui o anterior.
+ * `silent`: a tela já anunciou o mesmo fato na própria região (execução do treino); o toast não fala de novo.
+ */
+export function showToast(message: string, undo?: () => void, opts: { silent?: boolean } = {}) { current = { id: ++seq, message, undo, silent: opts.silent === true }; emit(); }
 export function dismissToast() { if (current) { current = null; emit(); } }
 
 function Toast({ item }: { item: Item }) {
@@ -37,7 +40,7 @@ function Toast({ item }: { item: Item }) {
 export function ToastHost() {
  const item = useSyncExternalStore(subscribe, () => current, () => null);
  return <div className="ui-toast-wrap">
-  <div role="status" aria-live="polite" aria-atomic="true" className="visually-hidden">{item?.message ?? ''}</div>
+  <div role="status" aria-live="polite" aria-atomic="true" className="visually-hidden">{item && !item.silent ? item.message : ''}</div>
   {item ? <Toast key={item.id} item={item} /> : null}
  </div>;
 }

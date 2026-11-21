@@ -15,9 +15,12 @@ import { weekStrip } from './semana';
 import { DietaResumo } from './DietaResumo';
 import { TerceiraAula } from './TerceiraAula';
 import { ObservacaoAula } from './ObservacaoAula';
-import { InstalarApp } from '../perfil/InstalarApp';
+import { DemoEntry } from '../../app/demo';
+import { ASSISTANT_QUESTIONS, openAssistant } from '../assistente/store';
+import { isStartConfirmed } from '../../domain/planStart';
+import { appMode } from '../../app/mode';
 import './inicio.css';
-import { shouldShowBackupReminder } from '../../domain/userData';
+import { hasUserData, shouldShowBackupReminder } from '../../domain/userData';
 import { activityFor, activityLabel } from '../../domain/dayActivity';
 import { addDays, mondayOf, phaseOf, rirSequence, weekLabel } from '../../domain/calendar';
 import type { DayIso, Phase } from '../../domain/calendar';
@@ -26,7 +29,7 @@ import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
 import { isLower, muscleGroupOf } from '../../domain/muscleGroups';
 import { suggestNext } from '../../domain/progression';
 import { lastWorkingSession, placeholderFor, workingHistory } from '../../domain/setPlaceholder';
-import { setsForWeek } from '../../domain/workout';
+import { parseNumber, setsForWeek } from '../../domain/workout';
 import type { SetEntry } from '../../domain/workout';
 import { exercisesWithSwaps } from '../../domain/swap';
 import { FREE_SESSION_ID, weekStreak } from '../../domain/weekStreak';
@@ -34,7 +37,8 @@ import { FEEL_VALUES, feelAriaLabel, feelLegend } from '../../domain/jiujitsu';
 import type { DayRecord, StateV3 } from '../../application/repository';
 
 /** Número que conta até o valor, seguido da palavra no singular ou no plural ("10 exercícios"). */
-function Count({ n, one, many }: { n: number; one: string; many: string }) { return <><CountUp value={n} /> {n === 1 ? one : many}</>; }
+// Contadores pequenos (até 20) aparecem prontos: contar 0..11 a cada visita só atrasa a leitura (ADR 006).
+function Count({ n, one, many }: { n: number; one: string; many: string }) { return <>{n > 20 ? <CountUp value={n} /> : n} {n === 1 ? one : many}</>; }
 
 // O "hoje" vem de um relógio injetável; o padrão usa o dia local do aparelho.
 export type Clock = () => number;
@@ -82,19 +86,22 @@ function PrimeiroExercicio({ state, sessionId, day }: { state: StateV3; sessionI
  const weighted = ex.m === 'kg' || ex.m === 'kgs';
  const kg = weighted && ph.kg ? ph.kg.replace('.', ',') : null;
  // Seta só quando a carga mostrada é maior que a melhor da última vez (na semana leve o placeholder não sobe).
- const lastTop = Math.max(0, ...previous.map(x => Number(String(x.kg).replace(',', '.')) || 0));
- const up = kg !== null && lastTop > 0 && Number(ph.kg) > lastTop;
+ const lastTop = Math.max(0, ...previous.map(x => parseNumber(x.kg) ?? 0));
+ const up = kg !== null && lastTop > 0 && (parseNumber(ph.kg) ?? 0) > lastTop;
  return <div className="in-first">
   <div className="in-first-text">
    <span className="in-first-k">{i === 0 ? '1º exercício' : 'Próximo exercício'}</span>
    <strong className="in-first-name">{ex.n}</strong>
-   <span className="in-first-presc num">{presc.sets} × {presc.reps}</span>
+   <span className="in-first-presc num" aria-label={`${presc.sets} ${presc.sets === 1 ? 'série' : 'séries'} de ${String(presc.reps).replace(/[–-]/, ' a ')} repetições`}>{presc.sets} × {presc.reps}</span>
   </div>
-  {kg ? <p className="in-hero num"><span className="visually-hidden">Carga sugerida{up ? ', acima da última vez' : ''}: </span>
+  {kg ? <div className="in-hero-box"><span className="in-hero-k">Carga sugerida</span><p className="in-hero num"><span className="visually-hidden">Carga sugerida{up ? ', acima da última vez' : ''}: </span>
    {up ? <span className="in-up" aria-hidden="true">↑</span> : null}<strong>{kg}</strong><span className="in-kg">kg</span>
-  </p> : weighted ? <p className="in-first-hint">Escolha a carga na 1ª série</p> : null}
+  </p></div> : weighted ? <p className="in-first-hint">Primeira vez: você escolhe a carga na 1ª série</p> : null}
  </div>;
 }
+
+/** "1 repetição" ou "N repetições" (o RIR vem como texto do plano, ex.: "3" ou "2-3"). */
+const repsLeft = (rir: string) => `${rir} ${rir === '1' ? 'repetição' : 'repetições'}`;
 
 export function Inicio({ now = Date.now }: { now?: Clock }) {
  const { state, commit, protection } = useData();
@@ -116,6 +123,9 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
  const phase = phaseOf(state.settings.start, day, rir);
  const plan = state.catalog.plan;
  const workouts = listWorkouts(record);
+ // Início vazio (ninguém montou plano nem registrou nada): o cartão "Monte seu plano" vira a ação principal.
+ const emptyStart = !isStartConfirmed(state.settings) && !hasUserData(state) && appMode() === 'real';
+ const startCls = emptyStart ? 'button secondary block' : 'button block in-start';
 
  const edit = (fn: (r: DayRecord) => void) => void commit((s: StateV3) => {
   const r = s.history.days[day] ?? (s.history.days[day] = {});
@@ -182,7 +192,7 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
    <a className="button block in-start" href={wLink(sessionId, 'done')}>Ver resultado</a>
    {candidates(sessionId).length ? <button type="button" className="button secondary block" aria-expanded={otherOpen} onClick={() => setOtherOpen(true)}>Fazer outro treino</button> : null}
   </>;
-  return <a className="button block in-start" href={hrefFor({ tab: 'treino', view: 'executar', id: sessionId, day })}><Icon name="play" size={22} />{w?.status === 'partial' ? 'Continuar treino' : 'Começar treino'}</a>;
+  return <a className={startCls} href={hrefFor({ tab: 'treino', view: 'executar', id: sessionId, day })}><Icon name="play" size={22} />{w?.status === 'partial' ? 'Continuar treino' : emptyStart ? 'Treinar com o plano padrão' : 'Começar treino'}</a>;
  };
  // O que vem amanhã (dias sem academia): treino com duração, ou a atividade da rotina.
  const tomorrowLine = (): ReactNode => {
@@ -216,8 +226,8 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
    </div> : <p className="muted">Você ainda pode registrar um dia anterior ou ver os treinos.</p>}
   </>;
   action = isToday ? <>
-   <button type="button" className="button block in-start" onClick={() => setStartConfirm(true)}><Icon name="play" size={22} />Começar o plano hoje</button>
-   {firstId ? <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'executar', id: firstId, day })}>Treinar sem mudar a data</a> : <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'lista' })}>Ver treinos</a>}
+   <button type="button" className={startCls} onClick={() => setStartConfirm(true)}><Icon name="play" size={22} />Começar o plano hoje</button>
+   {firstId ? <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'executar', id: firstId, day })}>{emptyStart ? 'Treinar com o plano padrão' : 'Treinar hoje sem começar o plano'}</a> : <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'lista' })}>Ver treinos</a>}
   </> : <a className="button secondary block" href={hrefFor({ tab: 'treino', view: 'lista' })}>Ver treinos</a>;
  } else if (phase.kind === 'done') {
   card = <><p className="eyebrow">Plano de 12 semanas</p><h2>Plano concluído</h2><p className="muted">Você completou as 12 semanas. Veja sua evolução ou comece um novo ciclo; seus registros continuam guardados.</p></>;
@@ -298,10 +308,19 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
    {phase.kind === 'pre' ? <p className="in-week">Seu plano começa em <Count n={phase.daysUntil} one="dia" many="dias" /> <span className="muted">· segunda, {ddmm(mondayOf(state.settings.start))}</span></p> : null}
    <Plano12 phase={phase} />
    {phase.kind === 'week' ? <p className="in-sub">
-    {phase.deload ? 'Semana leve · ' : ''}Pare {phase.rir} repetições antes da falha{phase.note ? ` · ${phase.note}` : ''}
+    <span>{phase.deload ? 'Semana leve: menos séries, sem subir carga · ' : ''}Pare com {repsLeft(phase.rir)} ainda sobrando{phase.note ? ` · ${phase.note}` : ''}</span>
     {streak?.show ? <span className="in-streak"><Icon name="fogo" size={16} />{streak.count} semanas seguidas</span> : null}
    </p> : null}
   </section></Reveal>
+
+  {emptyStart ? <Reveal screen="inicio" i={1}><section className="card in-monte" aria-labelledby="in-monte-h">
+   <p className="eyebrow">Primeiro passo</p>
+   <h2 id="in-monte-h">Monte seu plano</h2>
+   <p>{ASSISTANT_QUESTIONS} perguntas rápidas e o app monta treinos e metas de dieta para você.</p>
+   <button type="button" className="button block in-start" onClick={() => openAssistant('primeira')}>Montar meu plano</button>
+   <DemoEntry />
+   <p className="muted in-monte-foot">Abaixo está o plano padrão, se quiser treinar já.</p>
+  </section></Reveal> : null}
 
   {!isToday ? <p className="notice-day" role="status">Registrando: {formatDay(day)}. <button type="button" className="link-button" onClick={() => { setPicked(null); setPickerOpen(false); }}>Voltar para hoje</button></p> : null}
 
@@ -360,8 +379,7 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
   <TerceiraAula today={today} />
 
   <div className="in-foot">
-   <InstalarApp compact />
-   {shouldShowBackupReminder(state, protection?.backupDue) ? <BackupReminder /> : null}
+   {shouldShowBackupReminder(state, protection?.backupDue) ? <BackupReminder compact /> : null}
   </div>
  </div>;
 }

@@ -48,7 +48,10 @@ test.afterEach(async ({ page }) => { expect((page as any).__errors, 'Sem exceç�
 
 test('Dieta: tela inicial usa a meta do tipo de dia, avisa e cabe em 360 px', async ({ page }) => {
  await seed(page);
- await expect(page.getByText('Meta diária')).toBeVisible();
+ // Fase 3: sem os cartões de indicador; a meta do dia fica no anel e na linha "N kcal restantes" logo abaixo dele.
+ const goal = Number(await ring(page).getAttribute('aria-valuemax'));
+ expect(goal).toBeGreaterThan(0);
+ await expect(page.getByText(`${new Intl.NumberFormat('pt-BR').format(goal)} kcal restantes`, { exact: true })).toBeVisible();
  await expect(page.getByText('0 de 5')).toBeVisible();
  await expect(page.getByRole('heading', { name: 'Refeições de hoje' })).toBeVisible();
  for (const n of ['Café da manhã', 'Almoço', 'Pré-treino ou lanche', 'Pós-treino', 'Jantar']) await expect(page.getByRole('list', { name: 'Refeições' }).getByText(n, { exact: true })).toBeVisible();
@@ -271,9 +274,9 @@ test('Dieta: menu das opções usa teclado (setas, Escape e retorno de foco)', a
  await expect(trigger).toBeFocused();
 });
 
-test('Dieta: cartões de indicador não quebram "2.450 kcal" em 1280 px', async ({ page }) => {
+test('Dieta: a linha "N kcal restantes" sob o anel não quebra em 1280 px', async ({ page }) => {
  await page.setViewportSize({ width: 1280, height: 800 });
  await seed(page);
- const h = await page.locator('.dt-stat strong').first().evaluate(el => el.getBoundingClientRect().height);
+ const h = await page.getByText(/^[\d.]+ kcal restantes$/).evaluate(el => el.getBoundingClientRect().height);
  expect(h).toBeLessThan(26);
 });

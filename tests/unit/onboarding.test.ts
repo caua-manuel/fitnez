@@ -8,6 +8,7 @@ import {
 import type { OnboardingAnswers } from '../../src/domain/onboarding';
 import { activityFor, anyDayTypeOf, dayTypeOf } from '../../src/domain/dayActivity';
 import { RIR, RIR_BEGINNER, phaseOf, rirSequence } from '../../src/domain/calendar';
+import { RIR_CONSERVADOR } from '../../src/domain/onboarding';
 import { validateDietTargets } from '../../src/domain/dietTargets';
 import { muscleGroupOf } from '../../src/domain/muscleGroups';
 
@@ -42,8 +43,8 @@ describe('catálogo do assistente', () => {
    expect(muscleGroupOf(id, catalog[id]), id).not.toBeNull();
   }
  });
- it('17 exercícios novos; os do plano de exemplo mantêm séries, repetições e descanso', () => {
-  const novos = ['goblet', 'agach_livre', 'ponte_h', 'ponte_uni', 'afundo_livre', 'stiff_uni', 'supino_chao', 'flexao', 'flexao_fechada', 'pike', 'puxada_elastico', 'remada_mochila', 'face_elastico', 'ytw', 'pant_degrau', 'deadbug', 'prancha'];
+ it('19 exercícios novos (2 do ADR 012); os do plano de exemplo mantêm séries, repetições e descanso', () => {
+  const novos = ['goblet', 'agach_livre', 'ponte_h', 'ponte_uni', 'ponte', 'afundo_livre', 'sentar_levantar', 'stiff_uni', 'supino_chao', 'flexao', 'flexao_fechada', 'pike', 'puxada_elastico', 'remada_mochila', 'face_elastico', 'ytw', 'pant_degrau', 'deadbug', 'prancha'];
   expect(novos.every(id => catalog[id])).toBe(true);
   expect(catalog.supino).toMatchObject({ s: [4, 5, 5], r: ['5–8', '4–6', '3–5'], rest: 150 });
   expect(catalog.prancha).toMatchObject({ m: 's', s: [2, 3, 3], r: ['20–30', '30–40', '30–45'], rest: 45, g: 'core' });
@@ -87,8 +88,11 @@ describe('15 perfis da especificação (seção 7)', () => {
   const a = A({ goal: 'perder', experience: 'nunca', daysPerWeek: 3, duration: 'curto', place: 'casa_livre', body: body('f', 25, 162, 60, 'moderado') });
   expect(gymWeek(a)).toEqual(['0:Corpo inteiro A', '2:Corpo inteiro B', '4:Corpo inteiro A']);
   const g = buildPlanFromAnswers(a, catalog);
-  expect(g.plan.sess.CIA.ex).toEqual(['agach_livre', 'flexao', 'remada_mochila', 'ponte_uni']);
+  // ADR 012: nunca + casa sem equipamento usa a ponte com as duas pernas; principais sem carga com 90 s.
+  expect(g.plan.sess.CIA.ex).toEqual(['agach_livre', 'flexao', 'remada_mochila', 'ponte']);
   expect(g.plan.sess.CIB.ex).toHaveLength(4);
+  for (const id of ['agach_livre', 'flexao', 'remada_mochila', 'ponte']) expect(g.plan.ex[id].rest, id).toBe(90);
+  expect(g.plan.ex.remada_mochila.r).toEqual(['10–15', '10–15', '8–12']);
   expectDiet(a, [1400, 1550, 1600, 1650, 1600], [118, 155, 168, 180, 168], 120, 50, 2);
  });
  it('3: saude, nunca, 2, curto, casa_equip, sem dados', () => {
@@ -133,10 +137,12 @@ describe('15 perfis da especificação (seção 7)', () => {
   expect(p.diet.kind).toBe('none');
   expect(p.warnings).toContain('menor18');
  });
- it('8: gestação: treino normal, sem dieta', () => {
+ it('8: gestação: não gera plano nem metas (ADR 012)', () => {
   const a = A({ goal: 'perder', experience: 'iniciante', place: 'casa_equip', safety: ['gestacao'], body: body('f', 30, 165, 65, 'pouco') });
-  expect(gymWeek(a)).toEqual(['0:Corpo inteiro A', '2:Corpo inteiro B', '4:Corpo inteiro A']);
+  expect(() => buildPlanFromAnswers(a, catalog)).toThrow(/gestação/);
   const p = buildOnboardingPreview(a, catalog);
+  expect(p).toMatchObject({ blocked: 'gestacao', generated: null, requiresClearance: false, usedDayTypes: [] });
+  expect(p.summary).toMatchObject({ gymDays: 0, scheduledGymDays: 0, sessionNames: [] });
   expect(p.diet).toMatchObject({ kind: 'none', reason: 'seguranca', effectiveGoal: 'saude' });
   expect(p.warnings).toEqual(['gestacao']);
  });
@@ -174,10 +180,16 @@ describe('15 perfis da especificação (seção 7)', () => {
   for (const k of g.plan.order) expect(g.plan.sess[k].ex).toHaveLength(4);
   expect(buildDietTargetsFromAnswers(a).kind).toBe('none');
  });
- it('14: condição de saúde: sem dieta', () => {
+ it('14: condição de saúde: plano leve (nunca), ponte com halter, RIR conservador, liberação médica e sem dieta (ADR 012)', () => {
   const p = buildOnboardingPreview(A({ goal: 'perder', experience: 'iniciante', safety: ['condicao'], body: body('m', 50, 175, 90, 'pouco') }), catalog);
   expect(p.diet).toMatchObject({ kind: 'none', reason: 'seguranca' });
   expect(p.warnings).toEqual(['condicao']);
+  expect(p.requiresClearance).toBe(true);
+  const g = p.generated!;
+  expect(g.experience).toBe('nunca');
+  expect(g.plan.rir).toEqual([...RIR_CONSERVADOR]);
+  expect(Object.keys(g.plan.ex)).toContain('ponte_h');
+  expect(Object.keys(g.plan.ex)).not.toContain('hip_b');
  });
  it('15: massa, intermediário, 2 dias longo: 8 exercícios', () => {
   const a = A({ goal: 'massa', experience: 'intermediario', daysPerWeek: 2, duration: 'longo', body: body('m', 30, 175, 80, 'pouco') });
@@ -201,7 +213,7 @@ describe('divisões (a) a (e)', () => {
  });
  it('(d) casa_livre, Corpo inteiro A, medio: bíceps pulado, 6ª vaga é core', () => {
   const g = buildPlanFromAnswers(A({ place: 'casa_livre', duration: 'medio' }), catalog);
-  expect(g.plan.sess.CIA.ex).toEqual(['agach_livre', 'flexao', 'remada_mochila', 'ponte_uni', 'ytw', 'deadbug']);
+  expect(g.plan.sess.CIA.ex).toEqual(['agach_livre', 'flexao', 'remada_mochila', 'ponte', 'ytw', 'deadbug']);
  });
  it('(e) luta todos os dias: 2 treinos curtos fora da rotina e aviso semana-cheia (decisão do dono)', () => {
   const g = buildPlanFromAnswers(A({ daysPerWeek: 4, experience: 'iniciante', activities: [{ kind: 'luta', days: [0, 1, 2, 3, 4, 5, 6] }] }), catalog);
@@ -217,9 +229,10 @@ describe('divisões (a) a (e)', () => {
   expect(g.sched[6]).toEqual({ k: 'rest' });
   expect(g.warnings).toEqual(['semana-cheia']);
  });
- it('Pernas na véspera de luta troca com o próximo treino que não é de pernas', () => {
+ it('Pernas na véspera de luta troca com o próximo treino que não é de pernas; pernas não ficam em dias seguidos', () => {
   // iniciante 4 dias, luta na quarta: dias livres preferidos seg, ter, qui, sex; Pernas A (ter) é véspera da quarta.
-  expect(gymWeek(A({ experience: 'iniciante', daysPerWeek: 4, activities: [{ kind: 'luta', days: [2] }] }))).toEqual(['0:Superior A', '1:Superior B', '3:Pernas A', '4:Pernas B']);
+  // A troca deixa Pernas A (qui) e Pernas B (sex) seguidas; o sábado livre resolve (ADR 012).
+  expect(gymWeek(A({ experience: 'iniciante', daysPerWeek: 4, activities: [{ kind: 'luta', days: [2] }] }))).toEqual(['0:Superior A', '1:Superior B', '3:Pernas A', '5:Pernas B']);
  });
  it('treinos de perna são reconhecidos como dia de perna', () => {
   const g = buildPlanFromAnswers(A({ experience: 'iniciante', daysPerWeek: 4 }), catalog);
@@ -237,7 +250,7 @@ describe('séries, repetições, descanso e RIR', () => {
  });
  it('intermediário: principal [3,4,4] 150 s; exercícios rep/s mantêm a faixa própria', () => {
   const g = buildPlanFromAnswers(A({ experience: 'intermediario', daysPerWeek: 4, place: 'casa_livre', duration: 'longo' }), catalog);
-  expect(g.plan.ex.flexao).toMatchObject({ s: [3, 4, 4], r: ['5–12', '8–15', '10–20'], rest: 150 });
+  expect(g.plan.ex.flexao).toMatchObject({ s: [3, 4, 4], r: ['5–12', '8–15', '10–20'], rest: 90 }); // ADR 012: sem carga, 90 s
   expect(g.plan.ex.prancha).toMatchObject({ s: [3, 3, 4], r: ['20–30', '30–40', '30–45'], rest: 45 });
  });
  it('RIR: plan.rir para nunca e iniciante; phaseOf usa a sequência do plano', () => {
@@ -318,13 +331,12 @@ describe('volume semanal por grupo nos 15 perfis (bloco 1)', () => {
   ['5', A({ goal: 'recomp', experience: 'iniciante', daysPerWeek: 3, activities: [{ kind: 'luta', days: [0, 3] }] }), [6, 9, 8, 9]],
   ['6', A({ goal: 'perder', experience: 'nunca', daysPerWeek: 3, body: body('m', 40, 178, 105, 'pouco') }), [4, 6, 6, 6]],
   ['7', A({ goal: 'recomp', experience: 'intermediario', daysPerWeek: 5, safety: ['menor18'], body: { age: 16 } }), [4, 6, 6, 6]],
-  ['8', A({ goal: 'perder', experience: 'iniciante', place: 'casa_equip', safety: ['gestacao'] }), [6, 9, 8, 9]],
   ['9', A({ goal: 'perder', experience: 'iniciante', daysPerWeek: 4, safety: ['transtorno'] }), [6, 9, 10, 10]],
   ['10', A({ goal: 'perder', experience: 'iniciante', body: body('f', 28, 160, 47, 'moderado') }), [6, 9, 8, 9]],
   ['11', A({ goal: 'saude', experience: 'intermediario', daysPerWeek: 5, duration: 'longo', activities: [{ kind: 'corrida', days: [6] }] }), [9, 15, 15, 15]],
   ['12', A({ goal: 'perder', experience: 'nunca', daysPerWeek: 6, activities: [{ kind: 'luta', days: [0, 1, 3] }, { kind: 'esporte', days: [5], label: 'Futebol' }] }), [4, 4, 4, 4]],
   ['13', A({ goal: 'recomp', experience: 'intermediario', daysPerWeek: 4, duration: 'curto', place: 'casa_equip' }), [6, 12, 12, 12]],
-  ['14', A({ goal: 'perder', experience: 'iniciante', safety: ['condicao'] }), [6, 9, 8, 9]],
+  ['14', A({ goal: 'perder', experience: 'iniciante', safety: ['condicao'] }), [4, 6, 6, 6]],
   ['15', A({ goal: 'massa', experience: 'intermediario', daysPerWeek: 2, duration: 'longo' }), [6, 6, 6, 6]],
  ];
  it.each(PROFILES)('perfil %s: peito / costas / quadríceps / posterior e faixa', (_n, a, expected) => {
@@ -349,20 +361,20 @@ describe('volume semanal por grupo nos 15 perfis (bloco 1)', () => {
   expect(g.plan.sess.SUPB.ex).toContain('puxada');
  });
  it('perfis 12, 15 e 3: Corpo inteiro B com 2 dias usa empurrar inclinado e o novo subtítulo', () => {
-  const g12 = buildPlanFromAnswers(PROFILES[11]![1], catalog);
+  const g12 = buildPlanFromAnswers(PROFILES.find(p => p[0] === '12')![1], catalog);
   expect(g12.plan.sess.CIA.ex).toEqual(['leg', 'supino', 'puxada', 'hip_b', 'lat_a', 'pallof']);
   expect(g12.plan.sess.CIB.ex).toEqual(['hip_b', 'inclinado', 'remada_b', 'afundo', 'face', 'pallof']);
-  expect(g12.plan.sess.CIB.sub).toBe('Pernas, peito, costas e core');
-  const g15 = buildPlanFromAnswers(PROFILES[14]![1], catalog);
+  expect(g12.plan.sess.CIB.sub).toBe('Pernas, peito, costas e abdômen');
+  const g15 = buildPlanFromAnswers(PROFILES.find(p => p[0] === '15')![1], catalog);
   expect(g15.plan.sess.CIA.ex).toEqual(['agach', 'supino', 'puxada', 'hip_b', 'lat_a', 'pallof', 'rosca_a', 'pant_pe']);
   expect(g15.plan.sess.CIB.ex).toEqual(['hip_b', 'inclinado', 'remada_b', 'bulg', 'face', 'pallof', 'tri_a', 'pant_pe']);
-  const g3 = buildPlanFromAnswers(PROFILES[2]![1], catalog);
+  const g3 = buildPlanFromAnswers(PROFILES.find(p => p[0] === '3')![1], catalog);
   expect(g3.plan.sess.CIA.ex).toEqual(['goblet', 'supino_chao', 'puxada_elastico', 'ponte_h']);
   expect(g3.plan.sess.CIB.ex).toEqual(['ponte_h', 'supino_chao', 'remada_b', 'bulg']);
  });
  it('com 3 dias o Corpo inteiro B não muda', () => {
   const g = buildPlanFromAnswers(P1, catalog);
   expect(g.plan.sess.CIB.ex).toContain('press_b');
-  expect(g.plan.sess.CIB.sub).toBe('Pernas, ombros, costas e core');
+  expect(g.plan.sess.CIB.sub).toBe('Pernas, ombros, costas e abdômen');
  });
 });

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
-import { addDays, phaseOf, rirSequence } from '../../domain/calendar';
+import { storageKey } from '../../app/mode';
+import { addDays, phaseOf, rirSequence, weekLabel } from '../../domain/calendar';
 import { isLower, muscleGroupOf } from '../../domain/muscleGroups';
 import { suggestNext } from '../../domain/progression';
 import { lastPerformance, setsForWeek } from '../../domain/workout';
@@ -20,11 +21,11 @@ import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
 import { useStagger } from './stagger';
 import type { StaggerProps } from './stagger';
 import { GROUP_LABEL, dayBelongsTo, formatDay, formatKg, minutesLabel, plural, planWeek, repsText, sessionLetter, statusOf, todayIso } from './util';
-import { ExercicioSheet } from './ExercicioPagina';
+import { ExercicioSheet } from './lazy';
 import './treino.css';
 
 const AVISO_SAUDE = 'Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.';
-export const NEW_KEY = 'treino12:treino-novo';
+export const NEW_KEY = storageKey('treino-novo');
 type Tab ='exercicios' | 'detalhes' | 'historico';
 
 function performanceText(ex: Exercise, sets: SetEntry[]): string {
@@ -75,7 +76,7 @@ function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first, 
   <p className="tr-goal num">Meta: {plural(plan.sets, 'série', 'séries')} · {repsText(ex, plan.reps)}</p>
   {todayDone > 0 ? <p className="muted tr-last">Hoje: {todayDone} de {plan.sets} {plan.sets === 1 ? 'série feita' : 'séries feitas'}.</p> : null}
   <p className="muted tr-last">{last ? <>Último desempenho ({formatDay(last.day)}): {performanceText(ex, last.sets)}</> : 'Sem registro anterior'}</p>
-  {sugText ? <p className="tr-sug">Sugestão: {sugText} <span className="muted" style={{ fontWeight: 400 }}>(só uma sugestão; você define a carga)</span></p> : null}
+  {sugText ? <p className="tr-sug"><span className="tr-sug-k">Sugestão:</span> {sugText} <span className="muted tr-sug-note">(só uma sugestão; você define a carga)</span></p> : null}
   </div>
  </li>;
 }
@@ -111,8 +112,8 @@ export function Detalhe({ id }: { id: string }) {
     <p className="in-meta tr-hero-meta"><span><Icon name="relogio" size={20} />{dur ?? 'Duração não definida'}</span><span><Glyph name="barras" size={20} />{plural(s.ex.length, 'exercício', 'exercícios')}</span></p>
    </div>
    {phase.kind === 'week' ? <div className="tr-ring-box">
-    <ProgressRing animate percent={phase.progress * 100} size={96} stroke={11} label={`Semana ${phase.week + 1} de 12: ${planPct}% do plano`} />
-    <p className="tr-ring-cap" aria-hidden="true">Semana {phase.week + 1} de 12<br />{planPct}% do plano</p>
+    <ProgressRing animate percent={phase.progress * 100} size={96} stroke={11} label={`${weekLabel(phase.week)}: ${planPct}% do plano`} />
+    <p className="tr-ring-cap" aria-hidden="true">{weekLabel(phase.week)}<br />{planPct}% do plano</p>
    </div> : null}
   </div>
   {fresh ? <div className="ed-banner" role="status">
@@ -130,7 +131,7 @@ export function Detalhe({ id }: { id: string }) {
    </>
    : <a className="button block tr-start" href={hrefFor({ tab: 'treino', view: 'executar', id, day: today })}><Icon name="play" size={22} />{resuming ? 'Continuar treino' : 'Começar treino'}</a>}
   <div className="tr-tabs" role="tablist" aria-label="Seções do treino">
-   {TABS.map(t => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}><Icon name={t.icon} size={20} />{t.id === 'exercicios' ? `Exercícios (${s.ex.length})` : t.label}</button>)}
+   {TABS.map(t => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}><Icon name={t.icon} size={20} />{t.id === 'exercicios' ? <>Exercícios<span className="tr-tab-n num">{s.ex.length}</span></> : t.label}</button>)}
   </div>
   {tab === 'exercicios' ? <>{s.ex.length === 0 ? <div className="tr-empty-card"><strong>Este treino ainda não tem exercícios.</strong><p className="muted">Adicione exercícios para poder começar o treino.</p></div> : null}<ul className="tr-stack" aria-label="Exercícios do treino">
    {s.ex.map((exId, i) => {
@@ -145,7 +146,7 @@ export function Detalhe({ id }: { id: string }) {
     <div><dt>Duração</dt><dd>{dur ?? 'Não definida'}</dd></div>
     <div><dt>Exercícios</dt><dd>{s.ex.length}</dd></div>
     <div><dt>Séries e repetições</dt><dd>Meta da semana {week + 1} de 12{phase.kind === 'week' && phase.deload ? ' (semana leve)' : ''}</dd></div>
-    {phase.kind === 'week' ? <div><dt>Repetições em reserva (RIR)</dt><dd>{phase.rir}</dd></div> : null}
+    {phase.kind === 'week' ? <div><dt>Esforço (RIR)</dt><dd>{phase.rir} · pare com {phase.rir} {phase.rir === '1' ? 'repetição' : 'repetições'} ainda sobrando</dd></div> : null}
    </dl>
   </section> : <div>
    {logged.length === 0 ? <p className="tr-empty">Sem registro anterior.</p> : <ul className="tr-stack" aria-label="Histórico do treino">

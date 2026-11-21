@@ -27,7 +27,7 @@ function InstallSheet({ mode, onClose }: { mode: InstallMode; onClose: () => voi
 }
 
 /** Botão discreto de instalação. `compact` é o atalho do Início: some quando o app já está instalado. */
-export function InstalarApp({ compact = false }: { compact?: boolean }) {
+export function InstalarApp({ compact = false, label = 'Instalar na tela inicial' }: { compact?: boolean; label?: string }) {
  const { mode, prompt } = useInstall();
  const [open, setOpen] = useState(false);
  if (mode === 'installed') return compact ? null : <p className="ia-ok"><Icon name="marca" size={18} look="bold" />App instalado</p>;
@@ -39,7 +39,7 @@ export function InstalarApp({ compact = false }: { compact?: boolean }) {
   else setOpen(true);
  };
  return <>
-  <button type="button" className={compact ? 'ia-link' : 'button secondary ia-btn'} aria-haspopup={mode === 'prompt' ? undefined : 'dialog'} onClick={() => void click()}><Icon name="baixar" size={20} />Instalar na tela inicial</button>
+  <button type="button" className={compact ? 'ia-link' : 'button secondary ia-btn'} aria-haspopup={mode === 'prompt' ? undefined : 'dialog'} onClick={() => void click()}><Icon name="baixar" size={20} />{label}</button>
   {open ? <InstallSheet mode={mode} onClose={() => setOpen(false)} /> : null}
  </>;
 }

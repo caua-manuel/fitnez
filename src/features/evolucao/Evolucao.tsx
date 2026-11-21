@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
@@ -19,6 +19,9 @@ import { Sequencia, SeriesGrupo } from './SeriesGrupo';
 import { Bars, LineChart, MiniLine } from './Charts';
 import type { ChartPoint } from './Charts';
 import './evolucao.css';
+
+// Resumo da semana e cartão (ADR 011, 2.5): tela e desenho sob demanda.
+const ResumoSemana = lazy(() => import('../resumo/ResumoSemana'));
 
 type Metric = 'forca' | 'peso' | 'cintura' | 'constancia';
 const PERIODS: Weeks[] = [4, 8, 12];
@@ -75,6 +78,7 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
  const [weeks, setWeeks] = useState<Weeks>(12);
  const [metric, setMetric] = useState<Metric>('forca');
  const [openMeasure, setOpenMeasure] = useState<string | null>(null);
+ const [resumo, setResumo] = useState(false);
  if (!state) return null;
  const today = localDay(now());
  const { start, sched } = state.settings;
@@ -122,6 +126,11 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
  const dayLabel = (iso: string) => iso.split('-').reverse().slice(0, 2).join('/');
 
  return <div className="evolucao tone-evolucao"><>
+  <button type="button" className="list-row ev-resumo" aria-haspopup="dialog" onClick={() => setResumo(true)}>
+   <span className="icon-tile soft"><Icon name="historico" size={26} /></span>
+   <span className="grow"><strong>Resumo da semana</strong><small>Treinos, recordes e dieta, com imagem para compartilhar</small></span>
+   <Icon name="seta" size={22} />
+  </button>
   <Period weeks={weeks} onChange={setWeeks} />
 
   <Reveal screen="evolucao" i={1}><div className="ev-tiles" role="group" aria-label="Indicador do gráfico principal">
@@ -195,5 +204,6 @@ export function Evolucao({ now = Date.now }: { now?: () => number }) {
    </div>
    <div className="sheet-actions"><button type="button" className="button secondary block" onClick={() => setOpenMeasure(null)}>Fechar</button></div>
   </Sheet> : null}
+  {resumo ? <Suspense fallback={null}><ResumoSemana now={now} onClose={() => setResumo(false)} /></Suspense> : null}
  </div>;
 }

@@ -54,3 +54,4 @@ test('falha com URL remota dentro do CSS', () => {
   assert.equal(verificarRecursoRemoto('a.css', "@font-face{src:url('https://fonts.exemplo.test/f.woff2')}").length, 1);
   assert.equal(verificarRecursoRemoto('a.css', '@import "https://exemplo.test/x.css";').length, 1);
 });
+

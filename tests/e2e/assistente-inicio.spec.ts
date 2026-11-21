@@ -31,7 +31,7 @@ async function answer(page: Page, opts: { safety: string; sport?: boolean; body?
  await expect(wiz(page).getByText('Marque uma opção para continuar.')).toBeVisible();
  await wiz(page).getByText(opts.safety, { exact: false }).click();
  await next(page);
- await wiz(page).getByText('Perder gordura').click(); await next(page);
+ await wiz(page).getByText('Perder gordura', { exact: true }).click(); await next(page);
  await wiz(page).getByText('Nunca treinei').click(); await next(page);
  await next(page); await next(page); await next(page);
  await expect(wiz(page).getByText('Passo 7 de 9')).toBeVisible();
@@ -54,7 +54,7 @@ async function answer(page: Page, opts: { safety: string; sport?: boolean; body?
 
 test('montar o plano grava, mostra o esporte e permite desfazer', async ({ page }) => {
  await answer(page, { safety: 'Nenhuma dessas', sport: true, body: true });
- await expect(wiz(page).getByText('Meta de calorias: de', { exact: false })).toBeVisible();
+ await expect(wiz(page).getByText('Calorias: de', { exact: false })).toBeVisible();
  await expect(wiz(page).getByText('Futebol')).toBeVisible();
  // Escape volta um passo; Alterar volta ao resumo.
  await page.keyboard.press('Escape');
@@ -81,7 +81,7 @@ test('montar o plano grava, mostra o esporte e permite desfazer', async ({ page 
 test('segurança: sem metas calculadas e aviso no resumo', async ({ page }) => {
  await answer(page, { safety: 'transtorno alimentar', body: true });
  await expect(wiz(page).getByText('O app não vai calcular calorias', { exact: false })).toBeVisible();
- await expect(wiz(page).getByText('Meta de calorias: de', { exact: false })).toHaveCount(0);
+ await expect(wiz(page).getByText('Calorias: de', { exact: false })).toHaveCount(0);
  await wiz(page).getByRole('button', { name: 'Começar o plano' }).click();
  await expect.poll(async () => (await stored(page)).settings.onboarding?.hideDietNumbers).toBe(true);
  await page.goto('./#dieta');
@@ -101,7 +101,7 @@ test('refazer abre preenchido, nunca sozinho, e o toast desfaz', async ({ page }
  await page.getByRole('button', { name: /Refazer meu plano/ }).click();
  await expect(wiz(page).getByText('Passo 1 de 9')).toBeVisible();
  await wiz(page).getByText('Nenhuma dessas').click(); await next(page);
- await expect(wiz(page).getByRole('radio', { name: 'Perder gordura' })).toBeChecked();
+ await expect(wiz(page).getByRole('radio', { name: 'Perder gordura', exact: true })).toBeChecked();
  for (let i = 0; i < 5; i++) await next(page);
  await wiz(page).getByRole('button', { name: 'Pular' }).click();
  await wiz(page).getByRole('button', { name: 'Pular' }).click();

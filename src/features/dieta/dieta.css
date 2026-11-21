@@ -27,7 +27,7 @@
 .dt-macro-val{font-size:.75rem;font-weight:500;color:var(--muted-foreground);font-variant-numeric:tabular-nums;white-space:nowrap}
 .dt-macro-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin-top:5px}
 .dt-macro-bar .bar{height:8px}
-.dt-macro-bar .bar>span{display:block;height:100%;border-radius:999px;background:var(--primary);transition:width 300ms ease-out}
+.dt-macro-bar .bar>span{display:block;height:100%;border-radius:999px;background:var(--primary);transform-origin:left center;transition:transform 300ms var(--mv-ease,ease-out)}
 .dt-pct{min-width:2.2em;text-align:right;font-size:.75rem;font-weight:700;font-variant-numeric:tabular-nums}
 
 /* Três indicadores */
@@ -286,3 +286,9 @@ button.dt-check,button.dt-check[aria-pressed=true],button.dt-cup-btn,button.dt-c
 .dt-ring-text strong .num,.dt-stat strong .num{display:inline;font:inherit;letter-spacing:inherit;color:inherit}
 
 .dt .dt-meta-nota{margin:-4px 4px 0;font-size:.8125rem;line-height:1.4;color:var(--muted-foreground)}
+/* Fase 3: "Restantes" é a linha de apoio do anel (os 3 cartões repetidos saíram); barras de macro só com transform. */
+.dt-ring-box{display:grid;justify-items:center;gap:6px;flex:none}
+.dt-ring-left{margin:0;font-size:.8125rem;font-weight:600;color:var(--muted-foreground);text-align:center;max-width:8.5rem;line-height:1.3}
+.dt-ring-left.warn{color:var(--warning)}
+.dt-macro-bar .bar>span{width:100%}
+@media(prefers-reduced-motion:reduce){.dt-macro-bar .bar>span{transition:none}}

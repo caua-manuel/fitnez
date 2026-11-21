@@ -3,12 +3,16 @@ import type { StateV3 } from './repository';
 import { foundation } from '../data/migration';
 import { clone } from '../data/validation';
 import { asError, completed, open, request } from '../data/idb';
+import { databaseName, modeKeyName } from '../data/names';
+import type { AppMode } from '../data/names';
 
 type KeyedStorage = Pick<Storage, 'getItem'> & Partial<Pick<Storage, 'removeItem' | 'key' | 'length'>>;
 export interface EraseAllOptions {
  expectedRevision: number;
  basePath?: string; now?: () => number;
  indexedDB?: IDBFactory | null; storage?: KeyedStorage | null; session?: KeyedStorage | null;
+ /** Modo ativo (`appMode()`). Na demonstração a função recusa; sem a opção, a marca do localStorage é conferida. */
+ mode?: AppMode;
 }
 export interface EraseResult { state: StateV3; storageWarnings: string[] }
 
@@ -38,9 +42,12 @@ function wipe(store: KeyedStorage | null | undefined, label: string): string[] {
 export async function eraseAllData(options: EraseAllOptions): Promise<EraseResult> {
  const now = options.now ?? Date.now;
  const base = options.basePath ?? import.meta.env.BASE_URL;
- const name = `treino12:${encodeURIComponent(base)}`;
- const factory = options.indexedDB === undefined ? globalThis.indexedDB : options.indexedDB;
  let local = options.storage; if (local === undefined) { try { local = globalThis.localStorage; } catch { local = null; } }
+ // ADR 011 (A1): na demonstração nunca abre o banco real. Recusa antes de qualquer acesso ao IndexedDB.
+ let marked = false; try { marked = local?.getItem(modeKeyName(base)) === 'demo'; } catch { marked = false; }
+ if (options.mode === 'demo' || marked) throw new RepositoryError('validation', 'Apagar tudo fica desligado na demonstração. Saia da demonstração para apagar os seus dados.');
+ const name = databaseName(base); // banco real: só chega aqui fora da demonstração
+ const factory = options.indexedDB === undefined ? globalThis.indexedDB : options.indexedDB;
  let session = options.session; if (session === undefined) { try { session = globalThis.sessionStorage; } catch { session = null; } }
  const connection = await open(factory, name);
  let tx: IDBTransaction | undefined; let done: Promise<void> | undefined; let next: StateV3;

@@ -190,7 +190,7 @@ test('Assistente offline: com o service worker pronto, o chunk do assistente vem
  // O chunk ainda não foi carregado nesta página: nenhum script do assistente no documento.
  expect(await page.evaluate(() => performance.getEntriesByType('resource').some(e => /Assistente-/.test(e.name)))).toBe(false);
  await context.setOffline(true);
- await page.getByRole('button', { name: /Refazer meu plano/ }).click();
+ await page.getByRole('button', { name: /Responda algumas perguntas/ }).click(); // sem plano montado: "Montar meu plano"
  await expect(wiz(page).getByText('Passo 1 de 9')).toBeVisible();
  await expect(wiz(page).getByRole('heading', { level: 1 })).toBeVisible();
  await context.setOffline(false);

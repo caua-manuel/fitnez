@@ -36,7 +36,8 @@ async function seed(page: Page, today: string, extra: Record<string, unknown> = 
 
 const sheet = (page: Page) => page.getByRole('dialog', { name: 'Suas metas diárias' });
 const selo = (page: Page) => page.getByText('Meta de exemplo', { exact: true });
-const metaDiaria = (page: Page) => page.locator('.dt-stat').first().locator('strong');
+// Fase 3: os cartões de indicador saíram; a meta do dia é lida no anel (progressbar 'Calorias consumidas').
+const metaDiaria = (page: Page) => page.getByRole('progressbar', { name: 'Calorias consumidas' });
 async function openSheet(page: Page) {
  await page.getByRole('button', { name: 'Ajustar metas' }).click();
  await expect(sheet(page)).toBeVisible();

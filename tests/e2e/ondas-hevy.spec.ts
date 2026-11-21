@@ -59,7 +59,7 @@ const done = (page: Page, n: number) => page.getByRole('button', { name: `Série
 
 test('Ondas: placeholder com "Antes", ✓ sem digitar e Desfazer; aquecimento A fora do volume', async ({ page }) => {
  await open(page, histUA());
- await expect(page.getByLabel('Antes: 30 kg, 8 repetições').first()).toBeVisible();
+ await expect(page.getByLabel('Última vez: 30 kg, 8 repetições').first()).toBeVisible();
  const kg1 = page.getByLabel('Carga (kg), série 1');
  await expect(kg1).toHaveValue('');
  expect(await kg1.getAttribute('placeholder')).toMatch(/^\d/);
@@ -94,7 +94,12 @@ test('Ondas: recorde na hora e Concluído com recordes e comparação de volume'
 
 test('Ondas: página do exercício com instruções, recordes, histórico e nota fixa', async ({ page }) => {
  await open(page, histUA());
- await page.getByRole('button', { name: 'Supino com halteres', exact: true }).click();
+ // ADR 011, 2.3: o nome abre o histórico rápido; a página completa fica no menu do exercício.
+ await page.getByRole('button', { name: 'Mais opções de Supino com halteres' }).click();
+ await page.getByRole('menuitem', { name: 'Ver exercício' }).click();
+ // A página do exercício é carregada sob demanda (Suspense); com o relógio parado, o React só revela o conteúdo
+ // depois do próprio intervalo de espera, então o relógio anda 1 s (o usuário real não percebe a espera).
+ await page.clock.runFor(1_000);
  const dlg = page.getByRole('dialog', { name: 'Supino com halteres' });
  await expect(dlg.getByRole('heading', { name: 'Como fazer' })).toBeVisible();
  await expect(dlg.getByRole('heading', { name: 'Melhores marcas' })).toBeVisible();

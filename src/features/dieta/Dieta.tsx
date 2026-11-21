@@ -12,7 +12,6 @@ import { todayIso } from '../treino/util';
 import { Cup, CheckButton, DayNav, KcalRing, MealThumb } from './parts';
 import { DAY_TYPE_LABEL, MEALS, MEAL_NAME, dayLabel, fmt, nf1, optionNumber, weeklyAverages } from './dietData';
 import { useDietDay } from './useDietDay';
-import { CountUp } from '../../ui/motion';
 import { useStagger } from '../treino/stagger';
 import { MetaDieta } from './MetaDieta';
 import { Refeicao } from './Refeicao';
@@ -67,23 +66,21 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
    <p><strong>{totals.eatenCount} de 5</strong> refeições marcadas</p>
    <p className="muted">Por escolha do seu plano, a Dieta mostra só as refeições e as marcações, sem números de metas.</p>
   </section> : <><section className="card dt-summary" aria-label="Resumo do dia">
-   <KcalRing kcal={totals.kcal} target={target.kcal} />
+   <div className="dt-ring-box">
+    <KcalRing kcal={totals.kcal} target={target.kcal} />
+    <p className={`dt-ring-left num${over ? ' warn' : ''}`}>{over ? `${fmt(totals.kcal - target.kcal)} kcal acima da meta` : `${fmt(prog.remaining)} kcal restantes`}</p>
+   </div>
    <div className="dt-macros">
     {MACROS.map(({ key, label, t }) => {
      const value = totals[key], goal = target[t], pct = goal > 0 ? value / goal : 0;
      return <div className="dt-macro" key={key}>
       <div className="dt-macro-top"><span className="dt-macro-name">{label}</span><span className="dt-macro-val">{fmt(value)} g de {fmt(goal)} g</span></div>
-      <div className="dt-macro-bar"><div className="bar" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.round(pct * 100))}><span style={{ width: `${Math.min(100, pct * 100)}%` }} /></div><span className="dt-pct">{Math.round(pct * 100)}%</span></div>
+      <div className="dt-macro-bar"><div className="bar" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.round(pct * 100))}><span style={{ transform: `scaleX(${Math.min(1, pct)})` }} /></div><span className="dt-pct">{Math.round(pct * 100)}%</span></div>
      </div>;
     })}
    </div>
   </section>
 
-  <div className="dt-stats">
-   <div className="dt-stat"><Icon name="fogo" size={22} weight={1.6} /><div><strong><CountUp value={Math.round(target.kcal)} suffix=" kcal" duration={350} /></strong><span>Meta diária</span></div></div>
-   <div className="dt-stat"><Icon name="garfo" size={22} weight={1.6} /><div><strong><CountUp value={Math.round(totals.kcal)} suffix=" kcal" duration={350} /></strong><span>Consumidas</span></div></div>
-   <div className={`dt-stat${over ? ' warn' : ''}`}><Icon name="alvo" size={22} weight={1.6} /><div><strong><CountUp value={Math.round(over ? totals.kcal - target.kcal : prog.remaining)} prefix={over ? '+' : ''} suffix=" kcal" duration={350} /></strong><span>{over ? 'Acima da meta' : 'Restantes'}</span></div></div>
-  </div>
 
   <MetaDieta /></>}
 

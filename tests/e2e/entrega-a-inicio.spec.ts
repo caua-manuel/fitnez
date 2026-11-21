@@ -72,7 +72,7 @@ test('Início: dia de academia mostra semana, treino da rotina e Começar treino
  await expect(page.getByText('Semana 04 de 12', { exact: true })).toBeVisible();
  await expect(page.getByText('Qua, 11 nov', { exact: true })).toBeVisible();
  // Sem jargão no topo: o RIR vira frase e a semana leve vem por extenso.
- await expect(page.getByText('Semana leve · Pare 4 repetições antes da falha', { exact: false })).toBeVisible();
+ await expect(page.getByText('Semana leve: menos séries, sem subir carga · Pare com 4 repetições ainda sobrando', { exact: false })).toBeVisible();
  await expect(page.getByText('RIR', { exact: false })).toHaveCount(0);
  await expect(page.getByRole('img', { name: 'Semana 4 de 12 do plano' })).toBeVisible();
  await expect(page.getByRole('heading', { name: 'Upper A', level: 2 })).toBeVisible();
@@ -134,7 +134,7 @@ test('Início: pré-semana mostra a contagem de dias', async ({ page }, info) =>
  await expect(page.getByRole('heading', { name: 'Aula de jiu-jitsu', level: 2 })).toBeVisible();
  await expect(page.getByText('Primeiro treino do plano')).toBeVisible();
  await expect(page.getByRole('button', { name: 'Começar o plano hoje' })).toBeVisible();
- await expect(page.getByRole('link', { name: 'Treinar sem mudar a data' })).toHaveAttribute('href', /#treino\/\w+\/executar/);
+ await expect(page.getByRole('link', { name: 'Treinar hoje sem começar o plano' })).toHaveAttribute('href', /#treino\/\w+\/executar/);
  expect(await noHScroll(page)).toBe(true);
  await page.screenshot({ path: info.outputPath('inicio-pre-360.png'), fullPage: true });
  // Treinar agora não mexe na data de início.

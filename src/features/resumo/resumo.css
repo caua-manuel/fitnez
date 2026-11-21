@@ -1,0 +1,29 @@
+/* Resumo da semana (ADR 011, 2.5) */
+.rs{gap:16px}
+.rs>*{margin:0}
+.rs-text{display:grid;gap:4px;padding:16px;border:1px solid var(--border);border-radius:var(--radius-card,16px);background:var(--card)}
+.rs-text>*{margin:0}
+.rs-title{font-size:var(--fs-h1);font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.rs-title span{font-size:1.0625rem;font-weight:600;color:var(--muted-foreground);letter-spacing:0}
+.rs-sub{font-size:.875rem;color:var(--muted-foreground)}
+.rs-hero{display:grid;gap:0;margin-top:12px!important}
+.rs-hero>span[aria-hidden]{font-size:1.25rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.rs-hero strong{font-size:2.75rem;font-weight:800;letter-spacing:-.03em;color:var(--primary)}
+.rs-hero small{font-size:.875rem;color:var(--muted-foreground)}
+.rs-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;margin:12px 0 0!important;padding-top:12px;border-top:1px solid var(--border)}
+.rs-stats div{display:grid;gap:2px;padding:6px 0}
+.rs-stats dt{font-size:.8125rem;color:var(--muted-foreground)}
+.rs-stats dd{margin:0;font-size:1.25rem;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.rs-h4{margin-top:12px!important;padding-top:12px;border-top:1px solid var(--border);font-size:1rem;font-weight:700}
+.rs-records{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.rs-diet{margin-top:12px!important;padding-top:12px;border-top:1px solid var(--border);font-weight:600}
+.rs-foot{font-size:.8125rem;color:var(--muted-foreground)}
+.rs-check{display:flex;gap:12px;align-items:flex-start;min-height:var(--tap-min,48px);padding:12px;border:1px solid var(--field-border);border-radius:var(--radius-control,12px);font-weight:600;cursor:pointer}
+.rs-check input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:var(--primary)}
+.rs-check small{display:block;margin-top:2px;font-weight:400;font-size:.875rem;color:var(--muted-foreground)}
+.rs-fig{display:grid;justify-items:center;gap:8px}
+.rs-card{display:block;width:min(100%,15rem);height:auto;aspect-ratio:4/5;border:1px solid var(--border);border-radius:12px;background:var(--secondary)}
+.rs-cap{font-size:.8125rem;color:var(--muted-foreground);text-align:center}
+.rs-status{font-size:.875rem;min-height:1.25rem;text-align:center}
+@media (prefers-reduced-motion:no-preference){.rs-card.is-ready{animation:rs-in 150ms ease-out}}
+@keyframes rs-in{from{opacity:0}to{opacity:1}}

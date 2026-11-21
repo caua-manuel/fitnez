@@ -152,9 +152,14 @@ test.describe('Instalar na tela inicial', () => {
   await expect(folha).toHaveCount(0);
  });
 
- test('atalho discreto no Início para quem ainda não instalou', async ({ page }) => {
+ // ADR 011 (1.4): o atalho fixo saiu do Início; a instalação é oferecida no fim do primeiro treino e fica no Perfil.
+ test('Início sem atalho fixo de instalar; Perfil continua oferecendo', async ({ page }) => {
   await page.goto('./');
   await page.getByRole('dialog', { name: 'Vamos montar seu plano' }).getByRole('button', { name: 'Decidir depois' }).click();
+  await expect(page.getByRole('heading', { name: 'Monte seu plano' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Instalar na tela inicial' })).toHaveCount(0);
+  await page.goto('#perfil');
+  await page.getByRole('button', { name: /^Dados neste aparelho/ }).click();
   await expect(page.getByRole('button', { name: 'Instalar na tela inicial' })).toBeVisible();
  });
 

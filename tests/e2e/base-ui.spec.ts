@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { dayPlus, simulateUsageDays } from './support/adr011';
 
 const synthetic = { v: 2, start: '2026-01-05', log: { '2026-11-17': { orfao: [{ kg: '22,5', reps: '08', done: true }] } }, meas: {}, custom: { qa: 'SINTÉTICO' } };
 async function open(page: Page, hash = 'perfil') {
@@ -52,12 +53,21 @@ test('sino abre a folha Avisos (diálogo modal, fundo inerte, Escape devolve o f
   await expect(bell).toBeFocused();
 });
 
+// ADR 011, 1.2: o backup fica pendente depois de 7 dias de USO (dias com gravação), não de calendário.
 test('com dados do usuário e backup pendente, o sino mostra ponto e o aviso real', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-11-20T12:00:00'));
   await open(page);
   const head = page.getByRole('button', { name: /^Backup e restauração/ }); if (await head.getAttribute('aria-expanded') !== 'true') await head.click();
   await page.locator('#backup-file').setInputFiles({ name: 'fixture-SINTETICO.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(synthetic)) });
   await page.getByRole('button', { name: 'Confirmar importação', exact: true }).click();
   await expect(page.getByText('Backup importado.', { exact: false })).toBeVisible();
+  // Com dados, mas sem 7 dias de uso: ainda sem ponto. No 6º dia de uso, também não; no 7º, sim.
+  await expect(page.locator('.bell-dot')).toHaveCount(0);
+  const last = await simulateUsageDays(page, '2026-11-20', 6);
+  await page.reload(); await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
+  await expect(page.locator('.bell-dot')).toHaveCount(0);
+  await simulateUsageDays(page, dayPlus(last, 1), 1);
+  await page.reload(); await expect(page.getByText('Salvo neste aparelho', { exact: true })).toBeVisible();
   await expect(page.locator('.bell-dot')).toHaveCount(1);
   await page.getByRole('button', { name: /^Avisos/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Avisos' });

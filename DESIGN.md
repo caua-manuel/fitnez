@@ -32,7 +32,7 @@ Auxiliares: `--leaf` `#4DB33D` (folha da marca), `--surface` `#F7F7F8` e `--surf
 ### Contraste (mínimo 4,5:1 para texto, 3:1 para componentes)
 
 - `primary` sobre branco e branco sobre `primary`: 5,73:1.
-- `input` (contorno de campo): 3,79:1 sobre branco sobre branco e superfícies (recalculado em tokens.test.ts).
+- `input` (contorno de campo): 4,49:1 sobre branco e 4,09:1 sobre `#F4F4F5` (recalculado em tokens.test.ts).
 - `muted-foreground` `#5E5E66` sobre `#F4F4F5`: 4,69:1 (o antigo `#64748B` dava 4,36:1).
 - `border` é decorativo, abaixo de 3:1 de propósito; campos e caixas de marcar usam `input`.
 - `tests/unit/tokens.test.ts` recalcula os pares com a função `contrast`.
@@ -68,6 +68,7 @@ Contraste: ícones com 3:1 ou mais nos dois temas. Como texto (4,5:1): treino e 
 - Raios: cartão 16, campo e cartão interno 12, botão 14, folha 24, chip e segmentado em pílula (999) só onde a forma é de rótulo; ícone-botão circular.
 - Sombras: cartão `0 1px 2px rgb(16 24 40 / .04)` (nenhuma no escuro); botão sem sombra; folha desktop `0 24px 64px -16px rgb(16 24 40 / .16), 0 2px 8px rgb(16 24 40 / .04)`. Sem brilho azul, gradiente, vidro ou desfoque.
 - Cartão: fundo `card`, borda 1px `border`, padding 16 (24 acima de 48rem).
+- Alvo de toque: `--tap-min` = 48 px (ADR 011, 2.2). Na execução do treino todo botão e campo tem pelo menos 48 × 48 px, inclusive nas folhas abertas dali (classe `.ex-tap`), no menu do exercício e no Desfazer; no resto do app o mínimo continua 44 px. Ações principais da execução (concluir série, descanso, concluir treino) ficam na metade de baixo da tela: rodapé fixo com descanso e "Concluir treino" (52 px) e as linhas de série abaixo da metade em 390 × 844.
 - Espaço: 4, 8, 12, 16, 24, 32, 48 px. Margem lateral 20 px (16 px em telas até 25rem). Reservar abaixo do conteúdo a altura da barra inferior mais a área segura.
 
 ## 5. Casca e desktop "folha"
@@ -84,7 +85,7 @@ Barra inferior plana de 5 colunas: Início, Treino, Dieta, Evolução, Perfil; �
 | --- | --- |
 | Botão principal | `primary`/`primary-foreground`, 52 px, raio 14, texto 700, largura total quando é a ação da tela; uma por tela; desabilitado em `secondary` com motivo escrito. |
 | Botão secundário | Fundo `card`, contorno `input`, texto `foreground`, mínimo 48 px. |
-| Destrutivo | Texto `destructive` sobre `destructive-soft`; exige confirmação e oferece Desfazer por 8 s. |
+| Destrutivo | Texto `destructive` sobre `destructive-soft`; exige confirmação e oferece Desfazer por 6 s (`TOAST_MS` em `src/ui/UndoToast.tsx`). |
 | Ícone-botão | 44×44 px, `aria-label` obrigatório. |
 | Segmentado | Trilho cinza claro, raio 12, opção ativa azul sólida raio 10, sem sombra; `aria-pressed` ou radios nativos. |
 | Chip | Fundo `surface-2`, ativo azul sólido, sem sombra, alvo de 44 px. |
@@ -93,12 +94,15 @@ Barra inferior plana de 5 colunas: Início, Treino, Dieta, Evolução, Perfil; �
 | Linha de lista | Atalho em linha (ícone, duas linhas de texto, valor à direita, seta), borda `border`, sem sombra; usada para a dieta no Início e o treino livre. |
 | Cartão e linha de lista | Borda hairline, raio 16, sombra quase invisível; item clicável com 44 px ou mais. |
 | Campo | 48 px, borda 1px `input`, raio 12, foco `ring` 2px; label visível; erro com `aria-invalid` e texto. |
-| Linha de série | Caixa de marcar 44 px, repetições e carga (`inputMode="decimal"`, aceita vírgula), concluir copia o último valor (2 toques). |
+| Linha de série | Número (menu), "Antes", repetições (`inputMode="numeric"`), carga (`inputMode="decimal"`, aceita vírgula) e caixa de marcar, todos com 48 px; concluir copia o último valor (2 toques). Na série ativa de exercício com barra, logo abaixo da carga, o botão neutro "Anilhas para X kg" (ícone de anilha, sem borda) abre a calculadora; "Usar X kg" só preenche a carga, nunca conclui a série. |
+| Aviso de estagnação | Linha discreta (`.ex-stag`) no cabeçalho do exercício na execução e na página do exercício: ícone de informação em `muted`, texto do domínio (`stagnation`), fundo `surface-2`, sem cor de alerta. Ação secundária neutra: "Ajustar repetições" (com Desfazer) ou "Trocar só hoje"; semana leve é só texto. |
+| Execução: série ativa | Primeira linha ainda não feita com fundo `surface-2`, número em `foreground` 700 e `aria-current="step"`; depois de marcar, rola para ficar acima do rodapé. Com o exercício completo, o rodapé mostra "Próximo: {nome}" (secundário, 48 px). Sugestão (placeholder) em peso 400 e `muted`; valor digitado em peso 700 e `foreground`. Cronômetro geral em 1,125rem, peso 600, `m:ss`. |
+| Histórico rápido | Folha aberta pelo nome do exercício na execução (ícone de histórico ao lado do nome) ou por "Últimas sessões" no menu: até 5 sessões anteriores a hoje, sem aquecimento, data com dia da semana e "há N dias", séries em números tabulares; "Ver exercício" leva à página completa. Não desmonta a execução. |
 | Anel e barra de progresso | Trilho cinza azulado visível, preenchimento `primary`, valor em texto junto; `role="progressbar"` só com valor calculado. Faixa de 12 semanas com concluídas em `primary`, atual contornada. |
 | Gráficos | SVG próprio; `role="img"` com resumo e valores em texto; sem dados, estado vazio. |
 | Interruptor | `role="switch"`, 44 px de alvo, texto "Ativadas/Desativadas". |
 | Folha (`.sheet`) | Sobe do rodapé, raio superior 24, fecha com Escape e toque fora, foco contido, retorno ao origem. |
-| Aviso e toast | `role="status"` (rotina) ou `role="alert"` (erro); Desfazer de 44 px por 8 s. |
+| Aviso e toast | `role="status"` (rotina) ou `role="alert"` (erro); Desfazer de 44 px por 6 s; o tempo pausa com foco ou ponteiro. Na execução, o toast não fala (`silent`): a série tem um anúncio único na região da própria tela. |
 | Marca (`Logo.tsx`) | Halter robusto em `primary` com folha `--leaf` e nervura `card`; palavra "Fitnez" em peso 700 sem itálico; slogan "TREINO + DIETA" em caixa alta, peso 500, espaçamento 0,22em, só no cabeçalho principal. Ícones do PWA usam só o símbolo sobre branco. |
 | Thumb (`Thumb.tsx`) | `Thumb({ kind: 'meal' \| 'exercise' \| 'hero', id, group, size, label })`. Mostra foto de `public/img/<kind>/<id>.jpg` (ou `.webp`) apenas para ids listados em `src/ui/photos.ts`; sem foto, tile minimalista com ícone de linha (por refeição, grupo muscular ou padrão) e tom por opção A, B ou C; hero usa composição em `accent-soft`. Sem requisição para ids fora do manifesto. Sem ilustrações de desenho animado. |
 
@@ -107,6 +111,8 @@ Barra inferior plana de 5 colunas: Início, Treino, Dieta, Evolução, Perfil; �
 Todo estado vazio, de erro ou de carregamento tem título curto, uma frase e uma ação, em português, sem culpar a pessoa. Carregando: "Abrindo seus dados…". Falha ao salvar: "Não foi possível salvar. O que você digitou continua na tela." Evolução sem dados: texto com atalho para registrar. Dieta sem registro: "Nada marcado hoje". Importação de backup sempre com prévia e confirmação; conteúdo importado é texto, nunca HTML. Offline: "Disponível offline" só após o cache; atualização com "Atualizar agora" e "Depois".
 
 ## 9. Movimento
+
+Microinterações da execução (Fase 3): pressionar ✓ escala a caixa para 0,92 em 100 ms; o traço do ✓ da série dura 200 ms (300 ms só no Concluído); o painel de descanso entra com opacidade e 8 px em 200 ms; recorde: linha com opacidade e 4 px em 240 ms (atraso de 120 ms), troféu de 0,85 a 1 em 280 ms e vibração `[12, 60, 12]`. Concluído: sequência única abaixo de 800 ms (marca 220 ms, título aos 180 ms, cartões aos 260/320/380 ms, recordes aos 500 ms), botões tocáveis desde o início. Barras de progresso só com `transform: scaleX`. `CountUp` padrão de 350 ms; contadores até 20 aparecem prontos. Uma curva só: `--mv-ease`.
 
 Movimento só explica mudança de estado: transições de cor e opacidade de 120 a 150 ms, escala 0,98 ao pressionar, folha em 200 ms. Proibido `transition: all`, pulsos e animação de layout. Com `prefers-reduced-motion: reduce` tudo vira troca imediata. Hover só com `(hover: hover) and (pointer: fine)`.
 

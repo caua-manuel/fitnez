@@ -51,7 +51,7 @@ input[inputmode=decimal],input[inputmode=numeric]{text-align:center;font-size:1.
 .tabbar a[aria-current=page]{color:var(--primary);border-top-color:var(--primary);background:transparent}
 .tabbar svg{width:24px;height:24px}
 .sheet-backdrop{position:fixed;inset:0;z-index:10;background:color-mix(in srgb,var(--foreground) 40%,transparent)}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:30rem;margin:0 auto;max-height:90vh;overflow:auto;background:var(--card);color:var(--foreground);border-radius:24px 24px 0 0;padding:16px 16px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -8px 32px rgb(0 0 0 / .24);animation:sheet-up 180ms cubic-bezier(.23,1,.32,1)}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:30rem;margin:0 auto;max-height:90vh;overflow:auto;background:var(--card);color:var(--foreground);border-radius:24px 24px 0 0;padding:16px 16px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -8px 32px rgb(0 0 0 / .24);animation:sheet-up 180ms var(--mv-ease,cubic-bezier(.2,.8,.2,1))}
 .sheet::before{content:"";display:block;width:40px;height:4px;border-radius:999px;background:var(--input);margin:0 auto 16px}
 @keyframes sheet-up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 @media(min-width:48rem){.tabbar{margin:0 auto;width:min(100%,30rem);border:1px solid var(--border);border-bottom:0;border-radius:20px 20px 0 0}}
@@ -78,6 +78,8 @@ input[inputmode=decimal],input[inputmode=numeric]{text-align:center;font-size:1.
  --fs-h1:1.75rem;--fs-h2:1.25rem;--fs-h3:1.0625rem;--fs-body:1rem;--fs-small:.875rem;--fs-stat:1.5rem;
  --fw-regular:400;--fw-medium:500;--fw-semibold:600;--fw-bold:700;--fw-display:800;
  --sheet-width:430px;
+ /* Alvo mínimo de toque na execução do treino (ADR 011, 2.2): mãos suadas, uma mão só. */
+ --tap-min:48px;
 }
 [data-theme="dark"]{--page:#0B0B0C;--surface:#202024;--surface-2:#202024;--field-border:#7A7A83;--hairline:#2C2C31;--ink:#F2F2F3;--ink-2:#A1A1AA;--shadow-card:none;--shadow-sheet:0 24px 64px -16px rgb(0 0 0 / .6)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="dark"]){--page:#0B0B0C;--surface:#202024;--surface-2:#202024;--field-border:#7A7A83;--hairline:#2C2C31;--shadow-card:none}}
@@ -266,7 +268,7 @@ body .tr-row{min-height:88px}
 .ui-toast button{min-height:44px;min-width:44px;background:transparent;color:var(--background);border:1px solid color-mix(in srgb,var(--background) 55%,transparent);border-radius:10px;padding:0 14px;font-weight:700}
 .ui-toast button:hover{filter:none;background:color-mix(in srgb,var(--background) 14%,transparent)}
 .ui-menu-wrap{position:relative;display:inline-block}
-.ui-menu{position:absolute;right:0;top:calc(100% + 4px);z-index:8;min-width:12rem;display:grid;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);transform-origin:top right;animation:menu-in 150ms cubic-bezier(.23,1,.32,1);box-shadow:var(--shadow-sheet)}
+.ui-menu{position:absolute;right:0;top:calc(100% + 4px);z-index:8;min-width:12rem;display:grid;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);transform-origin:top right;animation:menu-in 150ms var(--mv-ease,cubic-bezier(.2,.8,.2,1));box-shadow:var(--shadow-sheet)}
 .ui-menu-left{left:0;right:auto;transform-origin:top left}
 .ui-menu-label{flex:1;min-width:0}.ui-menu [role=menuitem]>.icon{flex:none;color:var(--muted-foreground)}.ui-menu .is-danger>.icon{color:inherit}.ui-menu [role=option]>.icon{flex:none;color:var(--primary)}
 .ui-menu [role=menuitem].is-danger:hover,.ui-menu [role=menuitem].is-danger:focus-visible{background:var(--destructive-soft)}
@@ -311,3 +313,33 @@ body .tr-row{min-height:88px}
 body .depth.depth{box-shadow:var(--shadow-depth);transition:transform 160ms var(--mv-ease)}
 @media(hover:hover) and (pointer:fine){body .depth.depth:not(.mv-tilt):hover,body .depth.depth:not(.mv-tilt):focus-within{transform:translateY(-1px)}}
 @media(prefers-reduced-motion:reduce){.mv-tilt,.mv-par,.depth{transform:none!important;transition:none!important}}
+
+/* Modo demonstração (ADR 011, 1.1): faixa no topo de todas as telas, neutra; botão com 48 px. */
+.demo-bar{position:sticky;top:0;z-index:9;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;padding:calc(6px + env(safe-area-inset-top)) 16px 6px;background:var(--secondary);color:var(--foreground);border-bottom:1px solid var(--border)}
+.demo-bar-t{display:inline-flex;align-items:center;gap:8px;margin:0;font-size:.9375rem;font-weight:600}
+.demo-bar-t svg{flex:none;color:var(--muted-foreground)}
+.demo-bar-btn{flex:none;min-height:var(--tap-min);min-width:var(--tap-min);padding:0 14px;border:1px solid var(--field-border);border-radius:var(--radius-control);background:var(--card);color:var(--foreground);font-size:.9375rem;font-weight:600}
+html:has(.demo-bar){scroll-padding-top:72px}
+.demo-bar~.app-header{padding-top:14px}
+.demo-entry{display:grid;gap:6px;justify-items:start}
+.demo-entry-q,.demo-entry-apoio,.demo-entry-busy{margin:0}
+.demo-entry-apoio{font-size:.875rem}
+.demo-entry-btn{display:inline-flex;align-items:center;gap:8px;min-height:var(--tap-min);padding:0 4px;margin-left:-4px;border:0;border-radius:var(--radius-control);background:transparent;color:var(--primary);font-weight:600;text-decoration:underline;text-underline-offset:.2em}
+.demo-entry-busy{min-height:var(--tap-min);display:flex;align-items:center;color:var(--muted-foreground)}
+.demo-off{margin:0;font-size:.875rem;color:var(--muted-foreground)}
+/* Lembrete de backup (ADR 011, 1.2): cartão neutro; a ação azul da tela continua sendo a do treino. */
+.backup-card{display:grid;gap:8px;margin:0}
+.backup-card h2{margin:0;font-size:var(--fs-h3)}
+.backup-card p{margin:0}
+.backup-card-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.backup-card-acts .button{flex:1 1 9rem}
+/* Lembrete de backup compacto (Início): uma linha neutra com duas ações de texto, sem caixa âmbar. */
+.backup-line{display:grid;gap:2px;padding:4px 0 0;border-top:1px solid var(--border)}
+.backup-line-t{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:8px 0 0;font-size:.9375rem}
+.backup-line-t strong{font-weight:600}
+.backup-line-t strong:focus{outline:none}
+.backup-line-t .muted{font-size:.875rem}
+.backup-dot{align-self:center;width:8px;height:8px;border-radius:50%;background:var(--warning);flex:none}
+.backup-line .backup-card-acts{gap:4px 20px;margin-top:0}
+.backup-link{min-height:44px;padding:0;border:0;background:transparent;color:var(--primary);font-weight:600;text-decoration:underline;text-underline-offset:.2em}
+.backup-link+.backup-link{color:var(--foreground);text-decoration:none}

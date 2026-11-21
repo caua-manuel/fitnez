@@ -173,9 +173,17 @@
    "passos": "Deitado de costas, uma perna dobrada com o pé no chão e a outra no ar. Suba o quadril sem deixar um lado cair e desça devagar; faça os dois lados.",
    "erro": "quadril torto, caindo para o lado da perna no ar."
   },
+  "ponte": {
+   "passos": "Deitado de costas, joelhos dobrados e pés no chão, afastados na largura do quadril. Suba o quadril até ficar alinhado com os joelhos, aperte o glúteo por 1 segundo e desça devagar.",
+   "erro": "subir demais arqueando a lombar, em vez de subir apertando o glúteo."
+  },
   "afundo_livre": {
    "passos": "Dê um passo à frente com o tronco alto. Desça até o joelho de trás quase tocar o chão e volte; apoie a mão na parede se precisar.",
    "erro": "passo curto demais, com o joelho da frente indo muito à frente do pé."
+  },
+  "sentar_levantar": {
+   "passos": "Sente na ponta de uma cadeira firme encostada na parede, pés afastados na largura do quadril. Incline o tronco um pouco à frente e levante empurrando o chão com os pés; volte a sentar devagar, sem cair na cadeira. Se precisar, apoie as mãos nos joelhos.",
+   "erro": "sentar de uma vez, sem controlar a descida, ou deixar os joelhos se fecharem para dentro."
   },
   "stiff_uni": {
    "passos": "Em pé numa perna, joelho levemente dobrado. Leve o quadril para trás e incline o tronco, com a perna de trás subindo alinhada, e volte; segure numa parede se precisar.",
