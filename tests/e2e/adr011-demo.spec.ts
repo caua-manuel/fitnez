@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { dbNames, readDb, watchErrors } from './support/adr011';
+import { resolveBasePath } from '../../scripts/base-path.ts';
 
 // ADR 011, 1.1: modo demonstração. Entrar, navegar, offline, sair e voltar ao estado vazio real com o banco real intacto.
 
@@ -7,7 +8,11 @@ let errors: string[] = [];
 test.beforeEach(async ({ page }) => { errors = watchErrors(page); });
 test.afterEach(() => { expect(errors, 'Sem exceções nem erros de console').toEqual([]); });
 
-const MODE_KEY = 'treino12:%2FProjeto-Treino%2F:modo';
+// Mesma base do playwright.config.ts: no CI é /<repo>/, localmente /Projeto-Treino/.
+const BASE = encodeURIComponent(resolveBasePath({ VITE_BASE_PATH: process.env.VITE_BASE_PATH }));
+const REAL_DB = `treino12:${BASE}`;
+const DEMO_DB = `treino12:demo:${BASE}`;
+const MODE_KEY = `treino12:${BASE}:modo`;
 const banner = (page: Page) => page.getByRole('region', { name: 'Modo demonstração' });
 const nav = (page: Page, label: string) => page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('link', { name: label, exact: true });
 // Começa fora do Início: a demo abre nele, e tocar na aba atual não muda a rota.
@@ -29,10 +34,10 @@ async function enter(page: Page) {
 
 test('demo: entrar, navegar pelas cinco telas, sair e voltar ao vazio real com o banco real intacto', async ({ page }) => {
  const before = await realBaseline(page);
- expect(await dbNames(page)).toEqual(['treino12:%2FProjeto-Treino%2F']);
+ expect(await dbNames(page)).toEqual([REAL_DB]);
  await enter(page);
  expect(await page.evaluate(k => localStorage.getItem(k), MODE_KEY)).toBe('demo');
- expect(await dbNames(page)).toContain('treino12:demo:%2FProjeto-Treino%2F');
+ expect(await dbNames(page)).toContain(DEMO_DB);
  const demo = await readDb(page, 'demo');
  expect(demo.meta.demo).toBe(true);
  expect(Object.keys(demo.history.days).length).toBeGreaterThan(5);
@@ -65,7 +70,7 @@ test('demo: entrar, navegar pelas cinco telas, sair e voltar ao vazio real com o
  await expect(banner(page)).toHaveCount(0, { timeout: 15000 });
  await expect(page).toHaveURL(/#inicio$/);
  expect(await page.evaluate(k => localStorage.getItem(k), MODE_KEY)).toBeNull();
- await expect.poll(() => dbNames(page)).toEqual(['treino12:%2FProjeto-Treino%2F']);
+ await expect.poll(() => dbNames(page)).toEqual([REAL_DB]);
  expect(JSON.stringify(await readDb(page))).toBe(before);
  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
  await expect(page.getByRole('button', { name: 'Ver com dados de exemplo' }).first()).toBeVisible();
@@ -97,7 +102,7 @@ test('demo: marca adulterada sem banco da demo volta ao modo real e limpa a marc
  await expect(page.getByRole('dialog', { name: 'Vamos montar seu plano' })).toBeVisible({ timeout: 15000 });
  await expect.poll(() => page.evaluate(k => localStorage.getItem(k), MODE_KEY).catch(() => 'navegando')).toBeNull();
  await expect(banner(page)).toHaveCount(0);
- await expect.poll(() => dbNames(page)).toEqual(['treino12:%2FProjeto-Treino%2F']);
+ await expect.poll(() => dbNames(page)).toEqual([REAL_DB]);
  expect(JSON.stringify(await readDb(page))).toBe(before);
 });
 
