@@ -37,6 +37,7 @@ import { CheckDraw } from '../../ui/motion';
 import { useJustTurnedOn } from './stagger';
 import { FREE_SESSION_ID } from '../../domain/weekStreak';
 import { GROUP_LABEL, freeExercises, firstIncomplete, formatDay, formatKg, normalize, planWeek, readCursor, todayIso, writeCursor } from './util';
+import { applyDraft, draftKey, readDraft, writeDraft } from './rascunho';
 import './treino.css';
 
 // ADR 011, 1.1: no modo real a chave continua 'treino12:descanso'; na demo vira 'treino12:demo:descanso'.
@@ -192,7 +193,7 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
   startedRef.current = own?.startedAt ?? Date.now();
   const ids = dayExIds(state, id, day, picked);
   const init = initialRows(state, ids, day, week);
-  setRows(init);
+  setRows(applyDraft(init, readDraft(draftKey(import.meta.env.BASE_URL, day, id))));
   // Retoma onde a pessoa estava; sem cursor, cai no primeiro exercício incompleto.
   setIdx(readCursor(day, id, ids.length) ?? firstIncomplete(init, ids));
   restoreRef.current();
@@ -200,6 +201,24 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
   if (!own) setOverlap(overlappingExercises(rec, plan0, id).map(e => plan0.ex[e]?.n ?? 'Exercício'));
  }, [state, rows, id, day, week, picked]);
  useEffect(() => { if (rows) writeCursor(day, id, idx); }, [rows, day, id, idx]);
+ // Rascunho do que foi digitado e ainda não concluído (sobrevive a bloquear o celular, fechar o app ou Voltar).
+ const dKey = draftKey(import.meta.env.BASE_URL, day, id);
+ const draftOff = useRef(false);
+ const flushDraft = useRef<() => void>(() => undefined);
+ flushDraft.current = () => { if (!draftOff.current && rows) writeDraft(dKey, latest.current ?? rows); };
+ useEffect(() => {
+  if (!rows) return;
+  const t = setTimeout(() => flushDraft.current(), 400);
+  return () => clearTimeout(t);
+ }, [rows]);
+ useEffect(() => { flushDraft.current(); }, [idx]);
+ useEffect(() => {
+  const onHide = () => { if (document.visibilityState === 'hidden') flushDraft.current(); };
+  const onPageHide = () => flushDraft.current();
+  document.addEventListener('visibilitychange', onHide);
+  window.addEventListener('pagehide', onPageHide);
+  return () => { flushDraft.current(); document.removeEventListener('visibilitychange', onHide); window.removeEventListener('pagehide', onPageHide); };
+ }, []);
 
  useEffect(() => {
   const tick = () => setNow(Date.now());
@@ -400,7 +419,7 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
   setBusy(true);
   const ok = await persist(rows, true);
   setBusy(false);
-  if (ok) { setLeaving(true); writeRest(id, day, null); writeCursor(day, id, null); window.location.hash = hrefFor({ tab: 'treino', view: 'concluido', id, day }); }
+  if (ok) { draftOff.current = true; writeDraft(dKey, null); setLeaving(true); writeRest(id, day, null); writeCursor(day, id, null); window.location.hash = hrefFor({ tab: 'treino', view: 'concluido', id, day }); }
  };
 
  const sug = ctx.suggestion;

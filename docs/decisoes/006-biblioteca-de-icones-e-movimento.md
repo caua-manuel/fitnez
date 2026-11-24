@@ -34,7 +34,7 @@ O dono pediu ícones, menus e elementos mais vivos, mantendo o visual premium mi
 O app já tem sistema de tokens e CSS próprio (`DESIGN.md`). Migrar não traria ganho visual e arriscaria regressão em telas aprovadas, além de nova ferramenta de build.
 
 ### 5. Orçamento de peso (verificado no build)
-- Vigente (revisão de 19/11/2026, abaixo): JavaScript gzip total ≤ 215 KB e CSS gzip ≤ 28 KB, conferidos por `scripts/verify-build.ts`.
+- Vigente (revisão de 23/11/2026, decisão do dono; detalhes no ADR 011): JavaScript gzip total ≤ 300 KB (era 250 KB), inicial ≤ 205 KB inalterado, CSS e chunks sem mudança; conferidos por `scripts/verify-build.ts`. Motivo: margem para o cardápio do ADR 013 e animações.
 - Histórico: o texto original dizia JS ≤ 190 KB e CSS ≤ 12 KB. O limite de 12 KB nunca chegou ao build: o CSS herdado do protótipo já pesava cerca de 19,5 KB, e o script usava 24 KB. 28 KB é o número certo porque o CSS atual mede 23,7 KB e o limite precisa deixar margem para as próximas telas sem esconder crescimento descontrolado.
 - `devops-github` e `qa-testes` incluem a checagem no build/CI; estourar o orçamento falha o build.
 

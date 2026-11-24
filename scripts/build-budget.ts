@@ -5,7 +5,7 @@
 import { posix } from 'node:path';
 
 export const LIMITES = {
-  total: { js: 250, css: 32 },
+  total: { js: 300, css: 32 },
   inicial: { js: 205, css: 26 },
   chunk: { js: 20, css: 4 },
 } as const;

@@ -34,7 +34,7 @@ test('as três medidas separam carga inicial, total e chunks sob demanda', () =>
 });
 
 test('limites do ADR 011', () => {
-  assert.deepEqual(LIMITES, { total: { js: 250, css: 32 }, inicial: { js: 205, css: 26 }, chunk: { js: 20, css: 4 } });
+  assert.deepEqual(LIMITES, { total: { js: 300, css: 32 }, inicial: { js: 205, css: 26 }, chunk: { js: 20, css: 4 } });
 });
 
 test('falha quando a carga inicial passa do limite mesmo com o total dentro', () => {
@@ -47,7 +47,7 @@ test('falha quando a carga inicial passa do limite mesmo com o total dentro', ()
 
 test('falha quando o total passa do limite somando chunks sob demanda', () => {
   const tamanhos: Record<string, number> = { 'assets/index-AAA.js': 200 * KB };
-  for (let i = 0; i < 3; i++) tamanhos[`assets/c${i}-X.js`] = 19 * KB;
+  for (let i = 0; i < 6; i++) tamanhos[`assets/c${i}-X.js`] = 19 * KB;
   const falhas = verificarOrcamento(medir(tamanhos, ['assets/index-AAA.js']));
   assert.equal(falhas.length, 1);
   assert.match(falhas[0], /JavaScript total/);

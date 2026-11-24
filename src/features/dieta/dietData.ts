@@ -87,3 +87,12 @@ export function weeklyAverages(measurements: Record<string, Payload>): { weights
   waists: weeks.filter(w => buckets[w].c.length).map(w => avg(buckets[w].c)),
  };
 }
+
+/** Cardápio gerado pelo assistente (ADR 013): as opções trazem `foods`. O plano padrão não traz. */
+export const isGeneratedDiet = (catalog: Record<MealKey, DietOption[]>): boolean => MEALS.some(m => catalog[m].some(o => Array.isArray((o as { foods?: unknown }).foods)));
+/** Refeições mostradas: no cardápio gerado, as sem opção (fora do molde) ficam escondidas. */
+export const visibleMeals = (catalog: Record<MealKey, DietOption[]>): readonly MealKey[] => (isGeneratedDiet(catalog) ? MEALS.filter(m => catalog[m].length) : MEALS);
+const ALLERGY_KEYS = ['ovo', 'peixe', 'amendoim', 'soja'];
+export const hasAllergy = (state: StateV3): boolean => (state.settings.onboarding?.answers.food?.restrictions ?? []).some(r => ALLERGY_KEYS.includes(r));
+export const LABEL_NOTE = 'Confira os rótulos. O app só tira da sugestão os alimentos com alergia marcada e não garante que um produto seja livre de alérgenos. Em caso de alergia, siga a orientação do seu médico.';
+export const MENU_NOTE = 'Este cardápio é uma sugestão automática e não substitui nutricionista ou médico. Os valores estão a verificar.';

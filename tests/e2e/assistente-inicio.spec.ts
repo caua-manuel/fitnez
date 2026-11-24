@@ -24,7 +24,7 @@ async function answer(page: Page, opts: { safety: string; sport?: boolean; body?
  await page.goto('./');
  await wiz(page).getByRole('button', { name: 'Montar meu plano' }).click();
  await expect(wiz(page).getByRole('heading', { level: 1 })).toBeFocused();
- await expect(wiz(page).getByText('Passo 1 de 9')).toBeVisible();
+ await expect(wiz(page).getByText('Passo 1 de 10')).toBeVisible();
  // Nada pré-marcado no passo de segurança.
  for (const c of await wiz(page).getByRole('checkbox').all()) await expect(c).not.toBeChecked();
  await expect(wiz(page).getByRole('button', { name: 'Continuar' })).toHaveAttribute('aria-disabled', 'true');
@@ -33,8 +33,11 @@ async function answer(page: Page, opts: { safety: string; sport?: boolean; body?
  await next(page);
  await wiz(page).getByText('Perder gordura', { exact: true }).click(); await next(page);
  await wiz(page).getByText('Nunca treinei').click(); await next(page);
- await next(page); await next(page); await next(page);
- await expect(wiz(page).getByText('Passo 7 de 9')).toBeVisible();
+ await next(page);
+ // Tempo e local numa tela só (ADR 013).
+ await expect(wiz(page).getByRole('heading', { level: 1, name: 'Tempo e local do treino' })).toBeVisible();
+ await next(page);
+ await expect(wiz(page).getByText('Passo 6 de 10')).toBeVisible();
  if (opts.sport) {
   await wiz(page).getByText('Esporte', { exact: true }).click();
   await page.getByLabel('Qual esporte?').fill('Futebol');
@@ -45,7 +48,18 @@ async function answer(page: Page, opts: { safety: string; sport?: boolean; body?
   await wiz(page).getByText('Masculino').click();
   await page.getByLabel('Idade').fill('30'); await page.getByLabel('Altura (cm)').fill('175'); await page.getByLabel('Peso (kg)').fill('80');
   await next(page);
- } else await wiz(page).getByRole('button', { name: 'Pular' }).click();
+  // Com corpo preenchido entram as telas A e B da dieta.
+  await expect(wiz(page).getByRole('heading', { level: 1, name: 'Como você come?' })).toBeFocused();
+  await expect(wiz(page).getByText('Passo 8 de 10')).toBeVisible();
+  await next(page);
+  await expect(wiz(page).getByRole('heading', { level: 1, name: 'Quanto você quer seguir?' })).toBeFocused();
+  await next(page);
+  await expect(wiz(page).getByText('Passo 10 de 10')).toBeVisible();
+ } else {
+  await wiz(page).getByRole('button', { name: 'Pular' }).click();
+  // Sem idade, altura e peso, A e B não aparecem.
+  await expect(wiz(page).getByText('Passo 8 de 8')).toBeVisible();
+ }
  await expect(wiz(page).getByRole('heading', { level: 1, name: 'Começar quando?' })).toBeFocused();
  await page.keyboard.press('Enter');
  await expect(wiz(page).getByRole('heading', { level: 1, name: 'Seu plano' })).toBeVisible();
@@ -99,13 +113,14 @@ test('refazer abre preenchido, nunca sozinho, e o toast desfaz', async ({ page }
  await expect(wiz(page)).toHaveCount(0);
  await page.goto('./#perfil');
  await page.getByRole('button', { name: /Refazer meu plano/ }).click();
- await expect(wiz(page).getByText('Passo 1 de 9')).toBeVisible();
+ await expect(wiz(page).getByText('Passo 1 de 10')).toBeVisible();
  await wiz(page).getByText('Nenhuma dessas').click(); await next(page);
  await expect(wiz(page).getByRole('radio', { name: 'Perder gordura', exact: true })).toBeChecked();
- for (let i = 0; i < 5; i++) await next(page);
+ for (let i = 0; i < 4; i++) await next(page);
+ await expect(wiz(page).getByText('Passo 6 de 10')).toBeVisible();
  await wiz(page).getByRole('button', { name: 'Pular' }).click();
  await wiz(page).getByRole('button', { name: 'Pular' }).click();
- await expect(wiz(page).getByText('Passo 9 de 9')).toBeVisible();
+ await expect(wiz(page).getByText('Passo 8 de 8')).toBeVisible();
  await expect(wiz(page).getByRole('radio', { name: /Manter a data atual/ })).toBeChecked();
  await next(page);
  await expect(wiz(page).getByText('Seus registros, notas e medidas continuam salvos', { exact: false })).toBeVisible();

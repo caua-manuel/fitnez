@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
 import { Icon } from '../../ui/icons';
@@ -7,7 +7,7 @@ import { applyAdjustments } from '../../domain/diet';
 import type { DietOption, MealKey } from '../../domain/diet';
 import { showToast } from '../../ui/UndoToast';
 import { DayNav, MealThumb } from './parts';
-import { MEAL_LOWER, MEAL_NAME, fmt, optionNumber } from './dietData';
+import { LABEL_NOTE, MENU_NOTE, MEAL_LOWER, MEAL_NAME, catalogOf, fmt, hasAllergy, optionNumber } from './dietData';
 import { useDietDay } from './useDietDay';
 import { CheckDraw } from '../../ui/motion';
 import { useJustTurnedOn } from '../treino/stagger';
@@ -48,11 +48,45 @@ function Recipe({ id }: { id: string }) {
  </details>;
 }
 
+type GenOption = DietOption & { foods?: { id: string; qty: number }[] };
+
+/** "Trocar este alimento" (ADR 013): a troca e a regra vêm de application/generatedDiet, carregado só no toque. */
+function FoodList({ meal, option, today }: { meal: MealKey; option: GenOption; today: DayIso }) {
+ const { state, repository, run, commit, busy } = useData();
+ // Ids já mostrados em cada posição, para a sequência de trocas não voltar ao anterior.
+ const seen = useRef(new Map<number, string[]>());
+ const foods = option.foods ?? [];
+ const swap = async (j: number) => {
+  if (!state) return;
+  const id = foods[j]?.id;
+  if (!id) return;
+  const prev = structuredClone(catalogOf(state)[meal]);
+  const exclude = [...new Set([...(seen.current.get(j) ?? []), id])];
+  const r = await run(async () => {
+   const gd = await import('../../application/generatedDiet');
+   return gd.swapDietFood(repository, { meal, optionKey: option.key, foodId: id, expectedRevision: (await repository.read()).revision, today, exclude });
+  });
+  if (r === undefined) return;
+  if (r === null) { showToast('Não há troca parecida para este alimento.'); return; }
+  const now = (r.catalog.diet as Record<string, GenOption[] | undefined>)[meal]?.find(o => o.key === option.key)?.foods?.[j]?.id;
+  seen.current.set(j, now ? [...exclude, now] : exclude);
+  showToast('Alimento trocado', () => void commit(s => { s.catalog.diet = { ...s.catalog.diet, [meal]: prev }; return s; }));
+ };
+ return <ul className="dt-foods" aria-label={`Alimentos de ${option.name}`}>
+  {option.items.map((t, j) => <li key={`${j}-${foods[j]?.id ?? t}`}>
+   <span className="dt-food-t">{t.replace(" (a verificar)", "")}</span>
+   {foods[j] ? <button type="button" className="dt-swap" disabled={busy} aria-label={`Trocar este alimento: ${t.replace(" (a verificar)", "")}`} onClick={() => void swap(j)}>Trocar</button> : null}
+  </li>)}
+ </ul>;
+}
+
 export function Refeicao({ meal, day, today, setDay }: Props) {
- const hide = useData().state?.settings.onboarding?.hideDietNumbers === true;
+ const st = useData().state;
+ const hide = st?.settings.onboarding?.hideDietNumbers === true;
  const { dd, catalog, type, choose, mark, unmark, snapshotMeal, restoreMeal } = useDietDay(day);
  const [info, setInfo] = useState(false);
  const options = catalog[meal];
+ const generated = options.some(o => Array.isArray((o as GenOption).foods));
  const pickedKey = dd.pick[meal];
  const picked = options.find(o => o.key === pickedKey);
  const eaten = Boolean(dd.eaten[meal]);
@@ -94,12 +128,18 @@ export function Refeicao({ meal, day, today, setDay }: Props) {
        <span className="dt-opt-macros"><span>P {fmt(o.p)} g</span><span>C {fmt(o.c)} g</span><span>G {fmt(o.g)} g</span></span></>}
       </span>
       <span className="dt-radio" aria-hidden="true" />
-      <span className="dt-opt-items">{o.items.join(' · ')}</span>
+      {generated ? null : <span className="dt-opt-items">{o.items.join(' · ')}</span>}
      </label>
+     {generated ? <FoodList meal={meal} option={o} today={today} /> : null}
      {o.rec ? <Recipe id={o.rec} /> : null}
     </div>;
    })}
   </div>}
+
+  {generated ? <>
+   {st && hasAllergy(st) ? <p className="dt-note dt-label-note" role="note">{LABEL_NOTE}</p> : null}
+   <p className="dt-disclaimer">{MENU_NOTE}</p>
+  </> : null}
 
   <div className="dt-sticky">
    {eaten ? <>

@@ -51,7 +51,7 @@ Medidos em 21/11/2026, no build de produção.
 | Testes de unidade e integração (Vitest) | 782, em 53 arquivos |
 | Testes de ponta a ponta (Playwright, viewport de celular) | cerca de 200, em 21 arquivos |
 | JavaScript na carga inicial (gzip) | 187 KB, limite de 205 KB |
-| JavaScript total, incluindo telas sob demanda (gzip) | 241 KB, limite de 250 KB |
+| JavaScript total, incluindo telas sob demanda (gzip) | 241 KB, limite de 300 KB (revisto em 23/11/2026) |
 | CSS na carga inicial (gzip) | 22,5 KB, limite de 26 KB |
 | Lighthouse (celular): acessibilidade, boas práticas, SEO | 100, 100, 100 |
 | LCP em 4G lento com CPU 4× mais lenta, cache frio | 1,7 s |

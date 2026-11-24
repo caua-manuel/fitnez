@@ -23,7 +23,8 @@ import { DataInicioSheet } from './DataInicioSheet';
 import { ApagarDados } from './ApagarDados';
 import { ConfirmSheet } from '../../ui/Sheet';
 import { openAssistant } from '../assistente/store';
-import { canUndoOnboarding, undoOnboarding } from '../../application/onboarding';
+import { canUndoOnboarding } from '../../application/onboarding';
+import { undoAssistantPlan } from '../assistente/undo';
 import { InstalarApp } from './InstalarApp';
 import { CountUp } from '../../ui/motion';
 import { catalogOf } from '../dieta/dietData';
@@ -314,8 +315,8 @@ export function Perfil({ now = Date.now, offlineStatus = '' }: { now?: () => num
     <Icon name="seta" size={22} />
    </button></li> : null}
   </ul>
-  {undoOpen ? <ConfirmSheet title="Voltar ao plano anterior?" confirmLabel="Voltar ao plano anterior" destructive={false} onCancel={() => setUndoOpen(false)} onConfirm={() => { setUndoOpen(false); void run(async () => undoOnboarding(repository, { expectedRevision: (await repository.read()).revision }), 'Plano anterior restaurado.'); }}>
-   <p>Treinos, rotina, data de início e metas voltam ao que eram antes do último plano montado. Seus registros, notas e medidas não mudam.</p>
+  {undoOpen ? <ConfirmSheet title="Voltar ao plano anterior?" confirmLabel="Voltar ao plano anterior" destructive={false} onCancel={() => setUndoOpen(false)} onConfirm={() => { setUndoOpen(false); void run(() => undoAssistantPlan(repository), 'Plano anterior restaurado.'); }}>
+   <p>Treinos, rotina, data de início, metas e cardápio voltam ao que eram antes do último plano montado. Seus registros, notas e medidas não mudam.</p>
   </ConfirmSheet> : null}
   {shareUndoOpen ? <ConfirmSheet title="Voltar ao plano anterior?" confirmLabel="Voltar" destructive={false} onCancel={() => setShareUndoOpen(false)} onConfirm={() => { setShareUndoOpen(false); void undoShare(); }}>
    <p>O plano atual sai e o anterior volta. Seus registros continuam.</p>

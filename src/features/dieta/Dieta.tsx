@@ -10,7 +10,7 @@ import type { MealKey } from '../../domain/diet';
 import { showToast } from '../../ui/UndoToast';
 import { todayIso } from '../treino/util';
 import { Cup, CheckButton, DayNav, KcalRing, MealThumb } from './parts';
-import { DAY_TYPE_LABEL, MEALS, MEAL_NAME, dayLabel, fmt, nf1, optionNumber, weeklyAverages } from './dietData';
+import { DAY_TYPE_LABEL, LABEL_NOTE, MEALS, MEAL_NAME, dayLabel, fmt, hasAllergy, isGeneratedDiet, nf1, optionNumber, visibleMeals, weeklyAverages } from './dietData';
 import { useDietDay } from './useDietDay';
 import { useStagger } from '../treino/stagger';
 import { MetaDieta } from './MetaDieta';
@@ -45,7 +45,9 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
  const link = (meal: MealKey) => hrefFor({ tab: 'dieta', meal, day: isToday ? undefined : day });
  const hide = state?.settings.onboarding?.hideDietNumbers === true;
  const over = totals.kcal > target.kcal;
- const nextMeal = MEALS.find(m => !dd.eaten[m]);
+ const shown = visibleMeals(catalog);
+ const generated = isGeneratedDiet(catalog);
+ const nextMeal = shown.find(m => !dd.eaten[m]);
  const cups = Math.max(Math.round((target.waterL * 1000) / 500), dd.water);
  const water = (i: number) => update(d => ({ ...d, water: d.water === i ? i - 1 : i }));
  const notes = MEALS.map(m => ({ m, note: applyAdjustments(catalog[m][0] ?? { key: '', name: '', kcal: 0, p: 0, c: 0, g: 0, items: [] }, type, m).note })).filter(x => x.note);
@@ -63,7 +65,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
   <DayNav day={day} today={today} onChange={setDay} />
 
   {hide ? <section className="card dt-summary-plain" aria-label="Resumo do dia">
-   <p><strong>{totals.eatenCount} de 5</strong> refeições marcadas</p>
+   <p><strong>{totals.eatenCount} de {shown.length}</strong> refeições marcadas</p>
    <p className="muted">Por escolha do seu plano, a Dieta mostra só as refeições e as marcações, sem números de metas.</p>
   </section> : <><section className="card dt-summary" aria-label="Resumo do dia">
    <div className="dt-ring-box">
@@ -84,14 +86,14 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
 
   <MetaDieta /></>}
 
-  <div className="section-title"><h2>{isToday ? 'Refeições de hoje' : `Refeições de ${dayLabel(day, today).toLowerCase()}`}</h2><span className="dt-count">{totals.eatenCount} de 5</span></div>
+  <div className="section-title"><h2>{isToday ? 'Refeições de hoje' : `Refeições de ${dayLabel(day, today).toLowerCase()}`}</h2><span className="dt-count">{totals.eatenCount} de {shown.length}</span></div>
   <ul className="list dt-meals" aria-label="Refeições">
-   {MEALS.map(m => {
+   {shown.map(m => {
     const eaten = Boolean(dd.eaten[m]);
     const opt = eaten ? (dd.consumed?.[m] ?? catalog[m].find(o => o.key === dd.pick[m])) : catalog[m].find(o => o.key === dd.pick[m]);
     const picked = Boolean(dd.pick[m]);
     const kcal = opt && !hide ? opt.kcal : null;
-    return <li key={m} {...rv(MEALS.indexOf(m), `dt-meal${eaten ? ' done' : ''}`)}>
+    return <li key={m} {...rv(shown.indexOf(m), `dt-meal${eaten ? ' done' : ''}`)}>
      <a className="dt-meal-link" href={link(m)}>
       <MealThumb meal={m} size={56} />
       <span className="dt-meal-text">
@@ -149,6 +151,7 @@ function Resumo({ day, today, setDay }: { day: DayIso; today: DayIso; setDay: (d
    </>}
   </section> : null}
 
+  {generated && hasAllergy(state!) ? <p className="dt-note dt-label-note" role="note">{LABEL_NOTE}</p> : null}
   <p className="dt-disclaimer">Calorias e proteínas são estimativas e variam com marca, preparo e porção. O app não substitui nutricionista ou médico.</p>
  </div>;
 }

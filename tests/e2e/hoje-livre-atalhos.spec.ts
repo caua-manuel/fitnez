@@ -163,12 +163,12 @@ test('PWA: o manifesto tem os atalhos Treino de hoje, Registrar peso e Dieta, ap
 test('Assistente: o voltar do celular recua um passo, sem guardar as respostas de saúde', async ({ page }) => {
  await page.goto('./');
  await wiz(page).getByRole('button', { name: 'Montar meu plano' }).click();
- await expect(wiz(page).getByText('Passo 1 de 9')).toBeVisible();
+ await expect(wiz(page).getByText('Passo 1 de 10')).toBeVisible();
  await wiz(page).getByText('Nenhuma dessas').click();
  await wiz(page).getByRole('button', { name: 'Continuar' }).click();
- await expect(wiz(page).getByText('Passo 2 de 9')).toBeVisible();
+ await expect(wiz(page).getByText('Passo 2 de 10')).toBeVisible();
  await page.goBack();
- await expect(wiz(page).getByText('Passo 1 de 9')).toBeVisible();
+ await expect(wiz(page).getByText('Passo 1 de 10')).toBeVisible();
  // A resposta continua na memória da tela; nada foi para o histórico nem para o armazenamento.
  await expect(wiz(page).getByRole('checkbox', { name: /Nenhuma dessas/ })).toBeChecked();
  const leaked = await page.evaluate(() => JSON.stringify([history.state, { ...sessionStorage }, { ...localStorage }]));
@@ -191,7 +191,7 @@ test('Assistente offline: com o service worker pronto, o chunk do assistente vem
  expect(await page.evaluate(() => performance.getEntriesByType('resource').some(e => /Assistente-/.test(e.name)))).toBe(false);
  await context.setOffline(true);
  await page.getByRole('button', { name: /Responda algumas perguntas/ }).click(); // sem plano montado: "Montar meu plano"
- await expect(wiz(page).getByText('Passo 1 de 9')).toBeVisible();
+ await expect(wiz(page).getByText('Passo 1 de 10')).toBeVisible();
  await expect(wiz(page).getByRole('heading', { level: 1 })).toBeVisible();
  await context.setOffline(false);
 });

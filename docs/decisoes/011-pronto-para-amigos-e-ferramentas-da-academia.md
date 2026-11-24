@@ -121,7 +121,7 @@ Decisão: o orçamento passa a ter **dois números**, porque eles medem custos d
 | Medida | JS gzip | CSS gzip |
 | --- | --- | --- |
 | Carga inicial: arquivos citados em `dist/index.html` (`script src`, `modulepreload`, `stylesheet`) | ≤ 205 KB | ≤ 26 KB |
-| Total: todos os arquivos de `assets/` | ≤ 250 KB | ≤ 32 KB |
+| Total: todos os arquivos de `assets/` | ≤ 300 KB (era 250 KB; revisto em 23/11/2026 por decisão do dono: margem para o cardápio do ADR 013 e animações; inicial inalterado em 205 KB) | ≤ 32 KB |
 | Cada chunk sob demanda | ≤ 20 KB | ≤ 4 KB |
 
 - Sob demanda obrigatoriamente: gerador da demo (`src/demo/`), compartilhar plano (`src/features/compartilhar/`), cartão e tela do resumo (`src/features/resumo/`), assistente (já é).

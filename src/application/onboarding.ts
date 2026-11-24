@@ -1,4 +1,5 @@
 import seedPlan from '../../data/plan.json';
+import seedDiet from '../../data/diet.json';
 import type { Exercise, Payload, Repository, StateV3 } from './repository';
 import { RepositoryError } from './repository';
 import type { DayIso } from '../domain/calendar';
@@ -32,6 +33,21 @@ export interface OnboardingUndoRecord {
  createdAt: number;
  plan: Payload; sched: Payload[]; start: DayIso; startConfirmed: boolean | null;
  dietTargets: Payload | null; profile: Payload | null; onboarding: Payload | null;
+ /** Só quando aplicar o assistente removeu um cardápio gerado (ADR 013): o `catalog.diet` de antes. */
+ diet?: Payload;
+}
+
+/** O `catalog.diet` atual veio do cardápio gerado (alguma opção tem `foods`)? */
+export function hasGeneratedDiet(s: StateV3): boolean {
+ return Object.values(s.catalog.diet as Record<string, unknown>).some(l => Array.isArray(l) && l.some(o => Array.isArray((o as { foods?: unknown } | null)?.foods)));
+}
+
+/** Refeições que valeriam sem o cardápio gerado: as guardadas no desfazer do cardápio; sem esse registro, as de fábrica. */
+function dietWithoutGenerated(s: StateV3): StateV3['catalog']['diet'] {
+ const key = s.settings.onboarding?.dietUndoKey;
+ const rec = key ? s.recovery[key] as Payload | undefined : undefined;
+ if (rec?.kind === 'diet-undo' && rec.diet && typeof rec.diet === 'object') return clone(rec.diet) as StateV3['catalog']['diet'];
+ return clone(seedDiet) as StateV3['catalog']['diet'];
 }
 
 function undoRecordOf(s: StateV3, kind: 'onboarding-undo' | 'before-onboarding-undo', time: number): Payload {
@@ -65,9 +81,13 @@ export function applyOnboardingToState(state: StateV3, preview: OnboardingPrevie
  const generated = fresh.generated;
  const next = clone(state);
  const undoKey = freeKey(next, 'onboarding-undo', opts.now);
- next.recovery = { ...next.recovery, [undoKey]: undoRecordOf(state, 'onboarding-undo', opts.now) };
+ const undoRec = undoRecordOf(state, 'onboarding-undo', opts.now);
+ // ADR 013: refazer o plano tira o cardápio gerado antes; se o novo uso tiver cardápio, applyGeneratedDiet grava em seguida.
+ const dropDiet = hasGeneratedDiet(state);
+ if (dropDiet) undoRec.diet = clone(state.catalog.diet) as Payload;
+ next.recovery = { ...next.recovery, [undoKey]: undoRec };
 
- next.catalog = { ...next.catalog, plan: mergeGeneratedPlan(next.catalog.plan, generated.plan), revision: (next.catalog.revision ?? 0) + 1 };
+ next.catalog = { ...next.catalog, plan: mergeGeneratedPlan(next.catalog.plan, generated.plan), ...(dropDiet ? { diet: dietWithoutGenerated(state) } : {}), revision: (next.catalog.revision ?? 0) + 1 };
  next.settings.sched = clone(generated.sched);
  next.settings.start = opts.start;
  next.settings.startConfirmed = true;
@@ -99,7 +119,7 @@ export function undoOnboardingInState(state: StateV3, now: number): StateV3 {
  const rec = state.recovery[state.settings.onboarding!.undoKey!] as unknown as OnboardingUndoRecord;
  const next = clone(state);
  next.recovery = { ...next.recovery, [freeKey(next, 'before-onboarding-undo', now)]: undoRecordOf(state, 'before-onboarding-undo', now) };
- next.catalog = { ...next.catalog, plan: clone(rec.plan) as StateV3['catalog']['plan'], revision: (next.catalog.revision ?? 0) + 1 };
+ next.catalog = { ...next.catalog, plan: clone(rec.plan) as StateV3['catalog']['plan'], ...(rec.diet !== undefined ? { diet: clone(rec.diet) as StateV3['catalog']['diet'] } : {}), revision: (next.catalog.revision ?? 0) + 1 };
  next.settings.sched = clone(rec.sched);
  next.settings.start = rec.start;
  if (rec.startConfirmed === null) delete next.settings.startConfirmed; else next.settings.startConfirmed = rec.startConfirmed;

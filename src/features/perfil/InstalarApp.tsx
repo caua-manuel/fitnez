@@ -4,6 +4,7 @@ import { Sheet } from '../../ui/Sheet';
 import { showToast } from '../../ui/UndoToast';
 import { useInstall } from '../../pwa/install';
 import type { InstallMode } from '../../pwa/install';
+import './instalar.css';
 
 function IosSteps({ safari }: { safari: boolean }) {
  return <>

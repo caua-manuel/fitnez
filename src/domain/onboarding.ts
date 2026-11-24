@@ -37,7 +37,38 @@ export interface OnboardingAnswers {
  place: Place;
  activities: FixedActivity[];
  body?: BodyAnswers;
+ /** Bloco do cardápio (ADR 013, conteúdo v2). Opcional: respostas da versão 1 continuam válidas. */
+ food?: FoodAnswers;
 }
+
+// ---------- alimentação (ADR 013) ----------
+export type FoodStyle = 'tudo' | 'vegetariano' | 'vegano';
+export type FoodRestriction = 'sem_lactose' | 'sem_gluten' | 'ovo' | 'peixe' | 'amendoim' | 'soja';
+export type Dedication = 'proteina' | 'cardapio';
+export type MealsPerDay = 3 | 4 | 5;
+/** `dislikes`: ids da tabela de alimentos (até 40; os grupos da tela somam 34). `whey`: a pessoa marcou que usa whey ou proteína em pó. */
+export interface FoodAnswers { style: FoodStyle; restrictions: FoodRestriction[]; mealsPerDay: MealsPerDay; dedication: Dedication; dislikes: string[]; whey: boolean }
+export const FOOD_STYLES: readonly FoodStyle[] = ['tudo', 'vegetariano', 'vegano'];
+export const FOOD_RESTRICTIONS: readonly FoodRestriction[] = ['sem_lactose', 'sem_gluten', 'ovo', 'peixe', 'amendoim', 'soja'];
+export const DEDICATIONS: readonly Dedication[] = ['proteina', 'cardapio'];
+export const MEALS_PER_DAY: readonly MealsPerDay[] = [3, 4, 5];
+export const FOOD_DISLIKES_MAX = 40;
+export const FOOD_ID_RE = /^[a-z0-9_-]{1,40}$/;
+const FOOD_KEYS = new Set(['style', 'restrictions', 'mealsPerDay', 'dedication', 'dislikes', 'whey']);
+
+/** Valida o bloco `food` (só valores de listas fechadas). Devolve a mensagem do primeiro erro ou `null`. */
+export function checkFoodAnswers(v: unknown): string | null {
+ if (!plain(v)) return 'Alimentação: respostas inválidas.';
+ for (const k of Object.keys(v)) if (!FOOD_KEYS.has(k)) return `Alimentação: campo não permitido (${k.slice(0, 40)}).`;
+ if (!oneOf(FOOD_STYLES, v.style)) return 'Alimentação: escolha como você come.';
+ if (!Array.isArray(v.restrictions) || v.restrictions.length > FOOD_RESTRICTIONS.length || v.restrictions.some(r => !oneOf(FOOD_RESTRICTIONS, r)) || new Set(v.restrictions).size !== v.restrictions.length) return 'Alimentação: restrições inválidas.';
+ if (!oneOf(MEALS_PER_DAY, v.mealsPerDay)) return 'Alimentação: escolha de 3 a 5 refeições.';
+ if (!oneOf(DEDICATIONS, v.dedication)) return 'Alimentação: escolha quanto você quer seguir.';
+ if (!Array.isArray(v.dislikes) || v.dislikes.length > FOOD_DISLIKES_MAX || v.dislikes.some(d => typeof d !== 'string' || !FOOD_ID_RE.test(d)) || new Set(v.dislikes).size !== v.dislikes.length) return `Alimentação: marque no máximo ${FOOD_DISLIKES_MAX} alimentos que você não come.`;
+ if (typeof v.whey !== 'boolean') return 'Alimentação: responda se usa whey.';
+ return null;
+}
+const copyFood = (f: FoodAnswers): FoodAnswers => ({ style: f.style, restrictions: [...f.restrictions], mealsPerDay: f.mealsPerDay, dedication: f.dedication, dislikes: [...f.dislikes], whey: f.whey });
 
 export const SAFETY_FLAGS: readonly SafetyFlag[] = ['menor18', 'gestacao', 'amamentacao', 'condicao', 'transtorno'];
 export const GOALS: readonly Goal[] = ['perder', 'massa', 'recomp', 'saude'];
@@ -48,7 +79,8 @@ export const PLACES: readonly Place[] = ['academia', 'casa_equip', 'casa_livre']
 export const FIXED_KINDS: readonly FixedKind[] = ['luta', 'esporte', 'corrida'];
 export const SEXES: readonly Sex[] = ['m', 'f', 'nao_informar'];
 export const LIFESTYLES: readonly Lifestyle[] = ['pouco', 'moderado', 'muito'];
-export const ONBOARDING_CONTENT_VERSION = 1 as const;
+/** 2: bloco `food` (ADR 013). Respostas da versão 1 (sem `food`) continuam válidas. */
+export const ONBOARDING_CONTENT_VERSION = 2 as const;
 
 /** Padrões da especificação (seção 1). `safety` começa vazio: "Nenhuma dessas" precisa ser tocado. */
 export function defaultAnswers(): OnboardingAnswers {
@@ -111,9 +143,15 @@ export function validateOnboardingAnswers(input: unknown): AnswersResult {
    else { if (p.value.age !== undefined) body.age = p.value.age; if (p.value.heightCm !== undefined) body.heightCm = p.value.heightCm; if (p.value.weightKg !== undefined) body.weightKg = p.value.weightKg; }
   }
  }
+ let food: FoodAnswers | undefined;
+ if (input.food !== undefined && input.food !== null) {
+  const why = checkFoodAnswers(input.food);
+  if (why) errors.food = why; else food = copyFood(input.food as FoodAnswers);
+ }
  if (Object.keys(errors).length) return { ok: false, errors };
  const value: OnboardingAnswers = { safety, goal: input.goal as Goal, experience: input.experience as Experience, daysPerWeek: input.daysPerWeek as DaysPerWeek, duration: input.duration as Duration, place: input.place as Place, activities };
  if (body && Object.keys(body).length) value.body = body;
+ if (food) value.food = food;
  return { ok: true, value };
 }
 
@@ -494,7 +532,8 @@ export function defaultOnboardingStart(today: DayIso): DayIso {
 
 // ---------- o que pode ser gravado (privacidade) ----------
 /** Respostas que podem ser guardadas para refazer o assistente: sem passo 0 e sem dados físicos (sexo nunca é gravado). */
-export interface StoredAnswers { goal: Goal; experience: Experience; daysPerWeek: DaysPerWeek; duration: Duration; place: Place; activities: FixedActivity[] }
+/** `food` (ADR 013): fica só no aparelho e no backup; não entra no compartilhamento de plano nem no CSV. */
+export interface StoredAnswers { goal: Goal; experience: Experience; daysPerWeek: DaysPerWeek; duration: Duration; place: Place; activities: FixedActivity[]; food?: FoodAnswers }
 export interface OnboardingSetting {
  v: 1;
  /** Dia em que o plano do assistente foi aplicado. */
@@ -504,9 +543,13 @@ export interface OnboardingSetting {
  hideDietNumbers: boolean;
  /** Chave em `recovery` com o estado anterior para "Voltar ao plano anterior" (1 nível). */
  undoKey?: string;
+ /** Chave em `recovery` com o cardápio anterior para desfazer o cardápio gerado (ADR 013, 1 nível). */
+ dietUndoKey?: string;
 }
 export function storedAnswersOf(a: OnboardingAnswers): StoredAnswers {
- return { goal: a.goal, experience: a.experience, daysPerWeek: a.daysPerWeek, duration: a.duration, place: a.place, activities: a.activities.map(x => (x.label !== undefined ? { kind: x.kind, days: [...x.days], label: x.label } : { kind: x.kind, days: [...x.days] })) };
+ const out: StoredAnswers = { goal: a.goal, experience: a.experience, daysPerWeek: a.daysPerWeek, duration: a.duration, place: a.place, activities: a.activities.map(x => (x.label !== undefined ? { kind: x.kind, days: [...x.days], label: x.label } : { kind: x.kind, days: [...x.days] })) };
+ if (a.food) out.food = copyFood(a.food);
+ return out;
 }
 /** Respostas guardadas + padrões, para preencher o assistente ao refazer (passo 0 e passo 7 voltam vazios). */
 export function answersFromStored(s: unknown): OnboardingAnswers {
@@ -517,8 +560,8 @@ export function answersFromStored(s: unknown): OnboardingAnswers {
  return r.ok ? { ...r.value, safety: [] } : base;
 }
 
-const STORED_KEYS = new Set(['v', 'appliedOn', 'answers', 'dietTargetsDisabled', 'hideDietNumbers', 'undoKey']);
-const ANSWER_KEYS = new Set(['goal', 'experience', 'daysPerWeek', 'duration', 'place', 'activities']);
+const STORED_KEYS = new Set(['v', 'appliedOn', 'answers', 'dietTargetsDisabled', 'hideDietNumbers', 'undoKey', 'dietUndoKey']);
+const ANSWER_KEYS = new Set(['goal', 'experience', 'daysPerWeek', 'duration', 'place', 'activities', 'food']);
 const ACT_KEYS = new Set(['kind', 'days', 'label']);
 
 /**
@@ -532,6 +575,7 @@ export function checkStoredOnboarding(v: unknown, maxKey: number, maxLabel: numb
  if (typeof v.appliedOn !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v.appliedOn) || new Date(`${v.appliedOn}T12:00:00Z`).toISOString().slice(0, 10) !== v.appliedOn) return 'Assistente: data inválida.';
  if (typeof v.dietTargetsDisabled !== 'boolean' || typeof v.hideDietNumbers !== 'boolean') return 'Assistente: marcações inválidas.';
  if (v.undoKey !== undefined && (typeof v.undoKey !== 'string' || v.undoKey.length > maxKey)) return 'Assistente: chave de desfazer inválida.';
+ if (v.dietUndoKey !== undefined && (typeof v.dietUndoKey !== 'string' || v.dietUndoKey.length > maxKey)) return 'Assistente: chave de desfazer do cardápio inválida.';
  const a = v.answers;
  if (!plain(a)) return 'Assistente: respostas inválidas.';
  for (const k of Object.keys(a)) if (!ANSWER_KEYS.has(k)) return `Assistente: campo não permitido nas respostas (${k.slice(0, 40)}).`;

@@ -7,14 +7,20 @@ import { addDays, mondayOf } from '../../domain/calendar';
 import type { DayIso } from '../../domain/calendar';
 import { SPORT_LABEL_MAX } from '../../domain/dayActivity';
 import { localDayOf } from '../../domain/planStart';
-import { DURATION_TEXT, answersFromStored, defaultAnswers, defaultOnboardingStart, validateOnboardingAnswers } from '../../domain/onboarding';
+import { DURATION_TEXT, answersFromStored, buildDietTargetsFromAnswers, defaultAnswers, defaultOnboardingStart, validateOnboardingAnswers } from '../../domain/onboarding';
 import type { Duration, Experience, FixedKind, Goal, Lifestyle, OnboardingAnswers, OnboardingPreview, OnboardingWarning, Place, SafetyAnswer, Sex } from '../../domain/onboarding';
-import { applyOnboarding, previewOnboarding, undoOnboarding } from '../../application/onboarding';
+import { applyOnboarding, previewOnboarding } from '../../application/onboarding';
+import { undoAssistantPlan } from './undo';
+import { ALLERGIES, ALLERGY_NOTE, DEDICATION_OPTS, DISLIKE_GROUPS, FOOD_STYLE_OPTS, MEALS_OPTS, MENU_NOTE, NO_MENU_HEALTH, NO_MENU_PROTEIN, OFF_TARGET, RESTRICTION_OPTS, foodAnswersOf, foodDraftOf } from './food';
+import type { FoodDraft } from './food';
+import { FOOD_DISLIKES_MAX } from '../../domain/onboarding';
+import type { MealKey } from '../../domain/diet';
 import { validateStartDay } from '../perfil/DataInicioSheet';
 import { ASSISTANT_QUESTIONS, closeAssistant } from './store';
 import { DemoEntry, isDemo } from '../../app/demo';
 import { hasUserData } from '../../domain/userData';
 import { SemanaTipo } from './PlanResumo';
+import { InstalarApp } from '../perfil/InstalarApp';
 import type { AssistantMode } from './store';
 import './assistente.css';
 
@@ -59,15 +65,18 @@ const STEPS: Step[] = [
  { h: 'Qual é seu objetivo principal?' },
  { h: 'Há quanto tempo você treina musculação?' },
  { h: 'Quantos dias por semana você pode fazer musculação?', help: 'Escolha o que cabe numa semana normal, não na melhor semana.' },
- { h: 'Quanto tempo você tem por treino?' },
- { h: 'Onde você vai treinar?' },
+ { h: 'Tempo e local do treino' },
  { h: 'Você faz outra atividade em dias fixos?', help: 'O app evita treino pesado de pernas na véspera dessas atividades.', optional: true },
  { h: 'Seus dados para a dieta', help: 'Servem só para calcular calorias e proteína. Sem eles, o app usa metas de exemplo.', optional: true },
+ { h: 'Como você come?', help: 'Isso ajuda o app a sugerir alimentos que fazem sentido para você.' },
+ { h: 'Quanto você quer seguir?', help: 'Pode mudar depois refazendo o plano em Perfil.' },
  { h: 'Começar quando?', help: 'O plano sempre começa numa segunda-feira. Dá para mudar depois em Perfil.' },
 ];
 const N = STEPS.length;
 if (import.meta.env.DEV && N !== ASSISTANT_QUESTIONS) console.warn(`ASSISTANT_QUESTIONS (${ASSISTANT_QUESTIONS}) difere dos passos do assistente (${N}).`);
-const BODY_STEP = 7, ACT_STEP = 6, START_STEP = 8;
+const TIME_STEP = 4, ACT_STEP = 5, BODY_STEP = 6, FOOD_A = 7, FOOD_B = 8, START_STEP = 9;
+const MEAL_LABEL: Record<MealKey, string> = { cafe: 'Café da manhã', almoco: 'Almoço', lanche: 'Lanche', pos: 'Pós-treino', jantar: 'Jantar' };
+type MenuPreview = { kind: 'menu'; meals: { meal: MealKey; kcal: number; p: number }[]; within: boolean } | { kind: 'none'; reason: string } | { kind: 'loading' } | { kind: 'error' };
 
 type Screen = 'boas-vindas' | 'exemplo' | 'resumo' | number;
 type StartChoice = 'manter' | 'esta' | 'proxima' | 'outra';
@@ -91,6 +100,8 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
   const a = refazer ? answersFromStored(state?.settings.onboarding) : defaultAnswers();
   return { ...a, activities: a.activities.map(x => ({ ...x, days: [...x.days] })), body: emptyBody() };
  });
+ const [food, setFood] = useState<FoodDraft>(() => foodDraftOf(refazer ? answersFromStored(state?.settings.onboarding).food : undefined));
+ const [menu, setMenu] = useState<MenuPreview>({ kind: 'loading' });
  const [noActs, setNoActs] = useState(() => refazer && !draft.activities.length);
  const [start, setStart] = useState<StartChoice>(refazer ? 'manter' : 'proxima');
  const [other, setOther] = useState('');
@@ -113,6 +124,33 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
   window.addEventListener('popstate', onPop);
   return () => { window.removeEventListener('popstate', onPop); if (guard.current && window.location.hash === hash) { guard.current = false; history.back(); } };
  }, []);
+ // Prévia do cardápio no resumo (ADR 013): a regra e a tabela só carregam aqui, por import().
+ const bb = draft.body;
+ const bodyOk = [bb.age, bb.heightCm, bb.weightKg].every(v => v.trim() !== '');
+ const menuCheck = bodyOk ? validateOnboardingAnswers({ ...draft, body: { ...bb }, food: foodAnswersOf(food) }) : null;
+ const menuKey = menuCheck?.ok ? JSON.stringify(menuCheck.value) : '';
+ const onResumo = screen === 'resumo';
+ useEffect(() => {
+  if (!onResumo) return;
+  if (!menuKey) { setMenu({ kind: 'none', reason: 'sem-dados' }); return; }
+  let live = true;
+  setMenu({ kind: 'loading' });
+  const a = JSON.parse(menuKey) as OnboardingAnswers;
+  void (async () => {
+   try {
+    const [mp, fd] = await Promise.all([import('../../domain/mealPlan'), import('../../data/foods/index')]);
+    const el = mp.mealEligibility(a);
+    if (!el.ok) { if (live) setMenu({ kind: 'none', reason: el.reason }); return; }
+    const t = buildDietTargetsFromAnswers(a);
+    if (t.kind !== 'targets') { if (live) setMenu({ kind: 'none', reason: 'sem-dados' }); return; }
+    const data = await fd.loadFoodData();
+    const r = mp.generateMeals(a, t.targets, data.foods, data.templates);
+    const meals = mp.MEAL_KEYS.flatMap(m => { const o = r.meals[m].find(x => x.key === 't1'); return o ? [{ meal: m, kcal: o.kcal, p: o.p }] : []; });
+    if (live) setMenu({ kind: 'menu', meals, within: r.withinTolerance });
+   } catch { if (live) setMenu({ kind: 'error' }); }
+  })();
+  return () => { live = false; };
+ }, [onResumo, menuKey]);
  if (!state) return null;
 
  const thisMonday = mondayOf(today);
@@ -123,14 +161,24 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
  const startDay: DayIso | null = start === 'manter' ? current : start === 'esta' ? thisMonday : start === 'proxima' ? nextMonday : otherError ? null : mondayOf(other);
 
  const b = draft.body;
- const input = { ...draft, body: { sex: b.sex, lifestyle: b.lifestyle, age: b.age, heightCm: b.heightCm, weightKg: b.weightKg } };
+ // Telas A e B só aparecem com idade, altura e peso preenchidos (ADR 013); sem elas, o bloco food não vai.
+ const hasBody = [b.age, b.heightCm, b.weightKg].every(v => v.trim() !== '');
+ const foodAnswers = hasBody ? foodAnswersOf(food) : undefined;
+ const input = { ...draft, body: { sex: b.sex, lifestyle: b.lifestyle, age: b.age, heightCm: b.heightCm, weightKg: b.weightKg }, food: foodAnswers };
  const checked = validateOnboardingAnswers(input);
  const errors = checked.ok ? {} : checked.errors;
  const pv = checked.ok ? previewOnboarding(checked.value) : null;
  const preview: OnboardingPreview | null = pv && pv.ok ? pv.preview : null;
+ const setF = (patch: Partial<FoodDraft>) => { setFood(f => ({ ...f, ...patch })); setFailed(false); };
+ // Ordem das telas: sem dados de corpo, A e B saem do caminho.
+ const order = STEPS.map((_, i) => i).filter(i => hasBody || (i !== FOOD_A && i !== FOOD_B));
+ const total = order.length;
+ const after = (i: number) => order.find(x => x > i) ?? null;
+ const before = (i: number) => [...order].reverse().find(x => x < i) ?? null;
  const set = (patch: Partial<Draft>) => { setDraft(d => ({ ...d, ...patch })); setFailed(false); };
  const setBody = (patch: Partial<Body>) => set({ body: { ...b, ...patch } });
 
+ const dislikeCount = foodAnswersOf({ ...food, dedication: 'cardapio' }).dislikes.length;
  const stepError = (i: number): string => {
   if (i === 0) return draft.safety.length ? '' : 'Marque uma opção para continuar.';
   if (i === ACT_STEP) {
@@ -138,6 +186,7 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
    return Object.entries(errors).find(([k]) => k.startsWith('activities'))?.[1] ?? '';
   }
   if (i === BODY_STEP) return Object.entries(errors).find(([k]) => k.startsWith('body'))?.[1] ?? '';
+  if (i === FOOD_A) return food.dedication === 'cardapio' && dislikeCount > FOOD_DISLIKES_MAX ? 'São muitos alimentos para tirar. Desmarque alguns para o app conseguir montar o cardápio.' : '';
   if (i === START_STEP) return otherError;
   return '';
  };
@@ -146,24 +195,30 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
   if (typeof screen !== 'number') return;
   if (stepError(screen)) { setTried(true); return; }
   setTried(false);
-  setScreen(editing || screen === N - 1 ? 'resumo' : screen + 1);
-  if (editing) setEditing(false);
+  // "Alterar cardápio" no resumo passa pelas telas A e B antes de voltar.
+  const chain = screen === FOOD_A;
+  const nx = after(screen);
+  const toResumo = nx === null || (editing && !chain);
+  setScreen(toResumo ? 'resumo' : nx);
+  if (editing && toResumo) setEditing(false);
  };
  const goBack = () => {
   setTried(false);
   if (screen === 'boas-vindas') return;
   if (screen === 'exemplo') { setScreen('boas-vindas'); return; }
-  if (screen === 'resumo') { setScreen(N - 1); return; }
+  if (screen === 'resumo') { setScreen(START_STEP); return; }
   if (editing) { setEditing(false); setScreen('resumo'); return; }
   if (screen === 0) { if (refazer) closeAssistant(); else setScreen('boas-vindas'); return; }
-  setScreen(screen - 1);
+  setScreen(before(screen) ?? 0);
  };
  backRef.current = goBack;
  const skip = () => {
   if (screen === ACT_STEP) { set({ activities: [] }); setNoActs(true); }
   if (screen === BODY_STEP) set({ body: emptyBody() });
   setTried(false);
-  setScreen(editing ? 'resumo' : (screen as number) + 1);
+  // Pular a tela de corpo tira as telas A e B do caminho (o próximo passo é a data de início).
+  const nx = screen === BODY_STEP ? START_STEP : after(screen as number);
+  setScreen(editing || nx === null ? 'resumo' : nx);
   if (editing) setEditing(false);
  };
  const alter = (i: number) => { setEditing(true); setScreen(i); };
@@ -178,9 +233,16 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
   setFailed(false);
   const saved = await run(() => applyOnboarding(repository, { preview, start: startDay, today, expectedRevision: state.revision, clearanceConfirmed: preview.requiresClearance ? cleared : undefined }));
   if (!saved) { setFailed(true); return; }
+  // Cardápio (ADR 013): só depois do plano, que grava settings.onboarding. Nos casos bloqueados, nada é gravado.
+  if (checked.ok && checked.value.food && menu.kind === 'menu') {
+   await run(async () => {
+    const gd = await import('../../application/generatedDiet');
+    return gd.applyGeneratedDiet(repository, { answers: checked.value, expectedRevision: (await repository.read()).revision });
+   });
+  }
   closeAssistant();
   if (window.location.hash !== '#inicio') window.location.hash = '#inicio';
-  showToast('Plano pronto. Bom treino.', () => void run(async () => undoOnboarding(repository, { expectedRevision: (await repository.read()).revision }), 'Plano anterior restaurado.'));
+  showToast('Plano pronto. Bom treino.', () => void run(() => undoAssistantPlan(repository), 'Plano anterior restaurado.'));
  };
  const chooseExample = async () => {
   if (!startDay) { setTried(true); return; }
@@ -218,8 +280,30 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
   if (i === 1) return <fieldset aria-labelledby="as-h">{GOALS.map(([k, t]) => <Choice key={k} name="objetivo" checked={draft.goal === k} onChange={() => set({ goal: k })}>{t}</Choice>)}</fieldset>;
   if (i === 2) return <fieldset aria-labelledby="as-h">{EXPS.map(([k, t]) => <Choice key={k} name="experiencia" checked={draft.experience === k} onChange={() => set({ experience: k })}>{t}</Choice>)}</fieldset>;
   if (i === 3) return <fieldset aria-labelledby="as-h" className="as-row">{([2, 3, 4, 5, 6] as const).map(n => <Choice key={n} name="dias" checked={draft.daysPerWeek === n} onChange={() => set({ daysPerWeek: n })}>{n}<span className="visually-hidden"> dias</span></Choice>)}</fieldset>;
-  if (i === 4) return <fieldset aria-labelledby="as-h">{DURS.map(([k, t]) => <Choice key={k} name="tempo" checked={draft.duration === k} onChange={() => set({ duration: k })}>{t}</Choice>)}</fieldset>;
-  if (i === 5) return <fieldset aria-labelledby="as-h">{PLACES.map(([k, t]) => <Choice key={k} name="local" checked={draft.place === k} onChange={() => set({ place: k })}>{t}</Choice>)}</fieldset>;
+  if (i === TIME_STEP) return <>
+   <fieldset><legend className="as-legend">Quanto tempo você tem por treino?</legend>{DURS.map(([k, t]) => <Choice key={k} name="tempo" checked={draft.duration === k} onChange={() => set({ duration: k })}>{t}</Choice>)}</fieldset>
+   <fieldset><legend className="as-legend">Onde você vai treinar?</legend>{PLACES.map(([k, t]) => <Choice key={k} name="local" checked={draft.place === k} onChange={() => set({ place: k })}>{t}</Choice>)}</fieldset>
+  </>;
+  if (i === FOOD_A) {
+   const allergy = food.restrictions.some(r => ALLERGIES.includes(r));
+   return <>
+    <fieldset><legend className="as-legend">Tipo de alimentação</legend>{FOOD_STYLE_OPTS.map(([k, t]) => <Choice key={k} name="estilo" checked={food.style === k} onChange={() => setF({ style: k })}>{t}</Choice>)}</fieldset>
+    <fieldset aria-describedby="as-alergia"><legend className="as-legend">Restrições e alergias <span className="muted">(opcional)</span></legend>
+     {RESTRICTION_OPTS.map(([k, t]) => <Choice key={k} type="checkbox" name="restricao" checked={food.restrictions.includes(k)} onChange={() => setF({ restrictions: food.restrictions.includes(k) ? food.restrictions.filter(x => x !== k) : [...food.restrictions, k] })}>{t}</Choice>)}
+     <p id="as-alergia" className={allergy ? 'as-alert' : 'muted as-why'}>{ALLERGY_NOTE}</p>
+    </fieldset>
+    <fieldset><legend className="as-legend">Alimentos que você não come <span className="muted">(opcional)</span></legend>
+     <div className="as-grid2">{DISLIKE_GROUPS.map(([k, t]) => <Choice key={k} type="checkbox" name="naocome" checked={food.groups.includes(k)} onChange={() => setF({ groups: food.groups.includes(k) ? food.groups.filter(x => x !== k) : [...food.groups, k] })}>{t}</Choice>)}</div>
+    </fieldset>
+    <fieldset><legend className="as-legend">Você usa whey ou proteína em pó?</legend>
+     <div className="as-grid2"><Choice name="whey" checked={food.whey} onChange={() => setF({ whey: true })}>Sim, uso</Choice><Choice name="whey" checked={!food.whey} onChange={() => setF({ whey: false })}>Não uso</Choice></div>
+    </fieldset>
+   </>;
+  }
+  if (i === FOOD_B) return <>
+   <fieldset><legend className="as-legend">Refeições por dia</legend><div className="as-row as-row3">{MEALS_OPTS.map(n => <Choice key={n} name="refeicoes" checked={food.mealsPerDay === n} onChange={() => setF({ mealsPerDay: n })}>{n}<span className="visually-hidden"> refeições</span></Choice>)}</div></fieldset>
+   <fieldset><legend className="as-legend">O que você quer da Dieta?</legend>{DEDICATION_OPTS.map(([k, t, d]) => <Choice key={k} name="dedicacao" checked={food.dedication === k} onChange={() => setF({ dedication: k })}><strong className="as-opt-t">{t}</strong><span className="as-opt-d muted">{d}</span></Choice>)}</fieldset>
+  </>;
   if (i === ACT_STEP) return <fieldset aria-labelledby="as-h">
    {KINDS.map(([k, t]) => { const a = actOf(k); return <div key={k}>
     <Choice type="checkbox" name="atividade" checked={!!a} onChange={() => toggleKind(k)}>{t}</Choice>
@@ -263,6 +347,7 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
    <button type="button" className="button block" onClick={() => { setStart('proxima'); setScreen(0); }}>Montar meu plano</button>
    <button type="button" className="button secondary block" onClick={() => { setStart('manter'); setScreen('exemplo'); }}>Usar o plano padrão</button>
    <button type="button" className="as-link as-later" onClick={closeAssistant}>Decidir depois</button>
+   <InstalarApp compact label="Adicionar à tela de início" />
   </>;
  } else if (screen === 'exemplo') {
   top = <div className="as-top"><button type="button" className="as-link" onClick={goBack}><Icon name="voltar" size={20} />Voltar</button></div>;
@@ -302,6 +387,18 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
       ? <p>{s.kcalMin === s.kcalMax ? `Calorias: ${nf.format(s.kcalMin)} kcal por dia.` : `Calorias: de ${nf.format(s.kcalMin)} a ${nf.format(s.kcalMax)} kcal por dia (mais nos dias de treino).`} Proteína: {s.proteinG} g por dia.</p>
       : <p>{preview.diet.kind === 'none' && preview.diet.reason === 'seguranca' ? 'O app não calcula metas de dieta para você. A Dieta mostra valores de exemplo.' : 'Sem metas calculadas: a Dieta usa a meta de exemplo.'}</p>}
     </section>
+    {hasBody ? <section className="as-block" aria-labelledby="as-b4" aria-busy={menu.kind === 'loading' ? true : undefined}>
+     <div className="as-block-h"><h2 id="as-b4">Cardápio</h2><button type="button" className="as-link" onClick={() => alter(FOOD_A)} aria-label="Alterar cardápio">Alterar</button></div>
+     {menu.kind === 'menu' ? <>
+      <p>{menu.meals.length} refeições por dia, com quantidades, para os dias de treino e de descanso. No dia de treino:</p>
+      <ul className="as-sess">{menu.meals.map(m => <li key={m.meal}><strong>{MEAL_LABEL[m.meal]}</strong><span className="muted">{nf.format(m.kcal)} kcal · {nf.format(Math.round(m.p))} g de proteína</span></li>)}</ul>
+      {!menu.within ? <p className="muted">{OFF_TARGET}</p> : null}
+      {food.restrictions.some(r => ALLERGIES.includes(r)) ? <p className="muted"><strong>Confira os rótulos.</strong> {ALLERGY_NOTE}</p> : null}
+      <p className="as-note">{MENU_NOTE}</p>
+     </> : menu.kind === 'none' ? <p>{menu.reason === 'so-proteina' ? NO_MENU_PROTEIN : menu.reason === 'sem-dados' ? 'Sem cardápio: a Dieta mantém o cardápio de exemplo.' : NO_MENU_HEALTH}</p>
+      : menu.kind === 'error' ? <p className="muted">Não foi possível montar o cardápio agora. O plano funciona sem ele.</p>
+      : <p className="muted" role="status">Montando o cardápio…</p>}
+    </section> : null}
     {preview.warnings.length ? <ul className="as-warn">{preview.warnings.map(w => <li key={w}><Icon name="info" size={18} />{WARN[w]}</li>)}</ul> : null}
     {preview.requiresClearance ? <label className="source-choice as-opt as-clear"><input type="checkbox" checked={cleared} onChange={() => setCleared(c => !c)} /><span>Meu médico me liberou para fazer musculação.</span></label> : null}
     <p className="as-note">{DOR}</p>
@@ -314,19 +411,21 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
     <button type="button" className="button block" onClick={() => { setTried(false); setScreen(preview?.blocked === 'menor14' ? BODY_STEP : 0); }}>Voltar</button>
     <button type="button" className="as-link as-later" onClick={closeAssistant}>Explorar o app</button>
    </>
-    : <button type="button" className="button block" disabled={busy || !startDay || (preview.requiresClearance && !cleared)} onClick={() => void confirm()}>{failed ? 'Tentar de novo' : 'Começar o plano'}</button>}
+    : <button type="button" className="button block" disabled={busy || !startDay || (preview.requiresClearance && !cleared) || (hasBody && menu.kind === 'loading')} onClick={() => void confirm()}>{failed ? 'Tentar de novo' : 'Começar o plano'}</button>}
    {refazer || preview?.blocked ? null : <button type="button" className="as-link as-later" onClick={() => { setStart('manter'); setScreen('exemplo'); }}>Usar o plano padrão</button>}
   </>;
  } else {
   const st = STEPS[screen];
+  const shown = !hasBody && screen > BODY_STEP ? total : N;
+  const pos = order.indexOf(screen) + 1;
   const err = stepError(screen);
   top = <div className="as-top">
    <button type="button" className="as-link" onClick={goBack}><Icon name="voltar" size={20} />{screen === 0 && refazer ? 'Sair' : 'Voltar'}</button>
    {st.optional ? <button type="button" className="as-link" onClick={skip}>Pular</button> : null}
   </div>;
   progress = <div className="as-prog">
-   <span className="bar" role="progressbar" aria-label="Progresso" aria-valuemin={1} aria-valuemax={N} aria-valuenow={screen + 1} aria-valuetext={`Passo ${screen + 1} de ${N}`}><span style={{ width: `${((screen + 1) / N) * 100}%` }} /></span>
-   <span className="as-prog-t" aria-hidden="true">Passo {screen + 1} de {N}</span>
+   <span className="bar" role="progressbar" aria-label="Progresso" aria-valuemin={1} aria-valuemax={shown} aria-valuenow={pos} aria-valuetext={`Passo ${pos} de ${shown}`}><span style={{ width: `${(pos / shown) * 100}%` }} /></span>
+   <span className="as-prog-t" aria-hidden="true">Passo {pos} de {shown}</span>
   </div>;
   content = <>
    {screen === 0 ? <p className="as-eyebrow">Antes de começar</p> : null}
@@ -336,7 +435,7 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
   </>;
   foot = <>
    {err && (tried || screen === 0 || screen === ACT_STEP) ? <p className={tried ? 'in-error' : 'muted as-why'} role={tried ? 'alert' : undefined}>{err}</p> : null}
-   <button type="button" className="button block" aria-disabled={err ? true : undefined} onClick={goNext}>{editing ? 'Voltar ao resumo' : 'Continuar'}</button>
+   <button type="button" className="button block" aria-disabled={err ? true : undefined} onClick={goNext}>{editing && screen !== FOOD_A ? 'Voltar ao resumo' : 'Continuar'}</button>
   </>;
  }
 

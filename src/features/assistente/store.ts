@@ -7,8 +7,8 @@ const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 
-/** Quantas perguntas o assistente faz (passos de STEPS em Assistente.tsx). Fica aqui para o Início não carregar o assistente. */
-export const ASSISTANT_QUESTIONS = 9;
+/** Quantas perguntas o assistente faz (passos de STEPS em Assistente.tsx; 8 se a tela de corpo for pulada). Fica aqui para o Início não carregar o assistente. */
+export const ASSISTANT_QUESTIONS = 10;
 
 export function openAssistant(m: AssistantMode) { mode = m; emit(); }
 export function closeAssistant() { if (mode) { mode = null; emit(); } }

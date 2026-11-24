@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "check": true,
+  "mealTags": { "cafe": ["c"], "almoco": ["a"], "lanche": ["l", "pre"], "pos": ["pos", "l"], "jantar": ["a"] },
+  "tolerance": { "kcal": { "min": -0.05, "max": 0.05 }, "protein": { "min": -0.05, "max": 0.15 } },
+  "mealRules": {
+    "cafe": { "roles": ["P", "C", "F"], "optional": ["Gd"] },
+    "almoco": { "roles": ["P", "C", "PC", "Le", "Gd"], "optional": [], "minLeG": 100 },
+    "jantar": { "roles": ["P", "C", "Le", "Gd"], "optional": ["PC"], "minLeG": 100 },
+    "lanche": { "roles": ["P", "C"], "optional": ["F", "Gd"], "maxFatG": 10 },
+    "pos": { "roles": ["P", "C"], "optional": [] }
+  },
+  "plantBased": { "requireRoleIn": { "almoco": "PC", "jantar": "PC" } },
+  "plans": {
+    "3": {
+      "treino": [ { "meal": "cafe", "frac": 0.30 }, { "meal": "almoco", "frac": 0.40 }, { "meal": "jantar", "frac": 0.30 } ],
+      "descanso": [ { "meal": "cafe", "frac": 0.30 }, { "meal": "almoco", "frac": 0.40 }, { "meal": "jantar", "frac": 0.30 } ]
+    },
+    "4": {
+      "treino": [ { "meal": "cafe", "frac": 0.25 }, { "meal": "almoco", "frac": 0.30 }, { "meal": "lanche", "frac": 0.15 }, { "meal": "jantar", "frac": 0.30 } ],
+      "descanso": [ { "meal": "cafe", "frac": 0.25 }, { "meal": "almoco", "frac": 0.35 }, { "meal": "lanche", "frac": 0.15 }, { "meal": "jantar", "frac": 0.25 } ]
+    },
+    "5": {
+      "treino": [ { "meal": "cafe", "frac": 0.20 }, { "meal": "almoco", "frac": 0.30 }, { "meal": "lanche", "frac": 0.15 }, { "meal": "pos", "frac": 0.15 }, { "meal": "jantar", "frac": 0.20 } ],
+      "descanso": [ { "meal": "cafe", "frac": 0.20 }, { "meal": "almoco", "frac": 0.30 }, { "meal": "lanche", "frac": 0.15 }, { "meal": "pos", "frac": 0.10 }, { "meal": "jantar", "frac": 0.25 } ]
+    }
+  }
+}

@@ -292,3 +292,10 @@ button.dt-check,button.dt-check[aria-pressed=true],button.dt-cup-btn,button.dt-c
 .dt-ring-left.warn{color:var(--warning)}
 .dt-macro-bar .bar>span{width:100%}
 @media(prefers-reduced-motion:reduce){.dt-macro-bar .bar>span{transition:none}}
+/* ADR 013: alimentos do cardápio gerado, cada um com "Trocar". */
+.dt-foods{list-style:none;margin:0;padding:0 16px 8px;border-top:1px solid var(--border)}
+.dt-foods li{display:flex;align-items:center;gap:12px;min-height:48px;border-bottom:1px solid var(--border)}.dt-foods li:last-child{border-bottom:0}
+.dt-food-t{flex:1;min-width:0;font-size:.875rem;line-height:1.4;padding:6px 0;overflow-wrap:anywhere}
+.dt-foods .dt-swap{flex:none;min-height:48px;min-width:48px;padding:0 4px;background:none;border:0;color:var(--primary);font-weight:600;font-size:.875rem}
+.dt-foods .dt-swap:disabled{background:none;opacity:.5}
+.dt-label-note{margin-top:16px}
