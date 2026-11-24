@@ -129,3 +129,8 @@
 .in-monte-foot{font-size:.875rem}
 .in-monte .eyebrow{font-size:.8125rem;font-weight:500;color:var(--muted-foreground);margin:0}
 .in-dieta-note{display:block;margin-top:2px;font-size:.8125rem;font-weight:400;color:var(--muted-foreground)}
+/* Atalho de instalação no fim do Início: secundário, contorno, sem pílula, não compete com "Começar treino". */
+.in-instalar{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:48px;padding:0 16px;border:1px solid var(--border);border-radius:var(--radius-button);background:transparent;box-shadow:none;color:var(--muted-foreground);font:inherit;font-size:.9375rem;font-weight:500;cursor:pointer}
+.in-instalar svg{flex:none}
+@media(hover:hover) and (pointer:fine){.in-instalar:hover{color:var(--foreground);border-color:var(--muted-foreground)}}
+.in-instalar:focus-visible{outline:2px solid var(--ring,var(--primary));outline-offset:2px}

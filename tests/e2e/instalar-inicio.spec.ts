@@ -39,3 +39,41 @@ test('não aparece quando o app já está instalado (standalone)', async ({ page
  await expect(wiz(page).getByRole('heading', { name: 'Vamos montar seu plano' })).toBeVisible();
  await expect(opcao(page)).toHaveCount(0);
 });
+
+// Botão no fim da tela Início (abaixo da faixa da semana).
+async function abrirInicio(page: Page) {
+ await page.goto('./');
+ await wiz(page).getByRole('button', { name: 'Decidir depois' }).click();
+ await expect(wiz(page)).toHaveCount(0);
+ await expect(page.getByRole('heading', { name: 'Início', level: 1 })).toBeVisible();
+}
+const botaoInicio = (page: Page) => page.locator('.in-instalar');
+
+test('Início: botão secundário de largura total no fim da tela', async ({ page }) => {
+ await abrirInicio(page);
+ await expect(botaoInicio(page)).toBeVisible();
+ await expect(botaoInicio(page)).toHaveAccessibleName('Adicionar à tela de início');
+ const box = (await botaoInicio(page).boundingBox())!;
+ expect(box.height).toBeGreaterThanOrEqual(48);
+ const faixa = page.locator('.in-page > *').filter({ has: page.locator('.in-instalar') });
+ expect(await faixa.count()).toBe(0); // fica fora dos cartões
+});
+
+test.describe('Início no iPhone', () => {
+ test.use({ userAgent: IPHONE });
+ test('abre a folha com os 3 passos do Safari', async ({ page }) => {
+  await abrirInicio(page);
+  await botaoInicio(page).click();
+  const sheet = page.getByRole('dialog', { name: 'Instalar na tela inicial' });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.locator('.ia-steps li')).toHaveCount(3);
+  await page.keyboard.press('Escape');
+  await expect(sheet).toBeHidden();
+ });
+});
+
+test('Início: some em standalone', async ({ page }) => {
+ await page.addInitScript(() => { Object.defineProperty(navigator, 'standalone', { value: true }); });
+ await abrirInicio(page);
+ await expect(botaoInicio(page)).toHaveCount(0);
+});

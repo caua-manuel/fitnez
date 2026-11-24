@@ -13,6 +13,7 @@ import { CheckDraw, CountUp, Reveal } from '../../ui/motion';
 import { SemanaFaixa } from './SemanaFaixa';
 import { weekStrip } from './semana';
 import { DietaResumo } from './DietaResumo';
+import { InstalarInicio } from './InstalarInicio';
 import { TerceiraAula } from './TerceiraAula';
 import { ObservacaoAula } from './ObservacaoAula';
 import { DemoEntry } from '../../app/demo';
@@ -333,6 +334,8 @@ export function Inicio({ now = Date.now }: { now?: Clock }) {
   <Reveal screen="inicio" i={2}><DietaResumo day={day} isToday={isToday} /></Reveal>
 
   {gymDay ? null : <Reveal screen="inicio" i={3}><SemanaFaixa days={weekStrip({ sched: state.settings.sched, plan, days: state.history.days, today, preplan: phase.kind === 'pre' })} /></Reveal>}
+
+  <InstalarInicio />
 
   {startOpen ? <DataInicioSheet today={today} onClose={() => setStartOpen(false)} /> : null}
   {startConfirm ? <Sheet title="Começar o plano nesta semana?" onClose={() => setStartConfirm(false)}>

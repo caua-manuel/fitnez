@@ -18,7 +18,7 @@ function IosSteps({ safari }: { safari: boolean }) {
  </>;
 }
 
-function InstallSheet({ mode, onClose }: { mode: InstallMode; onClose: () => void }) {
+export function InstallSheet({ mode, onClose }: { mode: InstallMode; onClose: () => void }) {
  const ios = mode === 'ios-safari' || mode === 'ios-other';
  return <Sheet title="Instalar na tela inicial" onClose={onClose} className="ia-sheet">
   {ios ? <IosSteps safari={mode === 'ios-safari'} />
