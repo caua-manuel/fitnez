@@ -15,7 +15,8 @@
         "test:e2e": "playwright test",
         "build": "npm run typecheck && vite build && node scripts/verify-build.ts",
         "check": "npm run test:config && npm run typecheck && npm test && npm run build",
-        "test:config": "node --test scripts/base-path.test.ts scripts/csp-check.test.ts scripts/build-budget.test.ts"
+        "test:config": "node --test scripts/base-path.test.ts scripts/csp-check.test.ts scripts/build-budget.test.ts scripts/docs-galeria.test.ts",
+        "docs:galeria": "node scripts/docs-galeria.ts"
     },
     "dependencies": {
         "@phosphor-icons/react": "2.1.10",

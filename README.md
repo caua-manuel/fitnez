@@ -2,7 +2,7 @@
 
 Treino e dieta num só app, que monta o seu plano, registra cada série em segundos e funciona sem internet, com os dados guardados só no seu celular.
 
-![Registrando uma série com a carga sugerida](docs/gifs/01-registrar-serie.gif)
+<img src="docs/gifs/compactados/01-registrar-serie.gif" width="240" alt="Registrando uma série com a carga sugerida">
 
 **Abrir o app:** <https://caua-manuel.github.io/fitnez/>. Para conhecer sem preencher nada, toque em **Ver com dados de exemplo**.
 
@@ -27,7 +27,99 @@ O Fitnez resolve isso para mim e para dois ou três amigos: um plano de 12 seman
 
 | Descanso | Recorde | Dieta do dia | Resumo da semana |
 | --- | --- | --- | --- |
-| ![Cronômetro de descanso com +15 s](docs/gifs/02-descanso.gif) | ![Recorde de carga batido](docs/gifs/03-recorde.gif) | ![Água e refeição do dia](docs/gifs/04-dieta.gif) | ![Resumo da semana na Evolução](docs/gifs/05-evolucao.gif) |
+| <img src="docs/gifs/compactados/02-descanso.gif" width="240" alt="Cronômetro de descanso com +15 s"> | <img src="docs/gifs/compactados/03-recorde.gif" width="240" alt="Recorde de carga batido"> | <img src="docs/gifs/compactados/04-dieta.gif" width="240" alt="Água e refeição do dia"> | <img src="docs/gifs/compactados/05-evolucao.gif" width="240" alt="Resumo da semana na Evolução"> |
+
+As ilustrações dos exercícios foram geradas com IA.
+
+<!-- inicio-galeria -->
+<details>
+<summary>Galeria de exercícios</summary>
+
+<table>
+<tr>
+<td><img src="docs/galeria/supino.gif" width="120" alt="Supino com halteres"><br>Supino com halteres</td>
+<td><img src="docs/galeria/remada_a.gif" width="120" alt="Remada curvada ou apoiada no banco"><br>Remada curvada ou apoiada no banco</td>
+<td><img src="docs/galeria/press_a.gif" width="120" alt="Landmine press ou press sentado"><br>Landmine press ou press sentado</td>
+<td><img src="docs/galeria/barra.gif" width="120" alt="Barra fixa, pegada neutra"><br>Barra fixa, pegada neutra</td>
+<td><img src="docs/galeria/lat_a.gif" width="120" alt="Elevação lateral com halteres"><br>Elevação lateral com halteres</td>
+<td><img src="docs/galeria/face.gif" width="120" alt="Face pull na polia"><br>Face pull na polia</td>
+</tr>
+<tr>
+<td><img src="docs/galeria/rosca_a.gif" width="120" alt="Rosca direta com halteres"><br>Rosca direta com halteres</td>
+<td><img src="docs/galeria/tri_a.gif" width="120" alt="Tríceps na polia"><br>Tríceps na polia</td>
+<td><img src="docs/galeria/pallof.gif" width="120" alt="Pallof press (core)"><br>Pallof press (core)</td>
+<td><img src="docs/galeria/farmer.gif" width="120" alt="Farmer’s walk (pegada)"><br>Farmer’s walk (pegada)</td>
+<td><img src="docs/galeria/puxada.gif" width="120" alt="Puxada na frente, pegada aberta"><br>Puxada na frente, pegada aberta</td>
+<td><img src="docs/galeria/inclinado.gif" width="120" alt="Supino inclinado com halteres"><br>Supino inclinado com halteres</td>
+</tr>
+<tr>
+<td><img src="docs/galeria/press_b.gif" width="120" alt="Press de ombros sentado"><br>Press de ombros sentado</td>
+<td><img src="docs/galeria/remada_b.gif" width="120" alt="Remada unilateral ou remada baixa"><br>Remada unilateral ou remada baixa</td>
+<td><img src="docs/galeria/cruc.gif" width="120" alt="Crucifixo no peck deck ou nas polias"><br>Crucifixo no peck deck ou nas polias</td>
+<td><img src="docs/galeria/lat_b.gif" width="120" alt="Elevação lateral na polia"><br>Elevação lateral na polia</td>
+<td><img src="docs/galeria/inverso.gif" width="120" alt="Crucifixo inverso"><br>Crucifixo inverso</td>
+<td><img src="docs/galeria/rosca_b.gif" width="120" alt="Rosca alternada ou barra W"><br>Rosca alternada ou barra W</td>
+</tr>
+<tr>
+<td><img src="docs/galeria/tri_b.gif" width="120" alt="Tríceps francês ou na corda"><br>Tríceps francês ou na corda</td>
+<td><img src="docs/galeria/joelhos.gif" width="120" alt="Elevação de joelhos ou pernas na barra (core)"><br>Elevação de joelhos ou pernas na barra (core)</td>
+<td><img src="docs/galeria/pescoco.gif" width="120" alt="Isometria de pescoço, 4 direções"><br>Isometria de pescoço, 4 direções</td>
+<td><img src="docs/galeria/salto_l.gif" width="120" alt="Salto vertical ou box jump"><br>Salto vertical ou box jump</td>
+<td><img src="docs/galeria/agach.gif" width="120" alt="Agachamento com barra"><br>Agachamento com barra</td>
+<td><img src="docs/galeria/stiff.gif" width="120" alt="Stiff com barra ou halteres"><br>Stiff com barra ou halteres</td>
+</tr>
+<tr>
+<td><img src="docs/galeria/bulg.gif" width="120" alt="Agachamento búlgaro"><br>Agachamento búlgaro</td>
+<td><img src="docs/galeria/nordic.gif" width="120" alt="Nordic curl assistido (ou mesa flexora)"><br>Nordic curl assistido (ou mesa flexora)</td>
+<td><img src="docs/galeria/hip_l.gif" width="120" alt="Hip thrust com barra"><br>Hip thrust com barra</td>
+<td><img src="docs/galeria/pant_pe.gif" width="120" alt="Panturrilha em pé"><br>Panturrilha em pé</td>
+<td><img src="docs/galeria/roll.gif" width="120" alt="Roll-out com roda ou barra (core)"><br>Roll-out com roda ou barra (core)</td>
+<td><img src="docs/galeria/copen_l.gif" width="120" alt="Copenhagen plank (adutores)"><br>Copenhagen plank (adutores)</td>
+</tr>
+<tr>
+<td><img src="docs/galeria/salto_l.gif" width="120" alt="Salto vertical ou box jump"><br>Salto vertical ou box jump</td>
+<td><img src="docs/galeria/hip_l.gif" width="120" alt="Hip thrust com barra"><br>Hip thrust com barra</td>
+<td><img src="docs/galeria/leg.gif" width="120" alt="Leg press, pés na altura média"><br>Leg press, pés na altura média</td>
+<td><img src="docs/galeria/afundo.gif" width="120" alt="Afundo ou step-up"><br>Afundo ou step-up</td>
+<td><img src="docs/galeria/mesa.gif" width="120" alt="Mesa flexora"><br>Mesa flexora</td>
+<td><img src="docs/galeria/pant_sent.gif" width="120" alt="Panturrilha sentada"><br>Panturrilha sentada</td>
+</tr>
+<tr>
+<td><img src="docs/galeria/med.gif" width="120" alt="Arremesso rotacional de medicine ball (core)"><br>Arremesso rotacional de medicine ball (core)</td>
+<td><img src="docs/galeria/copen_l.gif" width="120" alt="Copenhagen plank (adutores)"><br>Copenhagen plank (adutores)</td>
+<td><img src="docs/galeria/goblet.gif" width="120" alt="Agachamento goblet com halter"><br>Agachamento goblet com halter</td>
+<td><img src="docs/galeria/agach_livre.gif" width="120" alt="Agachamento livre com peso do corpo"><br>Agachamento livre com peso do corpo</td>
+<td><img src="docs/galeria/ponte_h.gif" width="120" alt="Ponte de glúteo com halter"><br>Ponte de glúteo com halter</td>
+<td><img src="docs/galeria/ponte_uni.gif" width="120" alt="Ponte de glúteo com uma perna"><br>Ponte de glúteo com uma perna</td>
+</tr>
+<tr>
+<td><img src="docs/galeria/ponte.gif" width="120" alt="Ponte de glúteo"><br>Ponte de glúteo</td>
+<td><img src="docs/galeria/afundo_livre.gif" width="120" alt="Afundo com peso do corpo"><br>Afundo com peso do corpo</td>
+<td><img src="docs/galeria/sentar_levantar.gif" width="120" alt="Sentar e levantar da cadeira"><br>Sentar e levantar da cadeira</td>
+<td><img src="docs/galeria/stiff_uni.gif" width="120" alt="Stiff com uma perna, sem carga"><br>Stiff com uma perna, sem carga</td>
+<td><img src="docs/galeria/supino_chao.gif" width="120" alt="Supino no chão com halteres"><br>Supino no chão com halteres</td>
+<td><img src="docs/galeria/flexao.gif" width="120" alt="Flexão de braço"><br>Flexão de braço</td>
+</tr>
+<tr>
+<td><img src="docs/galeria/flexao_fechada.gif" width="120" alt="Flexão com mãos próximas"><br>Flexão com mãos próximas</td>
+<td><img src="docs/galeria/pike.gif" width="120" alt="Flexão pike (ombros)"><br>Flexão pike (ombros)</td>
+<td><img src="docs/galeria/puxada_elastico.gif" width="120" alt="Puxada com elástico"><br>Puxada com elástico</td>
+<td><img src="docs/galeria/remada_mochila.gif" width="120" alt="Remada curvada com mochila"><br>Remada curvada com mochila</td>
+<td><img src="docs/galeria/face_elastico.gif" width="120" alt="Face pull com elástico"><br>Face pull com elástico</td>
+<td><img src="docs/galeria/ytw.gif" width="120" alt="Y, T e W deitado de bruços"><br>Y, T e W deitado de bruços</td>
+</tr>
+<tr>
+<td><img src="docs/galeria/pant_degrau.gif" width="120" alt="Panturrilha num degrau"><br>Panturrilha num degrau</td>
+<td><img src="docs/galeria/deadbug.gif" width="120" alt="Dead bug"><br>Dead bug</td>
+<td><img src="docs/galeria/prancha.gif" width="120" alt="Prancha"><br>Prancha</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</table>
+
+</details>
+<!-- fim-galeria -->
 
 ## Decisões técnicas
 
