@@ -16,9 +16,8 @@ import { BARBELL_EXERCISES } from '../../domain/plates';
 import { Menu } from '../../ui/Menu';
 import { Sheet } from '../../ui/Sheet';
 import { showToast } from '../../ui/UndoToast';
-import { ExercicioSheet, preloadExercicio } from './lazy';
+import { ComoFazerSheet, ExercicioSheet, HistoricoRapido, preloadExercicio } from './lazy';
 import { AnilhasSheet } from './Anilhas';
-import { HistoricoRapido } from './HistoricoRapido';
 import { recordLine } from './recordText';
 import type { SetEntry } from '../../domain/workout';
 import { getWorkout, overlappingExercises, upsertWorkout } from '../../domain/workoutRecord';
@@ -163,7 +162,7 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
  // Anúncio único da execução (série registrada, recorde, descanso, troca de exercício): uma região só.
  const [announce, setAnnounce] = useState('');
  const scrollActive = useRef(false);
- const [open, setOpen] = useState<'ex' | 'hist' | 'plates' | 'swap' | 'add' | null>(null);
+ const [open, setOpen] = useState<'guide' | 'ex' | 'hist' | 'plates' | 'swap' | 'add' | null>(null);
  // Série que abriu a calculadora de anilhas ("Usar X kg" preenche a carga dela); null = aberta pelo menu.
  const [platesFor, setPlatesFor] = useState<number | null>(null);
  const [addQ, setAddQ] = useState('');
@@ -493,8 +492,7 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
   {overlap.length > 0 ? <p className="ex-overlap" role="note"><strong>Estes exercícios já têm séries registradas hoje:</strong> {overlap.join(', ')}. As séries continuam salvas e nada é apagado; o que você registrar aqui as atualiza.</p> : null}
   <div className="ex-name">
    <span className="ex-count">Exercício {idx + 1} de {exIds.length}</span>
-   <h2><button type="button" className="ex-title-btn" aria-haspopup="dialog" aria-describedby="ex-title-hint" onClick={() => setOpen('hist')}>{ex.n}<Icon name="historico" size={18} className="ex-title-ico" /></button></h2>
-   <span id="ex-title-hint" className="visually-hidden">Abre as últimas sessões deste exercício</span>
+   <h2><button type="button" className="ex-title-btn" aria-haspopup="dialog" onClick={() => setOpen('guide')}>{ex.n}<Icon name="info" size={18} className="ex-title-ico" /></button></h2>
    {group ? <span className="ex-group">{GROUP_LABEL[group]}{original !== exId ? ` · no lugar de ${plan.ex[original]?.n ?? ''}` : ''}</span> : null}
    {note ? <span className="muted ex-tip">{note}</span> : null}
    <AvisoEstagnacao exId={exId} day={day} onSwap={list.some(s => s.done) ? undefined : () => setOpen('swap')} />
@@ -570,6 +568,7 @@ export function Executar({ id, day: dayParam, picked }: { id: string; day?: stri
    <p>Você registrou {touched} de {exIds.length} exercícios. Concluir mesmo assim?</p>
   </ConfirmSheet> : null}
   {open === 'ex' ? <ExercicioSheet exId={exId} className="ex-tap" onClose={() => setOpen(null)} /> : null}
+  {open === 'guide' ? <ComoFazerSheet exId={exId} name={ex.n} group={group ?? undefined} className="ex-tap" onClose={() => setOpen(null)} /> : null}
   {open === 'hist' ? <HistoricoRapido exId={exId} day={day} onClose={() => setOpen(null)} onMore={() => { setOpen(null); setTimeout(() => setOpen('ex'), 0); }} /> : null}
   {open === 'plates' ? <AnilhasSheet className="ex-tap" initial={platesInitial} onUse={platesFor !== null ? kg => setField(platesFor, 'kg', kg) : undefined} onClose={() => { setOpen(null); setPlatesFor(null); }} /> : null}
   {open === 'add' ? <Sheet title="Adicionar exercício" className="ex-tap" initialFocus="#ex-add-q" onClose={() => setOpen(null)}>

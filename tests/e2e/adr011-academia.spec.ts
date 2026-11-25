@@ -246,8 +246,9 @@ test('2.3: histórico rápido abre no meio da série, mostra 5 sessões sem aque
  await logSet(page, 1);
  await expect(timer(page)).toHaveText(/2:30/);
  await kg(page, 2).fill('32,5'); await reps(page, 2).fill('7');
- const title = page.getByRole('button', { name: 'Supino com halteres', exact: true });
- await title.click();
+ const menu = page.getByRole('button', { name: 'Mais opções de Supino com halteres' });
+ await menu.click();
+ await page.getByRole('menuitem', { name: 'Últimas sessões' }).click();
  const sheet = page.getByRole('dialog', { name: 'Supino com halteres' });
  const list = sheet.getByRole('list', { name: 'Últimas sessões de Supino com halteres' });
  await expect(list.getByRole('listitem')).toHaveCount(5);
@@ -259,7 +260,7 @@ test('2.3: histórico rápido abre no meio da série, mostra 5 sessões sem aque
  await page.clock.runFor(5_000);
  await sheet.getByRole('button', { name: 'Fechar' }).click();
  await expect(sheet).toHaveCount(0);
- await expect(title).toBeFocused();
+ await expect(menu).toBeFocused();
  await expect(page).toHaveURL(/executar/);
  await expect(kg(page, 2)).toHaveValue('32,5');
  await expect(reps(page, 2)).toHaveValue('7');

@@ -26,11 +26,13 @@ export function pwaBuild(): Plugin {
    await writeFile(join(dist,'manifest.webmanifest'),JSON.stringify({id:base,name:'Fitnez',short_name:'Fitnez',description:'Treino e dieta em um só lugar, com seus dados guardados neste aparelho e uso offline.',lang:'pt-BR',start_url:base,scope:base,display:'standalone',orientation:'portrait',background_color:'#FFFFFF',theme_color:'#0A58F0',shortcuts:SHORTCUTS.map(([name,hash,description])=>({name,short_name:name,description,url:`${base}${hash}`,icons:[{src:`${base}icon-192.png`,sizes:'192x192',type:'image/png'}]})),icons:[{src:`${base}icon-192.png`,sizes:'192x192',type:'image/png'},{src:`${base}icon-512.png`,sizes:'512x512',type:'image/png'},{src:`${base}icon-maskable-512.png`,sizes:'512x512',type:'image/png',purpose:'maskable'}]},null,2),'utf8');
    async function files(directory:string,prefix=''):Promise<string[]> {const entries=await readdir(directory,{withFileTypes:true});const groups=await Promise.all(entries.map(entry=>entry.isDirectory()?files(join(directory,entry.name),`${prefix}${entry.name}/`):Promise.resolve([`${prefix}${entry.name}`])));return groups.flat();}
    const assets=(await files(dist)).filter(path=>path!=='sw.js').sort();
+   // A raiz já serve o HTML. A licença continua pública e os quadros têm cache próprio.
+   const precache = assets.filter(path => path !== 'index.html' && path !== 'fonts/Figtree-OFL.txt' && !/^img\/exercise\/[a-z0-9_-]+-[123]\.webp$/.test(path));
    const hash=createHash('sha256');for(const path of assets){hash.update(path);hash.update(await readFile(join(dist,path)));}
    const template=await readFile(join(config.root,'public','sw.js'),'utf8');
    hash.update(template);
    const version=hash.digest('hex').slice(0,16);const prefix=`treino12:${encodeURIComponent(base)}:`;
-   const worker=template.replace("'__APP_BASE__'",JSON.stringify(base)).replace("'__CACHE_PREFIX__'",JSON.stringify(prefix)).replace("'__CACHE_NAME__'",JSON.stringify(`${prefix}${version}`)).replace('__PRECACHE_LIST__',JSON.stringify([base,...assets.map(path=>`${base}${path}`)]));
+   const worker=template.replace("'__APP_BASE__'",JSON.stringify(base)).replace("'__CACHE_PREFIX__'",JSON.stringify(prefix)).replace("'__CACHE_NAME__'",JSON.stringify(`${prefix}${version}`)).replace('__PRECACHE_LIST__',JSON.stringify([base,...precache.map(path=>`${base}${path}`)]));
    await writeFile(join(dist,'sw.js'),worker,'utf8');
   },
  };

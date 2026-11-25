@@ -21,7 +21,7 @@ import { getWorkout, isDone, listWorkouts } from '../../domain/workoutRecord';
 import { useStagger } from './stagger';
 import type { StaggerProps } from './stagger';
 import { GROUP_LABEL, dayBelongsTo, formatDay, formatKg, minutesLabel, plural, planWeek, repsText, sessionLetter, statusOf, todayIso } from './util';
-import { ExercicioSheet } from './lazy';
+import { ComoFazerSheet, ExercicioSheet } from './lazy';
 import './treino.css';
 
 const AVISO_SAUDE = 'Calorias, cargas e metas são estimativas e não substituem nutricionista, médico ou educador físico.';
@@ -38,6 +38,7 @@ function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first, 
  const [expanded, setExpanded] = useState(first);
  const [confirmRemove, setConfirmRemove] = useState(false);
  const [page, setPage] = useState(false);
+ const [guide, setGuide] = useState(false);
  const { removeExercise } = usePlanEditor();
  const days = state.history.days;
  const group = muscleGroupOf(id, ex);
@@ -53,14 +54,16 @@ function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first, 
  const bodyId = `corpo-${id}`;
  return <li className={`tr-ex ${expanded ? 'is-open' : 'is-closed'}${reveal.className ? ` ${reveal.className}` : ''}`} style={reveal.style}>
   <div className="tr-ex-top">
-   <h3 className="tr-toggle-h"><button type="button" className="tr-toggle" aria-expanded={expanded} aria-controls={bodyId} onClick={() => setExpanded(e => !e)}>
+   <div className="tr-ex-head">
     <span className="tr-thumb"><Thumb kind="exercise" id={id} group={group ?? undefined} size={56} label={ex.n} /></span>
-    <span className="grow">
-     <span className="tr-exname">{ex.n}</span>
+    <div className="grow">
+     <h3 className="tr-exname"><button type="button" className="tr-ex-action" aria-haspopup="dialog" onClick={() => setGuide(true)}>{ex.n}<Icon name="info" size={16} /></button></h3>
      {group ? <span className="tr-meta">{GROUP_LABEL[group]}</span> : null}
-     <span className="tr-plan"><strong className="num">{plural(plan.sets, 'série', 'séries')}</strong> · <span className="num">{repsText(ex, plan.reps)}</span></span>
-    </span>
-   </button></h3>
+     <button type="button" className="tr-plan tr-ex-action" aria-expanded={expanded} aria-controls={bodyId} onClick={() => setExpanded(e => !e)}>
+      <span><strong className="num">{plural(plan.sets, 'série', 'séries')}</strong> · <span className="num">{repsText(ex, plan.reps)}</span></span><Icon name="chevron" size={16} />
+     </button>
+    </div>
+   </div>
    <Menu className="tr-more-ex" label={`Mais opções de ${ex.n}`} trigger={<Icon name="mais" size={22} weight={2} />} items={[
     { label: 'Ver exercício', icon: 'info', onClick: () => setPage(true) },
     { label: "Editar exercício", icon: 'editar', href: hrefFor({ tab: "treino", view: "exercicio", id: treinoId, ex: id }) },
@@ -69,6 +72,7 @@ function ExerciseCard({ state, id, ex, week, today, onHistory, treinoId, first, 
    ]} />
   </div>
   {page ? <ExercicioSheet exId={id} onClose={() => setPage(false)} /> : null}
+  {guide ? <ComoFazerSheet exId={id} name={ex.n} group={group ?? undefined} onClose={() => setGuide(false)} /> : null}
   {confirmRemove ? <ConfirmSheet title={`Remover ${ex.n} do treino?`} confirmLabel="Remover do treino" onCancel={() => setConfirmRemove(false)} onConfirm={() => { setConfirmRemove(false); void removeExercise(treinoId, id); }}>
    <p>O exercício sai só deste treino. O histórico fica guardado e você poderá desfazer por 6 segundos.</p>
   </ConfirmSheet> : null}

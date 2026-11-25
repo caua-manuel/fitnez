@@ -69,3 +69,4 @@ export function ExercicioSheet({ exId, onClose, className }: { exId: string; onC
   {plates ? <AnilhasSheet className={className} initial={bests?.maxKg ? String(bests.maxKg.kg).replace('.', ',') : ''} onClose={() => setPlates(false)} /> : null}
  </Sheet>;
 }
+export { HistoricoRapido } from './HistoricoRapido';

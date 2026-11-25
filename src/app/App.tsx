@@ -46,7 +46,7 @@ const readRoute = () => parseRoute(window.location.hash);
 
 export function App() {
  const data = useData(); const [route, setRoute] = useState<Route>(readRoute); const heading = useRef<HTMLHeadingElement>(null);
- const pwa = usePwa();
+ const pwa = usePwa(data.state);
  useEffect(() => { const change = () => setRoute(readRoute()); window.addEventListener('hashchange', change); return () => window.removeEventListener('hashchange', change); }, []);
  const routeKey = hrefFor(route);
  const { notice, clearNotice } = data; const [avisosOpen, setAvisosOpen] = useState(false);

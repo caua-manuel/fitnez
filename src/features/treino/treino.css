@@ -53,8 +53,10 @@
 .tr-ex{list-style:none;padding:14px;border:1px solid var(--border);border-radius:20px;background:var(--card);box-shadow:var(--shadow-card);min-width:0}
 .tr-ex h3{margin:0}
 .tr-ex-top{display:flex;align-items:flex-start;gap:12px}
-.tr-toggle-h{flex:1 1 auto;min-width:0;margin:0}
-.tr-toggle{width:100%;display:flex;align-items:flex-start;gap:12px;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit;min-height:56px;border-radius:12px}
+.tr-ex-head{flex:1 1 auto;min-width:0;display:flex;align-items:flex-start;gap:12px}
+.tr-ex-action{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0;border:0;border-radius:var(--radius-control);background:none;color:inherit;text-align:left;font:inherit}
+.tr-ex-action svg{flex:none;color:var(--muted-foreground)}
+.tr-ex-action[aria-expanded="true"] svg{transform:rotate(180deg)}
 .tr-exname{font-size:1.1875rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .is-closed .tr-ex-top .grow{min-height:56px}
 .tr-ex [hidden]{display:none}

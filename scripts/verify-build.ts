@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { Script } from 'node:vm';
@@ -30,17 +30,22 @@ async function files(directory: string, relative = ''): Promise<string[]> {
     : [`${relative}${entry.name}`]))).flat();
 }
 const artifact = await files('dist');
-assert.ok(artifact.every(file => /^(?:assets\/[^/]+\.(?:js|css)|img\/(?:meal|exercise|hero)\/[A-Za-z0-9-]+\.jpg|fonts\/(?:figtree-latin(?:-ext)?-wght-normal\.woff2|Figtree-OFL\.txt)|index\.html|sw\.js|manifest\.webmanifest|(?:icon-(?:192|512|maskable-512)|apple-touch-icon)\.png)$/.test(file)), 'Arquivo inesperado no artefato público.');
+const exerciseFrame = /^img\/exercise\/[a-z0-9_-]+-[123]\.webp$/;
+assert.ok(artifact.every(file => exerciseFrame.test(file) || /^(?:assets\/[^/]+\.(?:js|css)|img\/(?:meal|exercise|hero)\/[A-Za-z0-9-]+\.jpg|fonts\/(?:figtree-latin(?:-ext)?-wght-normal\.woff2|Figtree-OFL\.txt)|index\.html|sw\.js|manifest\.webmanifest|(?:icon-(?:192|512|maskable-512)|apple-touch-icon)\.png)$/.test(file)), 'Arquivo inesperado no artefato público.');
 for (const url of urls) {
   assert.equal(typeof url, 'string');
   assert.ok(url.startsWith(base) && !url.includes('..'), `URL fora da base: ${url}`);
   const relative = url.slice(base.length) || 'index.html';
   assert.ok(artifact.includes(relative), `Recurso ausente no build: ${relative}`);
 }
-for (const file of artifact.filter(file => file !== 'sw.js')) {
-  assert.ok(urls.includes(`${base}${file}`), `Recurso ausente do precache: ${file}`);
+for (const file of artifact) {
+  const expected = !exerciseFrame.test(file) && !['sw.js', 'index.html', 'fonts/Figtree-OFL.txt'].includes(file);
+  assert.equal(urls.includes(`${base}${file}`), expected, `Recurso com precache incorreto: ${file}`);
 }
 assert.ok(urls.includes(base));
+const precacheSizes = await Promise.all(urls.map(url => stat(join('dist', url.slice(base.length) || 'index.html'))));
+const precacheBytes = precacheSizes.reduce((bytes, file) => bytes + file.size, 0);
+console.log(`Precache: ${precacheBytes} bytes em ${urls.length} URLs, sem os WebP dos exercícios.`);
 const manifest = JSON.parse(await readFile('dist/manifest.webmanifest', 'utf8'));
 for (const field of ['id', 'start_url', 'scope']) assert.equal(manifest[field], base);
 for (const icon of manifest.icons) assert.ok(urls.includes(icon.src), `Ícone sem precache: ${icon.src}`);
@@ -66,6 +71,9 @@ assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i);
 // Números e regras: docs/decisoes/011-pronto-para-amigos-e-ferramentas-da-academia.md,
 // seção "Orçamento de peso (revisão do ADR 006)". Estourar exige nova revisão no ADR, não só aqui.
 const iniciais = arquivosIniciais(html, base);
+const guiaChunks = artifact.filter(file => /^assets\/(?:ComoFazer|como-fazer)-[^/]+\.(?:js|css)$/.test(file));
+assert.ok(guiaChunks.some(file => file.endsWith('.js')), 'A folha Como fazer precisa de um chunk sob demanda.');
+assert.ok(guiaChunks.every(file => !iniciais.includes(file)), 'Como fazer entrou na carga inicial.');
 assert.ok(iniciais.some(file => file.endsWith('.js')), 'Nenhum script de assets/ citado no index.html.');
 for (const file of iniciais) assert.ok(artifact.includes(file), `index.html cita arquivo ausente: ${file}`);
 const tamanhos: Record<string, number> = {};

@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-export function usePwa() {
+import type { StateV3 } from '../application/repository';
+import { isStartConfirmed } from '../domain/planStart';
+
+export function usePwa(state: StateV3 | null) {
  const [ready,setReady]=useState(false);
  const [online,setOnline]=useState(navigator.onLine);
  const [updateAvailable,setUpdateAvailable]=useState(false);
@@ -36,5 +39,27 @@ export function usePwa() {
   }).catch(()=>active&&setError('Não foi possível preparar o uso offline. Reabra com conexão e tente novamente.'));
   return ()=>{active=false;window.removeEventListener('online',connectivity);window.removeEventListener('offline',connectivity);navigator.serviceWorker.removeEventListener('message',message);navigator.serviceWorker.removeEventListener('controllerchange',change);};
  },[]);
+ const exerciseIds = state && isStartConfirmed(state.settings)
+  ? JSON.stringify([...new Set(Object.values(state.catalog.plan.sess).flatMap(session => session.ex))])
+  : null;
+ useEffect(() => {
+  if (!ready || !online || exerciseIds === null) return;
+  let active = true;
+  const prepare = () => {
+   const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+   if (!navigator.onLine || connection?.saveData || /2g|3g/.test(connection?.effectiveType ?? '')) return;
+   void Promise.all([navigator.serviceWorker.ready, import('../domain/exerciseImages')]).then(([registration, { exerciseFrames }]) => {
+    const ids: string[] = JSON.parse(exerciseIds);
+    if (active) registration.active?.postMessage({ type: 'CACHE_EXERCISE_IMAGES', files: ids.flatMap(exerciseFrames) });
+   }).catch(() => {});
+  };
+  // Safari não oferece requestIdleCallback. O atraso mantém o trabalho longe da abertura da tela.
+  const idle = 'requestIdleCallback' in window;
+  const task = idle ? window.requestIdleCallback(prepare) : window.setTimeout(prepare, 1500);
+  return () => {
+   active = false;
+   if (idle) window.cancelIdleCallback(task); else window.clearTimeout(task);
+  };
+ }, [exerciseIds, online, ready]);
  return {ready,online,error,development:import.meta.env.DEV,updateAvailable,applyUpdate:()=>{const waiting=registration.current?.waiting;if(waiting){applying.current=true;waiting.postMessage({type:'APPLY_UPDATE'});}else setError('A atualização não está mais disponível. Reabra o app para verificar.');},deferUpdate:()=>setUpdateAvailable(false)};
 }
