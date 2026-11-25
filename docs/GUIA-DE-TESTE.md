@@ -362,6 +362,14 @@ O iPhone só testa tudo pelo site publicado. Para isso, você precisa autorizar 
 
 ---
 
+## Como fazer (ilustrações)
+
+1. Abra um treino e toque no nome de um exercício. Repita durante a execução. A folha **Como fazer** deve mostrar o nome, a ilustração, os passos e o erro comum.
+2. No iPhone, confira em tema claro e escuro. No hip thrust, os dois quadros alternam e um toque na imagem pausa ou retoma. A isometria de pescoço fica estática. O exercício Y, T e W passa pelas três posições.
+3. Abra a folha com internet e aguarde os quadros aparecerem. Feche, ative o modo avião e abra o mesmo exercício de novo. Confira se a ilustração e os passos continuam disponíveis.
+4. No iPhone, ative **Reduzir Movimento** em **Ajustes → Acessibilidade → Movimento** e reabra a folha. Os quadros devem aparecer lado a lado, sem alternar.
+5. Com teclado, abra pelo nome do exercício e confira se o foco entra na folha. Use Tab e Espaço para pausar e retomar. Teste fechar por Esc e pelo botão **Fechar**. Nos dois casos, o foco deve voltar ao nome. Com VoiceOver, confira se a folha é anunciada como **Como fazer**.
+
 ## Anotações
 
 | Passo | O que aconteceu | Tema | Celular |
