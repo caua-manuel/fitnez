@@ -24,3 +24,16 @@ Motivos e contas: no handoff citado.
 
 ## Vitest e a letra do drive (causa raiz do erro de coleta)
 `Cannot read properties of undefined (reading 'config')` aparecia só quando o terminal abria em `c:\Projeto-Treino` (letra minúscula): o Vitest carregava o módulo `vitest` duas vezes. Com `C:\Projeto-Treino` funciona no pool padrão; não é problema de pool, então `vitest.config.ts` não muda e o CI (Linux) não é afetado. Abra o terminal com a letra do drive maiúscula.
+
+## Decisões do dono para fechar a Etapa 2 (25/11/2026)
+Commit local `6939f95`. `npm run check` passando (1406 testes). Nada publicado.
+
+**a. Texto do tempo longo: o plano NÃO entrega "60 a 90 min" hoje.** Medição no motor real (objetivo massa, 135 combinações): no tempo longo muitos grupos ficam abaixo do topo da faixa (ex.: nunca, academia, 3 dias: ombros e bíceps em 3 a 4 de 6; iniciante, academia, 2 dias: ombros, bíceps e tríceps em 3 de 8) e a estimativa por treino cai abaixo de 60 min em boa parte das divisões de 4 a 6 dias (de 31 a 58 min; só o intermediário em academia chega a 90). Logo o longo **pode ganhar volume útil**. O texto "60 a 90 min" fica como está e vira a tarefa BLOQUEADA "volume útil no tempo longo" (decisão de regra de volume, com o Claude). Não "corrigir o texto para baixo": o texto é a promessa; o plano é que deve crescer.
+
+**b. Descanso.** Aprovado 120 s nos principais do intermediário no tempo médio (antes 150 s). No tempo curto, os principais com carga **não ficam abaixo de 120 s**. Para caber nos 30 a 45 min: superset de músculos opostos (ex.: empurrar + puxar) ou corte de um acessório. O código atual usa 90 s no curto (`LOADED_PRINCIPAL_REST_CAP` em `planEngine.ts`): **a mudança é tarefa BLOQUEADA para o Claude** (mexe em regra de volume e tempo). Até lá, o 90 s do curto é conhecido e provisório.
+
+**c. Provisórias, aguardam revisão profissional** (nenhuma está verificada):
+1. perder na posição 0,33 da faixa;
+2. excesso de prioridade por experiência (0, 1 e 2 séries acima do máximo; nunca em déficit);
+3. prioridade escondida para menor de 18 e transtorno alimentar (a prioridade vira "equilibrado");
+4. "treinou nos últimos 3 meses?" só muda o intermediário (vira iniciante).

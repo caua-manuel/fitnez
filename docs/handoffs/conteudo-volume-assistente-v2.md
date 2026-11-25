@@ -220,3 +220,10 @@ Regra: depois de pular vagas (null, repetidas, dor), se restarem menos de 5 exer
 4. Prioridade muscular: esconder a pergunta para menor de 18 e transtorno alimentar (recomendo) e limitar o excesso acima do máximo a 0 (nunca), 1 (iniciante) e 2 (intermediário), sem excesso em `perder` (recomendo)?
 5. Descanso dos exercícios principais: 90 s no curto e 120 s no médio (recomendo, para caber nos tempos prometidos) ou manter 120 e 150 s e aceitar treinos mais longos que o prometido?
 6. "Treinou nos últimos 3 meses?": perguntar só a quem marcou intermediário (recomendo, pois para iniciante não muda nada) ou a ambos, como você pediu?
+
+## 10. Fechamento da Etapa 2 (25/11/2026, decisões do dono)
+Commit `6939f95`. Detalhes no ADR 015.
+- **Tempo longo:** o plano não entrega "60 a 90 min" (estimativas de 31 a 58 min em boa parte das divisões de 4 a 6 dias; grupos abaixo do topo da faixa com objetivo massa). O texto não muda; ganhar volume útil no longo é tarefa BLOQUEADA para o Claude.
+- **Descanso:** 120 s nos principais do intermediário no médio (aprovado). No curto, principais com carga nunca abaixo de 120 s; para caber, superset de músculos opostos ou corte de um acessório. O código ainda usa 90 s no curto: mudança BLOQUEADA para o Claude. Isto substitui a recomendação "curto 90 s" da seção 6.1 e a dúvida 5 da seção 9.
+- **Provisórias, aguardam revisão profissional (não verificadas):** perder na posição 0,33; excesso de prioridade 0/1/2 por experiência; prioridade escondida para menor de 18 e transtorno alimentar; "treinou há 3 meses" só muda o intermediário.
+- **Dado preliminar, tempo médio com grupo ausente (79 das 135 combinações têm algum grupo ausente em algum tempo):** academia e casa com equipamento em 2 a 3 dias: tríceps e panturrilha (intermediário em 3 dias: só tríceps); casa livre: ombro lateral e bíceps em todos os dias (e ombro posterior em 2 a 3 dias). O relatório completo por número de dias é a tarefa 2 do Codex.
