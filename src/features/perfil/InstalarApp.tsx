@@ -4,7 +4,20 @@ import { Sheet } from '../../ui/Sheet';
 import { showToast } from '../../ui/UndoToast';
 import { useInstall } from '../../pwa/install';
 import type { InstallMode } from '../../pwa/install';
+import { useData } from '../../app/DataProvider';
+import { hasUserData } from '../../domain/userData';
+import { isStartConfirmed } from '../../domain/planStart';
 import './instalar.css';
+
+/** No iPhone e no iPad, o app da tela de início tem armazenamento próprio, separado do Safari; no Android (Chrome) e no computador, os dados são os mesmos. */
+export const IOS_DATA_WARNING = 'O app instalado começa sem os dados deste navegador. Depois de instalar, monte o plano por lá ou restaure um backup.';
+const isIosMode = (mode: InstallMode) => mode === 'ios-safari' || mode === 'ios-other';
+
+/** Aviso antes de instalar: só no iOS e só se já houver plano escolhido ou registros neste navegador. */
+export function useIosDataWarning(mode: InstallMode): boolean {
+ const { state } = useData();
+ return isIosMode(mode) && !!state && (isStartConfirmed(state.settings) || hasUserData(state));
+}
 
 function IosSteps({ safari }: { safari: boolean }) {
  return <>
@@ -19,8 +32,10 @@ function IosSteps({ safari }: { safari: boolean }) {
 }
 
 export function InstallSheet({ mode, onClose }: { mode: InstallMode; onClose: () => void }) {
- const ios = mode === 'ios-safari' || mode === 'ios-other';
+ const ios = isIosMode(mode);
+ const warn = useIosDataWarning(mode);
  return <Sheet title="Instalar na tela inicial" onClose={onClose} className="ia-sheet">
+  {warn ? <p className="ia-aviso ia-dados" role="note"><Icon name="info" size={18} /><span>{IOS_DATA_WARNING}</span></p> : null}
   {ios ? <IosSteps safari={mode === 'ios-safari'} />
    : <p>Use o menu do navegador e escolha <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</p>}
   <div className="sheet-actions"><button type="button" className="button secondary" onClick={onClose}>Fechar</button></div>

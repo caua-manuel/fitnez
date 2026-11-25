@@ -50,7 +50,7 @@ describe('Entrega A: campos opcionais no v3', () => {
  });
  it('só 6 ids sem grupo e as somas por grupo em UA, UB e LW batem a tabela-alvo', () => {
   const plan = (seedPlan as any).plan; const ex = plan.ex as Record<string, any>;
-  expect(Object.keys(ex)).toHaveLength(57); // 38 do plano de exemplo + 17 do assistente de início (ADR 008) + 2 do ADR 012
+  expect(Object.keys(ex)).toHaveLength(59); // 38 do plano de exemplo + 17 do assistente de início (ADR 008) + 2 do ADR 012 + 2 do ADR 015 (rosca e elevação lateral com elástico)
   const missing = Object.entries(ex).filter(([id, e]) => muscleGroupOf(id, e) === null).map(([id]) => id).sort();
   expect(missing).toEqual(['copen_b', 'copen_l', 'farmer', 'pescoco', 'salto_b', 'salto_l']);
   const sum: Record<string, number[]> = {};

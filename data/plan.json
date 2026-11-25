@@ -978,6 +978,40 @@
     "t": "Segundos. Corpo reto, sem afundar o quadril.",
     "rest": 45,
     "g": "core"
+   },
+   "rosca_elastico": {
+    "n": "Rosca com elástico",
+    "s": [
+     2,
+     3,
+     3
+    ],
+    "r": [
+     "10–15",
+     "12–15",
+     "12–20"
+    ],
+    "m": "rep",
+    "t": "Pise no meio do elástico. Cotovelos junto ao corpo, suba e desça devagar.",
+    "rest": 45,
+    "g": "biceps"
+   },
+   "lat_elastico": {
+    "n": "Elevação lateral com elástico",
+    "s": [
+     2,
+     3,
+     3
+    ],
+    "r": [
+     "12–15",
+     "12–20",
+     "15–20"
+    ],
+    "m": "rep",
+    "t": "Pise no meio do elástico. Suba os braços até a altura dos ombros, sem balançar.",
+    "rest": 45,
+    "g": "ombro-lateral"
    }
   },
   "sess": {

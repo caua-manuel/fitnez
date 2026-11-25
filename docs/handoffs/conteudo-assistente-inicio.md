@@ -26,14 +26,16 @@ Faixas de entrada reaproveitam `validateProfile`: idade 10 a 100, altura 100 a 2
 
 ### 2.1 Quantos dias de musculação
 
+Atualizado em 25/11/2026 (ADR 014, `conteudo-dias-pedidos.md`): não há mais teto por experiência.
+
 ```
-teto = { nunca: 3, iniciante: 4, intermediario: 5 }[experiencia]
 fixas = número de dias com outra atividade (0 a 7)
-dias = min(respostaDias, teto)
-se dias + fixas > 6: dias = max(2, 6 - fixas)
+dias = respostaDias
+se transtorno alimentar: dias = min(dias, 4)        // daysReason 'teto'
+se dias + fixas > 6: dias = max(2, 6 - fixas)       // daysReason 'atividades'
 se fixas >= 6: dias = 2 e mostrar o aviso "semana-cheia"
 ```
-Motivo: recuperação de quem começa e pelo menos 1 dia de descanso por semana (a verificar). A pessoa pode adicionar treinos depois em Treinos.
+Motivo: decisão do dono (respeitar os dias pedidos); pelo menos 1 dia de descanso por semana (a verificar).
 
 ### 2.2 Modelo pela quantidade de dias e experiência
 
@@ -41,14 +43,15 @@ Motivo: recuperação de quem começa e pelo menos 1 dia de descanso por semana 
 | --- | --- | --- |
 | 2 | Corpo inteiro A, B | Corpo inteiro A, B |
 | 3 | Corpo inteiro A, B, A (semana seguinte B, A, B: na prática o app usa a rotina fixa A, B, A) | Superior A, Pernas A, Corpo inteiro B |
-| 4 | Superior A, Pernas A, Superior B, Pernas B (só `iniciante`; `nunca` já foi limitado a 3) | igual |
-| 5 | (não ocorre) | Superior A, Pernas A, Superior B, Pernas B, Corpo inteiro A |
+| 4 | Superior A, Pernas A, Superior B, Pernas B | igual |
+| 5 | Superior (= Superior B), Pernas A, Empurrar, Puxar, Pernas B | igual |
+| 6 | Empurrar, Puxar, Pernas A, Empurrar, Puxar, Pernas B (iniciante: principais com 2 séries no bloco 1) | igual |
 
 Nomes obrigatórios: os treinos de perna têm "Pernas" no nome para `dayTypeOf` (regex `/lower|perna/i`) os classificar como dia de perna. "Corpo inteiro" e "Superior" viram dia de academia.
 
 ### 2.3 Dias da semana (0 = segunda)
 
-Ordem preferida por quantidade: 2 → [0, 3]; 3 → [0, 2, 4]; 4 → [0, 1, 3, 4]; 5 → [0, 1, 2, 4, 5].
+Ordem preferida por quantidade: 2 → [0, 3]; 3 → [0, 2, 4]; 4 → [0, 1, 3, 4]; 5 → [0, 1, 2, 4, 5]; 6 → [0, 1, 2, 3, 4, 5].
 Algoritmo: (1) dias com atividade fixa ficam com ela (`luta` → `{k:'bjj', gi:true}`; `esporte` e `corrida` → ver seção 9, item 3); (2) percorrer a ordem preferida e depois os dias restantes de 0 a 6, pegando os livres até completar; (3) atribuir os treinos na ordem da tabela; (4) se um treino de "Pernas" cair na véspera ou no próprio dia de luta, esporte ou corrida, trocar com o próximo treino que não seja de pernas (uma passada só); (5) os demais dias ficam `{k:'rest'}`. Regra de fundo: pernas pesadas 36 a 48 h longe da luta e do esporte (seção 3 da especificação).
 
 ## 3. Exercícios
@@ -65,6 +68,8 @@ Cada treino é uma lista de vagas. O tempo define quantas entram, pegando as pri
 - **Superior B (nunca e iniciante):** puxar horizontal, empurrar inclinado, ombro lateral, ombro posterior, tríceps, bíceps, empurrar vertical.
 - **Pernas A:** joelho, quadril, unilateral, posterior isolado, panturrilha, core, core 2.
 - **Pernas B:** quadril, joelho 2, unilateral, posterior isolado, panturrilha, core, core 2.
+- **Empurrar (ADR 014):** empurrar horizontal, empurrar inclinado, empurrar vertical, ombro lateral, tríceps, ombro posterior, core.
+- **Puxar (ADR 014):** puxar vertical, puxar horizontal, ombro posterior, bíceps, ombro lateral, core 2, core.
 
 ### 3.2 Exercício por vaga e local
 

@@ -230,8 +230,8 @@ describe('weekStreak (seção 6)', () => {
 });
 
 describe('instruções e nota fixa', () => {
- it('57 exercícios com instruções, cobrindo plano e assistente (2 do ADR 012)', () => {
-  expect(Object.keys(EXERCISE_GUIDE.itens)).toHaveLength(57);
+ it('59 exercícios com instruções, cobrindo plano e assistente (2 do ADR 012)', () => {
+  expect(Object.keys(EXERCISE_GUIDE.itens)).toHaveLength(59);
   for (const id of Object.keys(EX)) expect(guideFor(id), id).not.toBeNull();
   for (const id of ASSISTANT_EXERCISE_IDS) expect(guideFor(id), id).not.toBeNull();
   expect(GUIDE_SAFETY).toHaveLength(2);

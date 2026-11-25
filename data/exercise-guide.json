@@ -232,6 +232,14 @@
   "prancha": {
    "passos": "Antebraços no chão sob os ombros, corpo reto da cabeça aos pés e abdômen firme. Segure pelo tempo marcado respirando normalmente.",
    "erro": "quadril afundando ou alto demais."
+  },
+  "rosca_elastico": {
+   "passos": "Pise no meio do elástico e segure as pontas com as palmas para a frente. Com os cotovelos junto ao corpo, dobre os braços até o elástico esticar e desça devagar.",
+   "erro": "balançar o tronco ou afastar os cotovelos do corpo."
+  },
+  "lat_elastico": {
+   "passos": "Pise no meio do elástico e segure as pontas ao lado do corpo. Levante os braços para os lados até a altura dos ombros, com os cotovelos levemente dobrados, e desça devagar.",
+   "erro": "encolher os ombros em direção às orelhas ou usar impulso do tronco."
   }
  }
 }

@@ -27,3 +27,5 @@
 .as .as-row3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .as-opt .as-opt-t{display:block;font-weight:600}.as-opt .as-opt-d{display:block;font-size:.875rem;font-weight:400;margin-top:2px}
 .as-alert{font-size:.875rem;margin:4px 0 0;padding:12px 0 0;border-top:1px solid var(--border)}
+.as-app{display:block;width:64px;height:64px;margin:8px 0 24px;border-radius:15px;box-shadow:0 0 0 1px var(--border),0 6px 20px rgb(0 0 0 / .08)}
+.as-foot .button svg{flex:none}

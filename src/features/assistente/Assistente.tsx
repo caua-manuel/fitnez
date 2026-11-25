@@ -20,7 +20,9 @@ import { ASSISTANT_QUESTIONS, closeAssistant } from './store';
 import { DemoEntry, isDemo } from '../../app/demo';
 import { hasUserData } from '../../domain/userData';
 import { SemanaTipo } from './PlanResumo';
-import { InstalarApp } from '../perfil/InstalarApp';
+import { InstalarApp, InstallSheet } from '../perfil/InstalarApp';
+import { useInstall } from '../../pwa/install';
+import type { InstallMode } from '../../pwa/install';
 import type { AssistantMode } from './store';
 import './assistente.css';
 
@@ -40,6 +42,8 @@ const WARN: Record<OnboardingWarning, string> = {
  'imc-baixo': 'Seu peso já está baixo para sua altura, então o app não sugere déficit de calorias. Converse com um nutricionista.',
  'imc-alto-massa': 'O app sugere manter as calorias por enquanto. Um nutricionista pode ajustar sua meta.',
  'semana-cheia': 'Sua semana já tem muita atividade. O app montou 2 treinos curtos de musculação, que ficam em Treinos, fora da rotina, para quando der. Descanse pelo menos 1 dia.',
+ // ADR 015: sugestão, não bloqueia.
+ 'tres-dias': 'Com 2 dias por semana o volume fica no mínimo para quem já treina. Se der, um terceiro dia melhora o resultado; você pode refazer o assistente quando quiser.',
 };
 // ADR 012: plano não gerado. Gestação: conteudo-revisao-10-perfis.md (seção 4); menos de 14 anos: conteudo-adr-012-textos.md (item 1).
 const BLOCKED_TITLE = 'Ainda não dá para montar seu plano';
@@ -78,7 +82,9 @@ const TIME_STEP = 4, ACT_STEP = 5, BODY_STEP = 6, FOOD_A = 7, FOOD_B = 8, START_
 const MEAL_LABEL: Record<MealKey, string> = { cafe: 'Café da manhã', almoco: 'Almoço', lanche: 'Lanche', pos: 'Pós-treino', jantar: 'Jantar' };
 type MenuPreview = { kind: 'menu'; meals: { meal: MealKey; kcal: number; p: number }[]; within: boolean } | { kind: 'none'; reason: string } | { kind: 'loading' } | { kind: 'error' };
 
-type Screen = 'boas-vindas' | 'exemplo' | 'resumo' | number;
+type Screen = 'instalar' | 'boas-vindas' | 'exemplo' | 'resumo' | number;
+/** Instalar antes de montar o plano: no iPhone o app da tela de início não vê os dados do Safari. Só no navegador, fora da demonstração. */
+const offersInstall = (m: InstallMode) => m === 'ios-safari' || m === 'prompt';
 type StartChoice = 'manter' | 'esta' | 'proxima' | 'outra';
 interface Body { sex?: Sex; lifestyle?: Lifestyle; age: string; heightCm: string; weightKg: string }
 interface Draft extends Omit<OnboardingAnswers, 'body' | 'activities'> { activities: { kind: FixedKind; days: number[]; label?: string }[]; body: Body }
@@ -95,7 +101,17 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
  const { state, repository, run, commit, busy, error } = useData();
  const today = localDayOf(Date.now());
  const refazer = mode === 'refazer';
- const [screen, setScreen] = useState<Screen>(refazer ? 0 : 'boas-vindas');
+ const install = useInstall();
+ const canInstall = !refazer && !isDemo() && offersInstall(install.mode);
+ const [screen, setScreen] = useState<Screen>(refazer ? 0 : canInstall ? 'instalar' : 'boas-vindas');
+ const [installOpen, setInstallOpen] = useState(false);
+ // "Continuar no navegador" vale para a sessão do assistente: o passo não volta sozinho.
+ const keptBrowser = useRef(false);
+ // O beforeinstallprompt do Android pode chegar depois da abertura; o app instalado no meio do caminho tira o passo.
+ useEffect(() => {
+  if (canInstall && screen === 'boas-vindas' && !keptBrowser.current) setScreen('instalar');
+  else if (install.mode === 'installed' && screen === 'instalar') setScreen('boas-vindas');
+ }, [canInstall, install.mode, screen]);
  const [draft, setDraft] = useState<Draft>(() => {
   const a = refazer ? answersFromStored(state?.settings.onboarding) : defaultAnswers();
   return { ...a, activities: a.activities.map(x => ({ ...x, days: [...x.days] })), body: emptyBody() };
@@ -116,7 +132,7 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
  // Ao voltar, o passo recua e a guarda é recolocada. Nada das respostas vai para o histórico nem para o armazenamento.
  const guard = useRef(false);
  const backRef = useRef<() => void>(() => undefined);
- const atRoot = screen === 'boas-vindas' || (refazer && screen === 0);
+ const atRoot = screen === 'instalar' || screen === 'boas-vindas' || (refazer && screen === 0);
  useEffect(() => { if (!atRoot && !guard.current) { history.pushState({ assistente: true }, ''); guard.current = true; } }, [screen, atRoot]);
  useEffect(() => {
   const hash = window.location.hash;
@@ -204,7 +220,7 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
  };
  const goBack = () => {
   setTried(false);
-  if (screen === 'boas-vindas') return;
+  if (screen === 'boas-vindas' || screen === 'instalar') return;
   if (screen === 'exemplo') { setScreen('boas-vindas'); return; }
   if (screen === 'resumo') { setScreen(START_STEP); return; }
   if (editing) { setEditing(false); setScreen('resumo'); return; }
@@ -336,7 +352,29 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
  const exampleSessions = state.catalog.plan.order.filter(id => state.catalog.plan.sess[id]).length;
  let content: ReactNode, foot: ReactNode, top: ReactNode = null, progress: ReactNode = null;
 
- if (screen === 'boas-vindas') {
+ const continueInBrowser = () => { keptBrowser.current = true; setInstallOpen(false); setScreen('boas-vindas'); };
+ const installNow = async () => {
+  if (install.mode !== 'prompt') { setInstallOpen(true); return; }
+  const result = await install.prompt();
+  if (result === 'accepted') { keptBrowser.current = true; setScreen('boas-vindas'); showToast('Instalando o app'); }
+  else if (result === 'dismissed') showToast('Instalação cancelada. Você pode instalar depois, em Perfil');
+  else setInstallOpen(true);
+ };
+
+ if (screen === 'instalar') {
+  const ios = install.mode === 'ios-safari';
+  content = <>
+   <img className="as-app" src={`${import.meta.env.BASE_URL}apple-touch-icon.png`} alt="" width={64} height={64} />
+   <p className="as-eyebrow">Antes de começar</p>
+   <h1 id="as-h" ref={heading} tabIndex={-1}>Instale o app primeiro</h1>
+   <p>{ios ? 'No iPhone, o plano montado no navegador não passa para o app instalado.' : 'Assim o Fitnez abre pelo ícone, como um app, e funciona sem internet.'}</p>
+   <p className="muted">{ios ? 'Adicione o Fitnez à tela de início e monte seu plano por lá.' : 'Depois é só montar seu plano.'}</p>
+  </>;
+  foot = <>
+   <button type="button" className="button block" aria-haspopup={install.mode === 'prompt' ? undefined : 'dialog'} onClick={() => void installNow()}><Icon name="baixar" size={20} />Adicionar à tela de início</button>
+   <button type="button" className="as-link as-later" onClick={continueInBrowser}>Continuar no navegador</button>
+  </>;
+ } else if (screen === 'boas-vindas') {
   content = <>
    <h1 id="as-h" ref={heading} tabIndex={-1}>Vamos montar seu plano</h1>
    <p>Responda {N} perguntas rápidas e o app monta seus treinos e suas metas de dieta. Dá para mudar tudo depois.</p>
@@ -345,7 +383,7 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
   </>;
   foot = <>
    <button type="button" className="button block" onClick={() => { setStart('proxima'); setScreen(0); }}>Montar meu plano</button>
-   <button type="button" className="button secondary block" onClick={() => { setStart('manter'); setScreen('exemplo'); }}>Usar o plano padrão</button>
+   <button type="button" className="as-link as-later" onClick={() => { setStart('manter'); setScreen('exemplo'); }}>Usar o plano padrão</button>
    <button type="button" className="as-link as-later" onClick={closeAssistant}>Decidir depois</button>
    <InstalarApp compact label="Adicionar à tela de início" />
   </>;
@@ -372,7 +410,7 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
     <section className="as-block" aria-labelledby="as-b1">
      <div className="as-block-h"><h2 id="as-b1">Treinos</h2><button type="button" className="as-link" onClick={() => alter(3)} aria-label="Alterar treinos">Alterar</button></div>
      <p>Musculação: {s.gymDays} dias por semana ({[...new Set(s.sessionNames)].join(', ')}), {DURATION_TEXT[g.duration]} cada.</p>
-     {s.daysReason === 'teto' ? <p className="muted">Você pediu {s.daysRequested} dias. O app montou {s.gymDays} treinos por semana para sobrar tempo de recuperação. Depois de algumas semanas, você pode acrescentar treinos em Treinos.</p>
+     {s.daysReason === 'teto' ? <p className="muted">Você pediu {s.daysRequested} dias. O app montou {s.gymDays} treinos por semana, para sobrar tempo de descanso. Se quiser mudar, converse antes com quem acompanha você.</p>
       : s.daysReason === 'atividades' ? <p className="muted">Com suas outras atividades, o app montou {s.gymDays} treinos por semana para você ter pelo menos 1 dia de descanso.</p> : null}
      <p className="muted">Em cada série, pare antes de não aguentar mais: o app mostra quantas repetições deixar sobrando.</p>
      {out > 0 && !preview.warnings.includes('semana-cheia') ? <p className="muted">{out === 1 ? 'Um treino curto fica' : `Os ${out} treinos curtos ficam`} em Treinos, fora da rotina: faça quando der.</p> : null}
@@ -446,5 +484,6 @@ export function Assistente({ mode }: { mode: AssistantMode }) {
    {screen === 'boas-vindas' || screen === 'resumo' ? <p className="as-note">{AVISO_FIXO}</p> : null}
   </div>
   <div className="as-foot">{foot}</div>
+  {installOpen ? <InstallSheet mode={install.mode} onClose={() => setInstallOpen(false)} /> : null}
  </div>;
 }

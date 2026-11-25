@@ -4,6 +4,8 @@ import { test, expect, type Page } from '@playwright/test';
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
 const wiz = (page: Page) => page.locator('.as[role=dialog]');
 const opcao = (page: Page) => page.getByRole('button', { name: 'Adicionar à tela de início' });
+// No Safari do iPhone, o passo "Instale o app primeiro" vem antes (instalar-primeiro.spec.ts).
+const continuar = async (page: Page) => { await expect(page.locator('.as[role=dialog] h1')).toBeVisible(); if (await page.getByRole('button', { name: 'Continuar no navegador' }).count()) await page.getByRole('button', { name: 'Continuar no navegador' }).click(); };
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -21,6 +23,8 @@ test.describe('iPhone', () => {
  test.use({ userAgent: IPHONE });
  test('abre a folha com os passos do Safari; Escape fecha e devolve o foco', async ({ page }) => {
   await page.goto('./');
+  await continuar(page);
+  await expect(wiz(page).getByRole('heading', { name: 'Vamos montar seu plano' })).toBeVisible();
   await opcao(page).click();
   const sheet = page.getByRole('dialog', { name: 'Instalar na tela inicial' });
   await expect(sheet).toBeVisible();
@@ -43,6 +47,8 @@ test('não aparece quando o app já está instalado (standalone)', async ({ page
 // Botão no fim da tela Início (abaixo da faixa da semana).
 async function abrirInicio(page: Page) {
  await page.goto('./');
+ await expect(wiz(page).getByRole('heading', { name: /Vamos montar seu plano|Instale o app primeiro/ })).toBeVisible();
+ await continuar(page);
  await wiz(page).getByRole('button', { name: 'Decidir depois' }).click();
  await expect(wiz(page)).toHaveCount(0);
  await expect(page.getByRole('heading', { name: 'Início', level: 1 })).toBeVisible();

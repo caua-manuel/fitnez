@@ -24,7 +24,7 @@ const PERFIS: Perfil[] = [
  {
   id: 1, titulo: 'Adolescente (16) querendo massa, 4 dias',
   answers: { safety: ['nenhum'], goal: 'massa', experience: 'iniciante', daysPerWeek: 4, duration: 'medio', place: 'academia', activities: [], body: { sex: 'm', age: 16, heightCm: 172, weightKg: 61, lifestyle: 'moderado' } },
-  estranho: 'Pediu 4 dias como iniciante; a idade (16) virou "menor18" sem marcar no passo 0 e o plano caiu para 3 dias de "nunca treinou" (teto 3). Sem metas de dieta (motivo: segurança). ADR 012: afundo e Pallof com "Repetições por perna/lado." na observação.'
+  estranho: 'Pediu 4 dias como iniciante; a idade (16) virou "menor18" sem marcar no passo 0 e o treino segue as regras de "nunca treinou", com os 4 dias pedidos (ADR 014, sem teto por experiência). Sem metas de dieta (motivo: segurança). ADR 012: afundo e Pallof com "Repetições por perna/lado." na observação.'
  },
  {
   id: 2, titulo: 'Idosa (67), saúde, nunca treinou, em casa sem equipamento',
@@ -39,7 +39,7 @@ const PERFIS: Perfil[] = [
  {
   id: 4, titulo: 'IMC alto (36) querendo massa, intermediário, 5 dias longos',
   answers: { safety: ['nenhum'], goal: 'massa', experience: 'intermediario', daysPerWeek: 5, duration: 'longo', place: 'academia', activities: [], body: { sex: 'm', age: 34, heightCm: 175, weightKg: 110, lifestyle: 'pouco' } },
-  estranho: 'Objetivo "massa" trocado para "saúde" com aviso imc-alto-massa. Proteína e gordura pelo peso de referência (IMC 25 = 76,6 kg); a sanidade passou a ser 1,4 a 2,2 g/kg desse peso (ADR 012). ADR 012: Corpo inteiro A passa de sábado para domingo, para não ficar no dia seguinte a Pernas B.'
+  estranho: 'Objetivo "massa" trocado para "saúde" com aviso imc-alto-massa. Proteína e gordura pelo peso de referência (IMC 25 = 76,6 kg); a sanidade passou a ser 1,4 a 2,2 g/kg desse peso (ADR 012). ADR 014: 5 dias viram Superior, Pernas A, Empurrar, Puxar e Pernas B, com só 2 dias de pernas (antes Corpo inteiro A ia para domingo).'
  },
  {
   id: 5, titulo: 'Gestante, iniciante, academia',
@@ -49,17 +49,17 @@ const PERFIS: Perfil[] = [
  {
   id: 6, titulo: 'Condição de saúde, perder, intermediário, 4 dias',
   answers: { safety: ['condicao'], goal: 'perder', experience: 'intermediario', daysPerWeek: 4, duration: 'medio', place: 'academia', activities: [], body: { sex: 'm', age: 52, heightCm: 180, weightKg: 98, lifestyle: 'pouco' } },
-  estranho: 'ADR 012: plano leve (experiência usada "nunca", 3 treinos), RIR conservador, ponte com halter no lugar do hip thrust com barra e confirmação obrigatória da liberação médica (requiresClearance, não gravada). Sem metas de dieta.'
+  estranho: 'ADR 012: plano leve (experiência usada "nunca"; 4 treinos, como pediu, desde o ADR 014), RIR conservador, ponte com halter no lugar do hip thrust com barra e confirmação obrigatória da liberação médica (requiresClearance, não gravada). Sem metas de dieta.'
  },
  {
   id: 7, titulo: 'Lutador, recomp, intermediário, pediu 6 dias longos',
   answers: { safety: ['nenhum'], goal: 'recomp', experience: 'intermediario', daysPerWeek: 6, duration: 'longo', place: 'academia', activities: [{ kind: 'luta', days: [1, 3] }], body: { sex: 'm', age: 26, heightCm: 178, weightKg: 80, lifestyle: 'muito' } },
-  estranho: 'Pediu 6 dias; teto do intermediário (5) e as 2 lutas reduziram a 4 treinos (daysReason: atividades). ADR 012: Pernas B passa de sábado para domingo, para não ficar no dia seguinte a Pernas A. Jiu-jitsu tem a maior kcal da semana.'
+  estranho: 'Pediu 6 dias; as 2 lutas reduziram a 4 treinos para sobrar 1 dia de descanso (daysReason: atividades). ADR 012: Pernas B passa de sábado para domingo, para não ficar no dia seguinte a Pernas A. Jiu-jitsu tem a maior kcal da semana.'
  },
  {
   id: 8, titulo: 'Nunca treinou, perder, pediu 6 dias de 60 a 90 min',
   answers: { safety: ['nenhum'], goal: 'perder', experience: 'nunca', daysPerWeek: 6, duration: 'longo', place: 'academia', activities: [], body: { sex: 'f', age: 22, heightCm: 163, weightKg: 58, lifestyle: 'pouco' } },
-  estranho: 'ADR 012: quem nunca treinou com 60 a 90 min recebe 45 a 60 min (6 exercícios) e aviso duracao-reduzida; o teto corta para 3 dias (daysReason: teto). kcal no piso de 1.400 em dia de descanso (mantido).'
+  estranho: 'ADR 012: quem nunca treinou com 60 a 90 min recebe 45 a 60 min (6 exercícios) e aviso duracao-reduzida. ADR 014: recebe os 6 dias pedidos (Empurrar, Puxar e Pernas duas vezes, 2 séries por exercício no bloco 1). kcal no piso de 1.400 em dia de descanso (mantido).'
  },
  {
   id: 9, titulo: 'Corredor(a), massa, iniciante, casa com equipamento, treino curto',
@@ -268,16 +268,16 @@ describe('assistente de início: 10 perfis depois do ADR 012', () => {
   const p = pv(2), g = p.generated!;
   expect(p.warnings).toEqual(['idade60']);
   expect(g.plan.rir).toEqual([...RIR_CONSERVADOR]);
-  expect(g.plan.sess.CIA.ex).toEqual(['sentar_levantar', 'flexao', 'remada_mochila', 'ponte']);
-  expect(g.plan.sess.CIB.ex).toEqual(['ponte', 'flexao', 'remada_mochila', 'afundo_livre']);
-  for (const id of ['sentar_levantar', 'flexao', 'remada_mochila', 'ponte']) expect(g.plan.ex[id], id).toMatchObject({ s: [2, 3, 3], rest: 90, r: catalog[id].r });
+  expect(g.plan.sess.CIA.ex).toEqual(['sentar_levantar', 'flexao', 'remada_mochila', 'ponte', 'pant_degrau']);
+  expect(g.plan.sess.CIB.ex).toEqual(['remada_mochila', 'afundo_livre', 'flexao', 'flexao_fechada', 'ytw']);
+  for (const id of ['sentar_levantar', 'flexao', 'remada_mochila', 'ponte']) expect(g.plan.ex[id], id).toMatchObject({ rest: 90, r: catalog[id].r });
   expect(g.plan.ex.afundo_livre).toMatchObject({ s: [2, 2, 3], rest: 60, r: catalog.afundo_livre.r });
   expect(g.plan.ex.remada_mochila.r).toEqual(['10–15', '10–15', '8–12']);
   expect([p.summary.kcalMin, p.summary.kcalMax, p.summary.proteinG]).toEqual([1400, 1600, 105]);
  });
  it('3: puxada com elástico com 90 s', () => { expect(gen(3).plan.ex.puxada_elastico.rest).toBe(90); });
- it('4: Corpo inteiro A no domingo, proteína 1,63 g/kg do peso de referência', () => {
-  expect(semana(4)).toEqual(['Superior A', 'Pernas A', 'Superior B', '-', 'Pernas B', '-', 'Corpo inteiro A']);
+ it('4: 5 dias com Empurrar e Puxar (ADR 014), proteína 1,63 g/kg do peso de referência', () => {
+  expect(semana(4)).toEqual(['Superior', 'Pernas A', 'Empurrar', '-', 'Puxar', 'Pernas B', '-']);
   const p = pv(4);
   expect(p.summary.proteinG).toBe(125);
   expect(Math.round((125 / refWeight(PERFIS[3].answers)!) * 100) / 100).toBe(1.63);
@@ -286,12 +286,14 @@ describe('assistente de início: 10 perfis depois do ADR 012', () => {
  it('5: gestação bloqueada, sem plano e sem metas', () => {
   expect(pv(5)).toMatchObject({ blocked: 'gestacao', generated: null, diet: { kind: 'none', reason: 'seguranca' } });
  });
- it('6: condição de saúde: nunca, 3 treinos, trocas e liberação médica', () => {
+ it('6: condição de saúde: nunca, 4 treinos como pediu (ADR 014), trocas e liberação médica', () => {
   const p = pv(6), g = p.generated!;
   expect(g.experience).toBe('nunca');
-  expect(semana(6)).toEqual(['Corpo inteiro A', '-', 'Corpo inteiro B', '-', 'Corpo inteiro A', '-', '-']);
-  expect(g.plan.sess.CIA.ex).toEqual(['leg', 'supino', 'puxada', 'ponte_h', 'lat_a', 'pallof']);
-  expect(g.plan.sess.CIB.ex).toEqual(['ponte_h', 'press_b', 'remada_b', 'afundo', 'face', 'pallof']);
+  expect(g.daysReason).toBeNull();
+  expect(semana(6)).toEqual(['Superior A', 'Pernas A', '-', 'Superior B', 'Pernas B', '-', '-']);
+  expect(g.plan.sess.SUPA.ex).toEqual(['supino', 'puxada', 'press_b', 'remada_b', 'lat_a', 'rosca_a']);
+  expect(g.plan.sess.PERA.ex).toEqual(['leg', 'ponte_h', 'afundo', 'mesa', 'pant_pe', 'pallof']);
+  expect(Object.keys(g.plan.ex)).not.toContain('hip_b');
   expect(g.plan.ex.supino.s).toEqual([2, 3, 3]);
   expect(g.plan.rir).toEqual([...RIR_CONSERVADOR]);
   expect(p.requiresClearance).toBe(true);
@@ -304,7 +306,9 @@ describe('assistente de início: 10 perfis depois do ADR 012', () => {
   expect(g.duration).toBe('medio');
   for (const k of g.plan.order) expect(g.plan.sess[k].ex).toHaveLength(6);
   expect(p.warnings).toEqual(['duracao-reduzida']);
-  expect(p.summary.daysReason).toBe('teto');
+  // ADR 014: recebe os 6 dias pedidos.
+  expect(p.summary).toMatchObject({ gymDays: 6, daysRequested: 6, daysReason: null });
+  expect(p.summary.sessionNames).toEqual(['Empurrar A', 'Puxar A', 'Pernas A', 'Empurrar B', 'Puxar B', 'Pernas B']);
  });
  it('9: Pernas B na quinta e Superior B na sexta; puxada com elástico com 90 s', () => {
   expect(semana(9)).toEqual(['Superior A', 'Pernas A', '-', 'Pernas B', 'Superior B', 'Corrida', 'Corrida']);

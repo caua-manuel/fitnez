@@ -109,18 +109,23 @@ describe('duração, dias e motivo do corte', () => {
   expect(g.daysReason).toBe('teto');
   expect(g.warnings).toEqual([]);
  });
- it('daysReason: teto, atividades ou null', () => {
-  expect(buildPlanFromAnswers(A({ experience: 'nunca', daysPerWeek: 5 }), catalog).daysReason).toBe('teto');
+ it('daysReason: teto (só transtorno, ADR 014), atividades ou null', () => {
+  // ADR 014: sem teto por experiência.
+  expect(buildPlanFromAnswers(A({ experience: 'nunca', daysPerWeek: 5 }), catalog).daysReason).toBeNull();
   expect(buildPlanFromAnswers(A({ experience: 'nunca', daysPerWeek: 3 }), catalog).daysReason).toBeNull();
+  expect(buildPlanFromAnswers(A({ safety: ['transtorno'], experience: 'nunca', daysPerWeek: 5 }), catalog).daysReason).toBe('teto');
   // intermediário, 5 dias, luta em 3 dias: 5 + 3 > 6, cai para 3.
   const g = buildPlanFromAnswers(A({ experience: 'intermediario', daysPerWeek: 5, activities: [{ kind: 'luta', days: [0, 2, 4] }] }), catalog);
   expect([g.gymDays, g.daysReason]).toEqual([3, 'atividades']);
-  // teto e atividades juntos: vale "atividades".
   expect(buildPlanFromAnswers(A({ experience: 'intermediario', daysPerWeek: 6, activities: [{ kind: 'luta', days: [1, 3] }] }), catalog).daysReason).toBe('atividades');
+  // teto (transtorno) e atividades juntos: vale "atividades".
+  const t = buildPlanFromAnswers(A({ safety: ['transtorno'], experience: 'intermediario', daysPerWeek: 6, activities: [{ kind: 'luta', days: [0, 2, 4] }] }), catalog);
+  expect([t.gymDays, t.daysReason]).toEqual([3, 'atividades']);
   // semana cheia: null.
   expect(buildPlanFromAnswers(A({ daysPerWeek: 4, activities: [{ kind: 'luta', days: [0, 1, 2, 3, 4, 5] }] }), catalog).daysReason).toBeNull();
-  const p = buildOnboardingPreview(A({ experience: 'nunca', daysPerWeek: 5 }), catalog);
-  expect(p.summary).toMatchObject({ gymDays: 3, daysRequested: 5, daysReason: 'teto' });
+  const p = buildOnboardingPreview(A({ safety: ['transtorno'], experience: 'nunca', daysPerWeek: 6 }), catalog);
+  expect(p.summary).toMatchObject({ gymDays: 4, daysRequested: 6, daysReason: 'teto' });
+  expect(buildOnboardingPreview(A({ experience: 'nunca', daysPerWeek: 5 }), catalog).summary).toMatchObject({ gymDays: 5, daysRequested: 5, daysReason: null });
  });
 });
 
@@ -137,11 +142,12 @@ describe('repetições, observação e descanso', () => {
  });
  it('principal sem carga: 90 s; remada com mochila mantém a faixa do catálogo; com carga segue a tabela', () => {
   const g = buildPlanFromAnswers(A({ experience: 'intermediario', place: 'casa_livre', daysPerWeek: 4, duration: 'longo' }), catalog);
-  expect(g.plan.ex.remada_mochila).toMatchObject({ s: [3, 4, 4], r: ['10–15', '10–15', '8–12'], rest: 90 });
+  expect(g.plan.ex.remada_mochila).toMatchObject({ r: ['10–15', '10–15', '8–12'], rest: 90 });
   expect(g.plan.ex.agach_livre.rest).toBe(90);
   expect(g.plan.ex.prancha.rest).toBe(45);
   const academia = buildPlanFromAnswers(A({ experience: 'intermediario', daysPerWeek: 4 }), catalog);
-  expect(academia.plan.ex.supino).toMatchObject({ r: ['6–10', '6–8', '5–8'], rest: 150 });
+  expect(academia.plan.ex.supino).toMatchObject({ r: ['6–10', '6–8', '5–8'], rest: 120 }); // ADR 015: médio 120 s (curto 90 s); 150 s só no longo
+  expect(buildPlanFromAnswers(A({ experience: 'intermediario', daysPerWeek: 4, duration: 'longo' }), catalog).plan.ex.supino.rest).toBe(150);
   const eq = buildPlanFromAnswers(A({ experience: 'iniciante', place: 'casa_equip' }), catalog);
   expect(eq.plan.ex.puxada_elastico.rest).toBe(90);
  });
@@ -153,8 +159,9 @@ describe('dias da semana: pernas', () => {
    .toEqual(['seg:Superior A', 'ter:Pernas A', 'qua:-', 'qui:Pernas B', 'sex:Superior B', 'sáb:Corrida', 'dom:Corrida']);
  });
  it('pernas em dias seguidos vão para o dia livre (perfis 4 e 7 do QA)', () => {
+  // ADR 014: 5 dias passam a ser Superior, Pernas A, Empurrar, Puxar, Pernas B; as pernas já não ficam seguidas.
   expect(week(A({ experience: 'intermediario', daysPerWeek: 5, duration: 'longo' })))
-   .toEqual(['seg:Superior A', 'ter:Pernas A', 'qua:Superior B', 'qui:-', 'sex:Pernas B', 'sáb:-', 'dom:Corpo inteiro A']);
+   .toEqual(['seg:Superior', 'ter:Pernas A', 'qua:Empurrar', 'qui:-', 'sex:Puxar', 'sáb:Pernas B', 'dom:-']);
   expect(week(A({ experience: 'intermediario', daysPerWeek: 6, duration: 'longo', activities: [{ kind: 'luta', days: [1, 3] }] })))
    .toEqual(['seg:Superior A', 'ter:luta', 'qua:Superior B', 'qui:luta', 'sex:Pernas A', 'sáb:-', 'dom:Pernas B']);
  });
@@ -181,7 +188,7 @@ describe('prévia: avisos e subtítulos', () => {
   expect(WARNING_ORDER.slice(0, 5)).toEqual(['menor18', 'gestacao', 'amamentacao', 'condicao', 'transtorno']);
  });
  it('"core" vira "abdômen" nos subtítulos', () => {
-  for (const a of [A({ daysPerWeek: 3 }), A({ daysPerWeek: 2 }), A({ experience: 'iniciante', daysPerWeek: 4 }), A({ experience: 'intermediario', daysPerWeek: 5 })]) {
+  for (const a of [A({ daysPerWeek: 3 }), A({ daysPerWeek: 2 }), A({ experience: 'iniciante', daysPerWeek: 4 }), A({ experience: 'intermediario', daysPerWeek: 5 }), A({ experience: 'nunca', daysPerWeek: 6 })]) {
    const g = buildPlanFromAnswers(a, catalog);
    for (const k of g.plan.order) expect(g.plan.sess[k].sub).not.toMatch(/core/);
   }
