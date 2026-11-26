@@ -44,3 +44,4 @@ capturas/
 .claude/skills/roast-me/
 agents/auditoria-roast/roast-idea/
 agents/auditoria-roast/roast-prompts/
+.roast/
