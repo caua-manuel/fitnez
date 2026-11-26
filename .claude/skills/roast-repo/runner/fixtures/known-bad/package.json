@@ -4,7 +4,7 @@
   "private": true,
   "description": "Fixture for /roast runner E2E tests. Planted vulnerable deps + misplaced build tools.",
   "dependencies": {
-    "lodash": "4.17.20",
+    "lodash": "4.18.1",
     "jsonwebtoken": "^8.5.1",
     "express": "^4.18.0",
     "eslint": "^8.0.0"
