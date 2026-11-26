@@ -214,7 +214,7 @@ test.describe('2.2 em 360 x 740', () => {
   expect(await reachable(page, 'Série 1 concluída'), 'Série 1 concluída').toBe('ok');
  });
 
- test('execução: descanso ativo, menu, histórico e anilhas também com 48 px', async ({ page }) => {
+ test('execução: descanso ativo, menu, Como fazer, histórico e anilhas também com 48 px', async ({ page }) => {
   await start(page, {}, 'UA', 'Supino com halteres', false);
   await logSet(page, 1);
   await expect(timer(page)).toBeVisible();
@@ -224,6 +224,11 @@ test.describe('2.2 em 360 x 740', () => {
   for (const name of ['Série 2 concluída', 'Pular descanso', 'Concluir treino']) expect(await reachable(page, name), name).toBe('ok');
   for (const name of ['Pular descanso', 'Concluir treino']) expect(await inFooter(page, name), name).toBe(true);
   await page.getByRole('button', { name: 'Supino com halteres', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Como fazer' })).toBeVisible();
+  expect(await small(page, '[role=dialog]'), 'Como fazer').toEqual([]);
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Mais opções de Supino com halteres' }).click();
+  await page.getByRole('menuitem', { name: 'Últimas sessões' }).click();
   await expect(page.getByRole('dialog', { name: 'Supino com halteres' })).toBeVisible();
   expect(await small(page, '[role=dialog]'), 'histórico rápido').toEqual([]);
   await page.keyboard.press('Escape');
