@@ -2,7 +2,8 @@ import type { AnyDayType, DayType } from './dayActivity';
 import { dietTargetsFromProfile } from './profile';
 
 export type MealKey = 'cafe' | 'almoco' | 'lanche' | 'pos' | 'jantar';
-export interface DietOption { key: string; name: string; kcal: number; p: number; c: number; g: number; items: string[]; rec?: string }
+export interface DietOption { key: string; name: string; kcal: number; p: number; c: number; g: number; items: string[]; rec?: string; edited?: boolean }
+export type DietOptionFields = Pick<DietOption, 'name' | 'items' | 'kcal' | 'p' | 'c' | 'g'>;
 export interface DayTarget { kcal: number; carbs: number; protein: number; fat: number; waterL: number; focus: string; adjustments: string[] }
 export interface Consumed { key: string; name: string; kcal: number; p: number; c: number; g: number }
 export interface DietDay {
@@ -14,6 +15,12 @@ export interface DietDay {
  consumed?: Partial<Record<MealKey, Consumed>>;
 }
 export interface Totals { kcal: number; p: number; c: number; g: number }
+
+export function editDietOption(option: DietOption, fields: DietOptionFields): DietOption {
+ const sameItems = option.items.length === fields.items.length && option.items.every((item, i) => item === fields.items[i]);
+ if (sameItems && option.name === fields.name && option.kcal === fields.kcal && option.p === fields.p && option.c === fields.c && option.g === fields.g) return option;
+ return { ...option, ...fields, edited: true };
+}
 
 const MEALS: MealKey[] = ['cafe', 'almoco', 'lanche', 'pos', 'jantar'];
 const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);

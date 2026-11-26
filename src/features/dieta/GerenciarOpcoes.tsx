@@ -6,7 +6,8 @@ import { Sheet, ConfirmSheet } from '../../ui/Sheet';
 import { Menu } from '../../ui/Menu';
 import { showToast } from '../../ui/UndoToast';
 import type { DayIso } from '../../domain/calendar';
-import type { DietOption, MealKey } from '../../domain/diet';
+import { editDietOption } from '../../domain/diet';
+import type { DietOption, DietOptionFields, MealKey } from '../../domain/diet';
 import { MealThumb } from './parts';
 import { MealTop } from './Refeicao';
 import { useStagger } from '../treino/stagger';
@@ -16,7 +17,7 @@ interface Fields { name: string; items: string; kcal: string; p: string; c: stri
 const EMPTY: Fields = { name: '', items: '', kcal: '', p: '', c: '', g: '' };
 type Errors = Partial<Record<keyof Fields, string>>;
 
-function validate(f: Fields): { errors: Errors; value?: Omit<DietOption, 'key'> } {
+function validate(f: Fields): { errors: Errors; value?: DietOptionFields } {
  const errors: Errors = {};
  const name = f.name.trim();
  const items = f.items.split('\n').map(x => x.trim()).filter(Boolean);
@@ -34,7 +35,7 @@ function validate(f: Fields): { errors: Errors; value?: Omit<DietOption, 'key'> 
 
 const LABELS: Record<keyof Fields, string> = { name: 'Nome', items: 'Itens (um por linha)', kcal: 'Calorias (kcal)', p: 'Proteína (g)', c: 'Carboidrato (g)', g: 'Gordura (g)' };
 
-function OptionForm({ initial, title, hasRecipe, onSave, onClose }: { initial: Fields; title: string; hasRecipe?: boolean; onSave: (v: Omit<DietOption, 'key'>) => void; onClose: () => void }) {
+function OptionForm({ initial, title, hasRecipe, onSave, onClose }: { initial: Fields; title: string; hasRecipe?: boolean; onSave: (v: DietOptionFields) => void; onClose: () => void }) {
  const [f, setF] = useState<Fields>(initial);
  const [errors, setErrors] = useState<Errors>({});
  const set = (k: keyof Fields) => (e: { target: { value: string } }) => setF(prev => ({ ...prev, [k]: e.target.value }));
@@ -42,7 +43,10 @@ function OptionForm({ initial, title, hasRecipe, onSave, onClose }: { initial: F
   e.preventDefault();
   const r = validate(f);
   setErrors(r.errors);
-  if (r.value) onSave(r.value);
+  if (r.value) {
+   if ((Object.keys(f) as (keyof Fields)[]).every(k => f[k] === initial[k])) onClose();
+   else onSave(r.value);
+  }
   else requestAnimationFrame(() => document.querySelector<HTMLElement>('.dt-sheet [aria-invalid=true]')?.focus());
  };
  const field = (k: keyof Fields, node: ReactNode) => <div className={`dt-field${errors[k] ? ' bad' : ''}`}>
@@ -91,10 +95,15 @@ export function GerenciarOpcoes({ meal, day, today }: { meal: MealKey; day: DayI
   return s;
  });
 
- const onSave = (v: Omit<DietOption, 'key'>) => {
+ const editing = form?.mode === 'edit' ? options.find(o => o.key === form.key) : undefined;
+ const onSave = (v: DietOptionFields) => {
   if (!form) return;
   if (form.mode === 'new') void saveList([...options, { key: nextKey(options), ...v }]);
-  else void saveList(options.map(o => (o.key === form.key ? { ...o, ...v } : o)));
+  else if (editing) {
+   const edited = editDietOption(editing, v);
+   if (edited === editing) { setForm(null); return; }
+   void saveList(options.map(o => o === editing ? edited : o));
+  } else return;
   const prev = options;
   showToast('Opção salva', () => void saveList(prev));
   setForm(null);
@@ -105,8 +114,6 @@ export function GerenciarOpcoes({ meal, day, today }: { meal: MealKey; day: DayI
   void saveList(options.filter(x => x.key !== o.key));
   showToast('Opção excluída', () => void saveList(prev));
  };
- const editing = form?.mode === 'edit' ? options.find(o => o.key === form.key) : undefined;
-
  return <div className="dt dt-manage tone-dieta">
   <MealTop meal={meal} day={day} today={today} manage />
   <p className="dt-manage-intro">Cadastre e gerencie as opções de {MEAL_LOWER[meal]} do seu plano alimentar.</p>

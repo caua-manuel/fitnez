@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useData } from '../../app/DataProvider';
 import { hrefFor } from '../../app/router';
 import { Icon } from '../../ui/icons';
+import { ConfirmSheet } from '../../ui/Sheet';
 import type { DayIso } from '../../domain/calendar';
 import { applyAdjustments } from '../../domain/diet';
 import type { DietOption, MealKey } from '../../domain/diet';
@@ -53,10 +54,11 @@ type GenOption = DietOption & { foods?: { id: string; qty: number }[] };
 /** "Trocar este alimento" (ADR 013): a troca e a regra vêm de application/generatedDiet, carregado só no toque. */
 function FoodList({ meal, option, today }: { meal: MealKey; option: GenOption; today: DayIso }) {
  const { state, repository, run, commit, busy } = useData();
+ const [pendingSwap, setPendingSwap] = useState<{ index: number; revision: number } | null>(null);
  // Ids já mostrados em cada posição, para a sequência de trocas não voltar ao anterior.
  const seen = useRef(new Map<number, string[]>());
  const foods = option.foods ?? [];
- const swap = async (j: number) => {
+ const swap = async (j: number, expectedRevision: number) => {
   if (!state) return;
   const id = foods[j]?.id;
   if (!id) return;
@@ -64,7 +66,7 @@ function FoodList({ meal, option, today }: { meal: MealKey; option: GenOption; t
   const exclude = [...new Set([...(seen.current.get(j) ?? []), id])];
   const r = await run(async () => {
    const gd = await import('../../application/generatedDiet');
-   return gd.swapDietFood(repository, { meal, optionKey: option.key, foodId: id, expectedRevision: (await repository.read()).revision, today, exclude });
+   return gd.swapDietFood(repository, { meal, optionKey: option.key, foodId: id, expectedRevision, today, exclude });
   });
   if (r === undefined) return;
   if (r === null) { showToast('Não há troca parecida para este alimento.'); return; }
@@ -72,12 +74,26 @@ function FoodList({ meal, option, today }: { meal: MealKey; option: GenOption; t
   seen.current.set(j, now ? [...exclude, now] : exclude);
   showToast('Alimento trocado', () => void commit(s => { s.catalog.diet = { ...s.catalog.diet, [meal]: prev }; return s; }));
  };
- return <ul className="dt-foods" aria-label={`Alimentos de ${option.name}`}>
-  {option.items.map((t, j) => <li key={`${j}-${foods[j]?.id ?? t}`}>
-   <span className="dt-food-t">{t.replace(" (a verificar)", "")}</span>
-   {foods[j] ? <button type="button" className="dt-swap" disabled={busy} aria-label={`Trocar este alimento: ${t.replace(" (a verificar)", "")}`} onClick={() => void swap(j)}>Trocar</button> : null}
-  </li>)}
- </ul>;
+ return <>
+  <ul className="dt-foods" aria-label={`Alimentos de ${option.name}`}>
+   {option.items.map((t, j) => <li key={j}>
+    <span className="dt-food-t">{t.replace(" (a verificar)", "")}</span>
+    {foods[j] ? <button type="button" className="dt-swap" aria-disabled={busy} aria-label={`Trocar este alimento: ${t.replace(" (a verificar)", "")}`} onClick={e => {
+     if (busy || !state) return;
+     if (option.edited) {
+      e.currentTarget.focus({ preventScroll: true });
+      setPendingSwap({ index: j, revision: state.revision });
+     } else void swap(j, state.revision);
+    }}>Trocar</button> : null}
+   </li>)}
+  </ul>
+  {pendingSwap ? <ConfirmSheet title="Trocar alimento?" confirmLabel="Trocar mesmo" icon="troca" onCancel={() => setPendingSwap(null)} onConfirm={() => {
+   setPendingSwap(null);
+   void swap(pendingSwap.index, pendingSwap.revision);
+  }}>
+   <p className="dt-confirm-text">Trocar vai refazer a lista desta opção e descartar a sua edição. Você pode desfazer logo depois.</p>
+  </ConfirmSheet> : null}
+ </>;
 }
 
 export function Refeicao({ meal, day, today, setDay }: Props) {

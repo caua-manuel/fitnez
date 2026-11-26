@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyAdjustments, dayTarget, dayTargetForProfile, dayTotals, markEaten, progress, unmarkEaten, weeklyReview } from '../../src/domain/diet';
+import { applyAdjustments, dayTarget, dayTargetForProfile, dayTotals, editDietOption, markEaten, progress, unmarkEaten, weeklyReview } from '../../src/domain/diet';
 import type { DietDay, DietOption, MealKey } from '../../src/domain/diet';
 
 const opt = (key: string, kcal: number, p = 30, c = 40, g = 10): DietOption => ({ key, name: `Opção ${key}`, kcal, p, c, g, items: ['x'] });
@@ -7,6 +7,18 @@ const catalog = (): Record<MealKey, DietOption[]> => ({
  cafe: [opt('A', 500)], almoco: [opt('A', 800)], lanche: [opt('A', 300)], pos: [opt('A', 250)], jantar: [opt('A', 600)]
 });
 const empty = (): DietDay => ({ pick: {}, eaten: {}, skip: {}, water: 0, crea: false });
+
+describe('editar opção do cardápio', () => {
+ const original = { ...opt('A', 500), items: ['a', 'b'], foods: [{ id: 'a', qty: 1 }], rec: 'receita' };
+ it.each([{}, { edited: true }] as const)('mantém a opção quando os campos são iguais (%j)', flag => {
+  const option = { ...original, ...flag };
+  expect(editDietOption(option, { ...original, items: [...original.items] })).toBe(option);
+ });
+ it.each([{ name: 'Outro nome' }, { items: ['b', 'a'] }, { kcal: 501 }, { p: 31 }, { c: 41 }, { g: 11 }])('marca alteração de %j e mantém os dados internos', changes => {
+  const option = editDietOption(original, { ...original, ...changes });
+  expect(option).toEqual({ ...original, ...changes, edited: true });
+ });
+});
 
 describe('meta do dia', () => {
  it.each([['perna', 2600, 340], ['academia', 2450, 305], ['jiujitsu', 2500, 315], ['volei', 2500, 315], ['descanso', 2100, 215]] as const)('%s', (t, kcal, carbs) => {

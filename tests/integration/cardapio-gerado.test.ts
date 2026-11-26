@@ -5,6 +5,8 @@ import { applyOnboarding, previewOnboarding } from '../../src/application/onboar
 import { applyGeneratedDiet, canUndoGeneratedDiet, swapDietFood, undoGeneratedDiet } from '../../src/application/generatedDiet';
 import type { Repository } from '../../src/application/repository';
 import type { OnboardingAnswers } from '../../src/domain/onboarding';
+import { applyPlanShare } from '../../src/application/planShare';
+import { buildPlanShare, checkPlanShare } from '../../src/domain/planShare';
 
 // ADR 013. Dados sintéticos; relógio injetado.
 const NOW = new Date(2026, 10, 23, 12).getTime();
@@ -73,6 +75,40 @@ describe('cardápio gerado: aplicar, trocar e desfazer', () => {
   await expect(r.prepareImport(backup(bad))).rejects.toMatchObject({ code: 'validation' });
   bad.catalog.diet.cafe[0].foods = Array.from({ length: 9 }, (_, i) => ({ id: `x${i}`, qty: 10 }));
   await expect(r.prepareImport(backup(bad))).rejects.toMatchObject({ code: 'validation' });
+ });
+
+ it('exporta e importa a edição do cardápio e continua compartilhando o plano', async () => {
+  const source = setup();
+  const before = await withPlan(source, answers());
+  const generated = await applyGeneratedDiet(source, { answers: answers(), expectedRevision: before.revision, now: NOW });
+  if (!generated.ok) throw new Error(generated.reason);
+  const state = generated.state;
+  const option = state.catalog.diet.almoco[0];
+  option.items[0] = 'Item escolhido à mão';
+  option.edited = true;
+  const saved = await source.save({ state, expectedRevision: state.revision });
+  const exported = await source.export();
+  const dest = setup();
+  const { state: empty } = await dest.initialize();
+  const preview = await dest.prepareImport(exported.text);
+  const imported = await dest.confirmImport({ token: preview.token, expectedRevision: empty.revision });
+  expect(imported.catalog.diet).toEqual(saved.catalog.diet);
+  expect((await dest.read()).catalog.diet.almoco[0].edited).toBe(true);
+
+  const shared = buildPlanShare(saved, { name: 'Plano com cardápio editado', includeNotes: false });
+  if (!shared.ok) throw new Error(shared.error);
+  expect(shared.file).not.toHaveProperty('diet');
+  const checked = checkPlanShare(JSON.parse(JSON.stringify(shared.file)));
+  if (!checked.ok) throw new Error(checked.error);
+  const applied = await applyPlanShare(dest, { file: checked.value, start: TODAY, today: TODAY, expectedRevision: imported.revision });
+  expect(applied.catalog.diet).toEqual(saved.catalog.diet);
+ });
+
+ it.each(['true', 1, null])('recusa marca de edição não booleana (%j)', async edited => {
+  const r = setup();
+  const { state } = await r.initialize();
+  state.catalog.diet.cafe[0].edited = edited;
+  await expect(r.prepareImport(backup(state))).rejects.toMatchObject({ code: 'validation' });
  });
 });
 
